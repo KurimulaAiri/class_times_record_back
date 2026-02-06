@@ -1,0 +1,41 @@
+# 基础配置文件
+spring:
+  profiles:
+    active: dev  # 默认激活开发环境
+  # 通用配置
+  application:
+    name: class-times-record
+  # 数据库驱动等通用配置可以放在这里
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://121.196.229.10:3306/class_times_record?useSSL=false&serverTimezone=UTC&characterEncoding=utf8mb4
+    username: class_times_record
+    password: 8BCnbZjTT8ZxmBj6
+
+
+# MyBatis-Plus 核心配置
+mybatis-plus:
+  # 1. 基础配置
+  configuration:
+    map-underscore-to-camel-case: true # 开启下划线转驼峰（默认开启，可省略）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印 SQL 日志（开发环境开启）
+    cache-enabled: false # 关闭二级缓存（默认false，按需开启）
+  # 2. 映射配置
+  mapper-locations: classpath:mapper/**/*.xml # 自定义 SQL 的 XML 文件路径
+  type-aliases-package: com.example.demo.entity # 实体类包名（简化 XML 中的类型别名）
+  type-handlers-package: com.example.demo.handler # 自定义类型处理器包名（可选）
+  # 3. 全局配置
+  global-config:
+    db-config:
+      # 主键生成策略（全局默认）：ASSIGN_ID=雪花算法，AUTO=自增，INPUT=手动输入
+      id-type: ASSIGN_ID
+      # 逻辑删除配置
+      logic-delete-field: isDeleted # 全局逻辑删除字段名（实体类需加 @TableLogic 注解）
+      logic-not-delete-value: 0 # 未删除值
+      logic-delete-value: 1 # 已删除值
+      # 表名前缀（可选，如所有表都以 t_ 开头）
+      # table-prefix: t_
+      # 字段策略（插入/更新时的空值处理）
+      insert-strategy: NOT_NULL # 插入时非空字段才参与
+      update-strategy: NOT_NULL # 更新时非空字段才参与
+
