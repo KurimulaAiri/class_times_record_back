@@ -1,10 +1,12 @@
 package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.shiroko.converter.CourseRecordConverter;
 import com.shiroko.mapper.CourseRecordMapper;
 import com.shiroko.repository.dto.QueryCourseRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.CourseRecord;
+import com.shiroko.repository.vo.CourseRecordVO;
 import com.shiroko.repository.vo.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import org.springframework.stereotype.Service;
@@ -23,16 +25,22 @@ public class CourseRecordServiceImpl implements CourseRecordService {
 
     private final CourseRecordMapper courseRecordMapper;
 
-    private CourseRecordServiceImpl(CourseRecordMapper courseRecordMapper) {
+    private final CourseRecordConverter courseRecordConverter;
+
+    private CourseRecordServiceImpl(CourseRecordMapper courseRecordMapper, CourseRecordConverter courseRecordConverter) {
         this.courseRecordMapper = courseRecordMapper;
+        this.courseRecordConverter = courseRecordConverter;
     }
 
     @Override
-    public ResponseDTO<List<QueryCourseRecordVO>> getCourseRecords(QueryCourseRecordDTO dto) {
+    public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
         QueryWrapper<CourseRecord> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", dto.getUserId());
-        queryWrapper.eq("course_id", dto.getCourseId());
+        queryWrapper.eq("stu_name", dto.getStuName());
+        queryWrapper.eq("course_name", dto.getCourseName());
+        queryWrapper.eq("is_delete", "0");
         List<CourseRecord> courseRecords = courseRecordMapper.selectList(queryWrapper);
-        return ResponseDTO.success(courseRecords.stream().map(CourseRecord::toQueryCourseRecordVO).toList());
+        List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(courseRecords);
+        QueryCourseRecordVO vo = new QueryCourseRecordVO(voList);
+        return ResponseDTO.success(vo);
     }
 }

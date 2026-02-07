@@ -6,17 +6,17 @@
 
     <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.CourseRecord">
             <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="stu_name" column="stu_name" jdbcType="VARCHAR"/>
-            <result property="course_name" column="course_name" jdbcType="VARCHAR"/>
-            <result property="course_total_time" column="course_total_time" jdbcType="INTEGER"/>
-            <result property="course_rest_time" column="course_rest_time" jdbcType="INTEGER"/>
-            <result property="course_last_time" column="course_last_time" jdbcType="TIMESTAMP"/>
-            <result property="couse_admin_group_id" column="couse_admin_group_id" jdbcType="INTEGER"/>
-            <result property="course_owner_user_id" column="course_owner_user_id" jdbcType="INTEGER"/>
-            <result property="course_remark" column="course_remark" jdbcType="VARCHAR"/>
-            <result property="is_delete" column="is_delete" jdbcType="VARCHAR"/>
-            <result property="create_time" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="update_time" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="stuName" column="stu_name" jdbcType="VARCHAR"/>
+            <result property="courseName" column="course_name" jdbcType="VARCHAR"/>
+            <result property="courseTotalTime" column="course_total_time" jdbcType="INTEGER"/>
+            <result property="courseRestTime" column="course_rest_time" jdbcType="INTEGER"/>
+            <result property="courseLastTime" column="course_last_time" jdbcType="TIMESTAMP"/>
+            <result property="courseAdminGroupId" column="couse_admin_group_id" jdbcType="INTEGER"/>
+            <result property="courseOwnerUserId" column="course_owner_user_id" jdbcType="INTEGER"/>
+            <result property="courseRemark" column="course_remark" jdbcType="VARCHAR"/>
+            <result property="isDelete" column="is_delete" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -27,6 +27,11 @@
     </sql>
 
     <select id="getCourseRecords" resultMap="BaseResultMap">
-        select <include refid="Base_Column_List"/> from course_record where id = #{id}
+        select <include refid="Base_Column_List"/>
+            from course_record
+                where is_delete = '0'
+                  and stu_name = #{stuName}
+                  and course_name = #{courseName}
+
     </select>
 </mapper>

@@ -1,2 +1,7 @@
 server:
   port: 9999
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: trace
+    com.shiroko: DEBUG

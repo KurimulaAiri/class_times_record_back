@@ -1,9 +1,12 @@
 package com.shiroko.repository.vo;
 
+import com.shiroko.repository.entity.CourseRecord;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * Description: TODO
@@ -17,5 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QueryCourseRecordVO extends BaseVO {
+
+    private List<CourseRecordVO> courseRecords;
 
 }

@@ -8,7 +8,7 @@ spring:
   # 数据库驱动等通用配置可以放在这里
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://121.196.229.10:3306/class_times_record?useSSL=false&serverTimezone=UTC&characterEncoding=utf8mb4
+    url: jdbc:mysql://121.196.229.10:3306/class_times_record?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
     username: class_times_record
     password: 8BCnbZjTT8ZxmBj6
 
@@ -21,9 +21,9 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印 SQL 日志（开发环境开启）
     cache-enabled: false # 关闭二级缓存（默认false，按需开启）
   # 2. 映射配置
-  mapper-locations: classpath:mapper/**/*.xml # 自定义 SQL 的 XML 文件路径
-  type-aliases-package: com.example.demo.entity # 实体类包名（简化 XML 中的类型别名）
-  type-handlers-package: com.example.demo.handler # 自定义类型处理器包名（可选）
+  mapper-locations: classpath:com/shiroko/mapper/**/*.xml # 自定义 SQL 的 XML 文件路径
+  type-aliases-package: com.shiroko.entity # 实体类包名（简化 XML 中的类型别名）
+  type-handlers-package: com.shiroko.handler # 自定义类型处理器包名（可选）
   # 3. 全局配置
   global-config:
     db-config:

@@ -1,14 +1,11 @@
 package com.shiroko.controller;
 
-import com.alibaba.fastjson2.JSON;
 import com.shiroko.repository.dto.QueryCourseRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,11 +28,14 @@ public class CourseRecordController {
 
     /**
      * 获取课程记录
+     *
      * @param dto 查询课程记录DTO
      * @return 课程记录列表
      */
-    @GetMapping("/get")
-    public ResponseDTO<List<QueryCourseRecordVO>> getCourseRecords(QueryCourseRecordDTO dto) {
+    @PostMapping("/get")
+    public ResponseDTO<QueryCourseRecordVO> getCourseRecords(@Valid @RequestBody QueryCourseRecordDTO dto) {
+        System.out.println("dto = " + dto);
         return courseRecordService.getCourseRecords(dto);
+    }
 
 }

@@ -19,5 +19,5 @@ public interface CourseRecordService {
      * 按特定信息获取对应课程记录
      * @return 所有课程记录列表
      */
-    ResponseDTO<List<QueryCourseRecordVO>> getCourseRecords(QueryCourseRecordDTO dto);
+    ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto);
 }
