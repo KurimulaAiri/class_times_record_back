@@ -98,4 +98,38 @@
         </dependency>
 
     </dependencies>
+
+    <!-- 确保 pom.xml 中有以下配置（放在 <build><plugins> 标签内） -->
+    <build>
+        <plugins>
+            <!-- SpringBoot 打包插件（核心：生成可执行 jar 包） -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.5.10</version> <!-- 替换为你项目的 SpringBoot 版本 -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal> <!-- 关键：重新打包生成可执行 jar -->
+                        </goals>
+                    </execution>
+                </executions>
+                <!-- 可选：指定主类（若插件未自动识别） -->
+                <configuration>
+                    <mainClass>com.shiroko.ClassTimesRecordApplication</mainClass> <!-- 替换为你的实际主类全路径 -->
+                </configuration>
+            </plugin>
+
+            <!-- Java 编译插件（确保编译版本匹配） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>17</source> <!-- 和你用的 JDK 版本一致（17） -->
+                    <target>17</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
