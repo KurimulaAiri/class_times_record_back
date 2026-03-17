@@ -7,15 +7,18 @@ pipeline {
         GIT_BRANCH = 'master'
         // 项目名称
         PROJECT_NAME = 'class-times-record'
-        // SpringBoot项目端口（需与application.yml中一致）
+        // SpringBoot项目端口
         APP_PORT = 9999
         // Maven构建命令
         MAVEN_BUILD_CMD = 'clean package -DskipTests'
-        // 宿主机部署目录（需提前创建，赋予Jenkins容器读写权限）
-        HOST_DEPLOY_DIR = '/opt/java-deploy/class_times_record_back'
-        // 宿主机Java进程PID文件（用于快速停止进程）
-        PID_FILE = "${HOST_DEPLOY_DIR}/${PROJECT_NAME}.pid"
-        // 宿主机Java命令路径（需与宿主机实际Java路径一致）
+        // Jenkins容器内共享目录（已在容器编排中挂载，对应宿主机/opt/java-deploy/class_times_record_back）
+        CONTAINER_DEPLOY_DIR = '/opt/deploy/class_times_record_back'
+        // 宿主机SSH配置
+        HOST_USER = 'root'  // 宿主机登录用户名（根据实际修改）
+        HOST_IP = '192.168.1.100'  // 替换为宿主机真实内网IP
+        // 宿主机PID文件路径（与共享目录对应）
+        HOST_PID_FILE = "/opt/java-deploy/class_times_record_back/${PROJECT_NAME}.pid"
+        // 宿主机Java命令路径
         HOST_JAVA_CMD = '/usr/bin/java'
     }
 
@@ -26,29 +29,14 @@ pipeline {
 
     options {
         skipDefaultCheckout true
-        // 构建超时时间（避免卡死）
         timeout(time: 30, unit: 'MINUTES')
     }
 
     stages {
-        // 1. 初始化宿主机部署目录
-        stage('初始化部署目录') {
-            steps {
-                echo '创建/检查宿主机部署目录...'
-                // 通过alpine容器调用宿主机命令创建目录（解决Jenkins容器无宿主机权限问题）
-                sh """
-                    docker run --rm -v /:/host alpine \
-                    mkdir -p /host${HOST_DEPLOY_DIR} && \
-                    chmod 777 /host${HOST_DEPLOY_DIR}
-                """
-            }
-        }
-
-        // 2. 拉取代码（SSH方式需Jenkins配置Git私钥凭证）
+        // 1. 拉取代码（移除目录创建阶段，直接拉取代码）
         stage('拉取代码') {
             steps {
                 echo '拉取Git代码...'
-                // 配置Git私钥（需在Jenkins凭证中添加SSH私钥，ID为git-ssh-key）
                 withCredentials([sshUserPrivateKey(credentialsId: 'git-ssh-key', keyFileVariable: 'GIT_SSH_KEY')]) {
                     sh """
                         export GIT_SSH_COMMAND='ssh -i ${GIT_SSH_KEY} -o StrictHostKeyChecking=no'
@@ -58,7 +46,7 @@ pipeline {
             }
         }
 
-        // 3. 编译打包
+        // 2. 编译打包
         stage('编译打包') {
             steps {
                 echo '编译打包SpringBoot项目...'
@@ -70,68 +58,82 @@ pipeline {
             }
         }
 
-        // 4. 同步jar包到宿主机部署目录
+        // 3. 同步jar包到共享目录（仅验证目录存在，不创建）
         stage('同步jar包到宿主机') {
             steps {
-                echo '将jar包复制到宿主机部署目录...'
-                // 找到最新的jar包（避免多jar包问题）
+                echo '将jar包复制到共享目录（同步到宿主机）...'
                 sh """
+                    # 仅验证共享目录是否存在（容器编排已创建，无需重复mkdir）
+                    if [ ! -d ${CONTAINER_DEPLOY_DIR} ]; then
+                        echo '共享目录不存在！请检查容器编排挂载配置'
+                        exit 1
+                    fi
+                    # 找到编译后的jar包（排除original-开头的原始包）
                     JAR_FILE=\$(ls target/*.jar | grep -v 'original-' | head -1)
                     if [ -z "\$JAR_FILE" ]; then
                         echo '未找到编译后的jar包！'
                         exit 1
                     fi
-                    # 复制jar包到宿主机部署目录（覆盖旧包）
-                    cp \$JAR_FILE ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar
-                    # 验证宿主机是否存在jar包
-                    docker run --rm -v /:/host alpine \
-                    test -f /host${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar && \
-                    echo 'jar包同步到宿主机成功' || (echo 'jar包同步失败' && exit 1)
+                    # 直接复制到已挂载的共享目录（自动同步到宿主机）
+                    cp \$JAR_FILE ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar
+                    # 验证jar包同步结果
+                    if [ -f ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar ]; then
+                        echo 'jar包同步到宿主机成功'
+                    else
+                        echo 'jar包同步失败'
+                        exit 1
+                    fi
                 """
             }
         }
 
-        // 5. 停止旧Java进程
+        // 4. 停止宿主机旧Java进程（SSH直接执行）
         stage('停止旧Java进程') {
             steps {
                 echo '停止宿主机上的旧Java进程...'
-                sh """
-                    # 方式1：通过PID文件停止进程（优先）
-                    if docker run --rm -v /:/host alpine test -f /host${PID_FILE}; then
-                        PID=\$(docker run --rm -v /:/host alpine cat /host${PID_FILE})
-                        docker run --rm -v /:/host --privileged alpine \
-                        kill -9 \$PID || echo '旧进程已停止或不存在'
-                        docker run --rm -v /:/host alpine rm -f /host${PID_FILE}
-                    fi
-
-                    # 方式2：通过端口查找并停止进程（兜底，防止PID文件丢失）
-                    PORT_PID=\$(docker run --rm -v /:/host --privileged alpine \
-                    netstat -tlnp | grep :${APP_PORT} | awk '{print \$7}' | cut -d/ -f1)
-                    if [ -n "\$PORT_PID" ]; then
-                        docker run --rm -v /:/host --privileged alpine \
-                        kill -9 \$PORT_PID && echo '通过端口停止旧进程成功'
-                    fi
-                """
+                withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    sh """
+                        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
+                            # 通过PID文件停止进程
+                            if [ -f ${HOST_PID_FILE} ]; then
+                                PID=\$(cat ${HOST_PID_FILE})
+                                kill -9 \$PID 2>/dev/null || echo '旧进程已停止或不存在'
+                                rm -f ${HOST_PID_FILE}
+                            fi
+                            # 通过端口兜底停止
+                            PORT_PID=\$(netstat -tlnp | grep :${APP_PORT} | awk '{print \$7}' | cut -d/ -f1)
+                            if [ -n "\$PORT_PID" ]; then
+                                kill -9 \$PORT_PID && echo '通过端口停止旧进程成功'
+                            fi
+                        EOF
+                    """
+                }
             }
         }
 
-        // 6. 启动新Java进程（宿主机后台运行）
+        // 5. 启动宿主机新Java进程（SSH直接执行）
         stage('启动新Java进程') {
             steps {
                 echo '在宿主机启动SpringBoot进程...'
-                sh """
-                    # 宿主机后台启动Java进程，输出日志到部署目录，记录PID
-                    docker run --rm -v /:/host --privileged alpine \
-                    sh -c 'nohup /host${HOST_JAVA_CMD} -jar /host${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar \
-                    --server.port=${APP_PORT} > /host${HOST_DEPLOY_DIR}/app.log 2>&1 & \
-                    echo \$! > /host${PID_FILE}'
-
-                    # 等待3秒，验证进程是否启动
-                    sleep 3
-                    # 检查端口是否被占用（验证启动成功）
-                    docker run --rm -v /:/host --privileged alpine \
-                    netstat -tlnp | grep :${APP_PORT} && echo 'SpringBoot进程启动成功' || (echo '进程启动失败' && exit 1)
-                """
+                withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    sh """
+                        ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
+                            # 后台启动SpringBoot进程，输出日志到共享目录
+                            nohup ${HOST_JAVA_CMD} -jar /opt/java-deploy/class_times_record_back/${PROJECT_NAME}.jar \
+                            --server.port=${APP_PORT} > /opt/java-deploy/class_times_record_back/app.log 2>&1 &
+                            # 记录进程PID到共享目录
+                            echo \$! > ${HOST_PID_FILE}
+                            # 验证进程启动
+                            sleep 3
+                            if netstat -tlnp | grep :${APP_PORT}; then
+                                echo 'SpringBoot进程启动成功'
+                            else
+                                echo '进程启动失败！日志路径：/opt/java-deploy/class_times_record_back/app.log'
+                                exit 1
+                            fi
+                        EOF
+                    """
+                }
             }
         }
     }
@@ -139,18 +141,21 @@ pipeline {
     post {
         always {
             echo 'CI/CD流程结束'
-            // 打印宿主机进程状态（方便排查）
-            sh """
-                echo '宿主机${APP_PORT}端口进程状态：'
-                docker run --rm -v /:/host --privileged alpine \
-                netstat -tlnp | grep ${APP_PORT} || echo '无进程占用${APP_PORT}端口'
-            """
+            // 验证宿主机进程状态
+            withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                sh """
+                    echo '宿主机${APP_PORT}端口进程状态：'
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
+                        netstat -tlnp | grep ${APP_PORT} || echo '无进程占用${APP_PORT}端口'
+                    EOF
+                """
+            }
         }
         success {
             echo "===== 部署完成！====="
-            echo "项目部署目录：${HOST_DEPLOY_DIR}"
-            echo "访问地址：http://宿主机IP:${APP_PORT}"
-            echo "日志文件：${HOST_DEPLOY_DIR}/app.log"
+            echo "宿主机部署目录：/opt/java-deploy/class_times_record_back"
+            echo "访问地址：http://${HOST_IP}:${APP_PORT}"
+            echo "日志文件：/opt/java-deploy/class_times_record_back/app.log"
         }
         failure {
             echo "===== 部署失败！请检查Jenkins控制台日志 ====="
