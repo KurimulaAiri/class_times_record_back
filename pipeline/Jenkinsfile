@@ -2,19 +2,23 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO_URL = 'git@github.com:KurimulaAiri/class_times_record_back.git'
-        GIT_BRANCH = 'master'
-        PROJECT_NAME = 'class-times-record'
-        APP_PORT = 9999
-        MAVEN_BUILD_CMD = 'clean package -DskipTests'
+        // ===================== 你的项目配置 =====================
+        GIT_REPO_URL        = 'git@github.com:KurimulaAiri/class_times_record_back.git'
+        GIT_BRANCH          = 'master'
+        PROJECT_NAME        = 'class-times-record'
+        APP_PORT            = 9999
+        MAVEN_BUILD_CMD     = 'clean package -DskipTests'
+
+        // 容器内挂载目录（你已经在编排里配置好，直接用）
         CONTAINER_DEPLOY_DIR = '/opt/deploy/class_times_record_back'
-        HOST_USER = 'root'
-        HOST_IP = '172.21.0.1'  // 替换为你的宿主机真实IP
-        HOST_PID_FILE = "/opt/java-deploy/class_times_record_back/${PROJECT_NAME}.pid"
-        HOST_JAVA_CMD = '/usr/bin/java'
-        // 新增：定义环境变量传递SSH密钥路径（避免插值风险）
-        GIT_SSH_KEY_PATH = '/var/jenkins_home/.ssh/jenkins_github_id_ed25519'
-        HOST_SSH_KEY_PATH = '/var/jenkins_home/.ssh/host_id_rsa'
+
+        // ===================== 宿主机 SSH 配置 =====================
+        HOST_USER           = 'root'
+        HOST_IP             = '172.21.0.1'   // Docker 容器访问宿主机 IP（正确）
+        HOST_SSH_PORT       = 25184          // ✅ 你宿主机的 SSH 端口（关键修复）
+        HOST_JAVA_CMD       = '/usr/bin/java'
+        HOST_DEPLOY_DIR     = '/opt/java-deploy/class_times_record_back'
+        HOST_PID_FILE       = "${HOST_DEPLOY_DIR}/${PROJECT_NAME}.pid"
     }
 
     tools {
@@ -25,13 +29,16 @@ pipeline {
     options {
         skipDefaultCheckout true
         timeout(time: 30, unit: 'MINUTES')
+        // 构建前清空工作区（解决 Git 目录不为空）
+        buildDiscarder(logRotator(numToKeepStr: '5'))
     }
 
     stages {
+        // ===================== 1. 拉取代码（修复：先清空目录） =====================
         stage('拉取代码') {
             steps {
-                echo '拉取Git代码...'
-                // 修复：用变量传递密钥路径，避免Groovy插值
+                echo '→ 清理工作区 + 拉取代码'
+                sh 'rm -rf ./* .git* || true' // 强制清空，解决目录非空
                 withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh-key', keyFileVariable: 'GIT_SSH_KEY_PATH')]) {
                     sh '''
                         export GIT_SSH_COMMAND="ssh -i ${GIT_SSH_KEY_PATH} -o StrictHostKeyChecking=no"
@@ -41,86 +48,56 @@ pipeline {
             }
         }
 
+        // ===================== 2. 编译打包 =====================
         stage('编译打包') {
             steps {
-                echo '编译打包SpringBoot项目...'
+                echo '→ 编译打包 SpringBoot'
                 sh "mvn ${MAVEN_BUILD_CMD}"
             }
             post {
-                failure { echo '编译打包失败！'; error '终止构建' }
-                success { echo '编译打包成功，生成jar包完成' }
+                failure { error '编译失败，终止部署' }
             }
         }
 
-        stage('同步jar包到宿主机') {
+        // ===================== 3. 复制 jar 到共享目录（直接复制，已挂载） =====================
+        stage('发布 jar 到宿主机') {
             steps {
-                echo '将jar包复制到共享目录...'
+                echo '→ 复制 jar 到共享目录'
                 sh '''
-                    if [ ! -d ${CONTAINER_DEPLOY_DIR} ]; then
-                        echo '共享目录不存在！请检查容器挂载配置'
-                        exit 1
-                    fi
-                    # 找到编译后的jar包（排除original-原始包）
-                    JAR_FILE=$(ls target/*.jar | grep -v 'original-' | head -1)
-                    if [ -z "$JAR_FILE" ]; then
-                        echo '未找到编译后的jar包！'
-                        exit 1
-                    fi
-                    # 复制到共享目录（同步到宿主机）
-                    cp $JAR_FILE ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar
-                    # 验证同步结果
-                    if [ -f ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar ]; then
-                        echo 'jar包同步到宿主机成功'
-                    else
-                        echo 'jar包同步失败'
-                        exit 1
-                    fi
+                    JAR_FILE=$(ls target/*.jar | grep -v original | head -1)
+                    cp -f $JAR_FILE ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar
+                    echo "✅ jar 已同步到宿主机"
                 '''
             }
         }
 
-        stage('停止旧Java进程') {
+        // ===================== 4. 停止宿主机旧进程（SSH 端口 25184） =====================
+        stage('停止旧进程') {
             steps {
-                echo '停止宿主机上的旧Java进程...'
+                echo '→ 停止宿主机旧 Java 进程'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                            # 通过PID文件停止进程
-                            if [ -f ${HOST_PID_FILE} ]; then
-                                PID=$(cat ${HOST_PID_FILE})
-                                kill -9 $PID 2>/dev/null || echo '旧进程已停止或不存在'
-                                rm -f ${HOST_PID_FILE}
-                            fi
-                            # 通过端口兜底停止
-                            PORT_PID=$(netstat -tlnp | grep :${APP_PORT} | awk '{print $7}' | cut -d/ -f1)
-                            if [ -n "$PORT_PID" ]; then
-                                kill -9 $PORT_PID && echo '通过端口停止旧进程成功'
-                            fi
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
+                            kill \$(cat ${HOST_PID_FILE}) 2>/dev/null || true
+                            rm -f ${HOST_PID_FILE}
                         EOF
                     '''
                 }
             }
         }
 
-        stage('启动新Java进程') {
+        // ===================== 5. 启动宿主机新进程（宿主机直接 nohup 运行） =====================
+        stage('启动新进程') {
             steps {
-                echo '在宿主机启动SpringBoot进程...'
+                echo '→ 启动宿主机 SpringBoot 进程'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                            # 后台启动进程，输出日志到共享目录
-                            nohup ${HOST_JAVA_CMD} -jar /opt/java-deploy/class_times_record_back/${PROJECT_NAME}.jar \
-                            --server.port=${APP_PORT} > /opt/java-deploy/class_times_record_back/app.log 2>&1 &
-                            # 记录PID到文件
-                            echo $! > ${HOST_PID_FILE}
-                            # 验证进程启动
-                            sleep 3
-                            if netstat -tlnp | grep :${APP_PORT}; then
-                                echo 'SpringBoot进程启动成功'
-                            else
-                                echo '进程启动失败！日志路径：/opt/java-deploy/class_times_record_back/app.log'
-                                exit 1
-                            fi
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
+                            cd ${HOST_DEPLOY_DIR}
+                            nohup ${HOST_JAVA_CMD} -jar ${PROJECT_NAME}.jar --server.port=${APP_PORT} > app.log 2>&1 &
+                            echo \$! > ${HOST_PID_FILE}
+                            sleep 2
+                            echo "✅ 启动成功，端口：${APP_PORT}"
                         EOF
                     '''
                 }
@@ -129,25 +106,17 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'CI/CD流程结束'
-            withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
-                sh '''
-                    echo '宿主机${APP_PORT}端口进程状态：'
-                    ssh -i ${HOST_SSH_KEY_PATH} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                        netstat -tlnp | grep ${APP_PORT} || echo '无进程占用${APP_PORT}端口'
-                    EOF
-                '''
-            }
-        }
         success {
-            echo "===== 部署完成！====="
-            echo "宿主机部署目录：/opt/java-deploy/class_times_record_back"
-            echo "访问地址：http://${HOST_IP}:${APP_PORT}"
-            echo "日志文件：/opt/java-deploy/class_times_record_back/app.log"
+            echo ''
+            echo '=================================================='
+            echo '                🎉 部署成功！'
+            echo ' 项目：${PROJECT_NAME}'
+            echo ' 端口：${APP_PORT}'
+            echo ' 宿主机日志：${HOST_DEPLOY_DIR}/app.log'
+            echo '=================================================='
         }
         failure {
-            echo "===== 部署失败！请检查Jenkins控制台日志 ====="
+            echo '❌ 部署失败，请检查日志'
         }
     }
 }
