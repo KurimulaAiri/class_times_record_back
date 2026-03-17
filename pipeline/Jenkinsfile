@@ -37,7 +37,7 @@ pipeline {
         stage('拉取代码') {
             steps {
                 echo '拉取Git代码...'
-                withCredentials([sshUserPrivateKey(credentialsId: 'git-ssh-key', keyFileVariable: 'GIT_SSH_KEY')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh-key', keyFileVariable: 'GIT_SSH_KEY')]) {
                     sh """
                         export GIT_SSH_COMMAND='ssh -i ${GIT_SSH_KEY} -o StrictHostKeyChecking=no'
                         git clone -b ${GIT_BRANCH} ${GIT_REPO_URL} .
