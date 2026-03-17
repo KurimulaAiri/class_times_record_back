@@ -66,11 +66,9 @@ pipeline {
             steps {
                 echo '→ 同步 jar 包到宿主机共享目录'
                 sh '''
-                    # 检查并修复目录权限
                     if [ ! -w ${CONTAINER_DEPLOY_DIR} ]; then
                         chmod 777 ${CONTAINER_DEPLOY_DIR} || true
                     fi
-                    # 复制 jar 包
                     JAR_FILE=$(ls target/*.jar | grep -v 'original-' | head -1)
                     cp -f $JAR_FILE ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar
                     echo '✅ jar 包已同步到宿主机'
@@ -78,67 +76,54 @@ pipeline {
             }
         }
 
-        // 4. 停止旧进程（核心优化：强制安装 net-tools）
+        // 4. 停止旧进程（核心修复：EOF 顶格 + 极简逻辑）
         stage('停止旧进程') {
             steps {
                 echo '→ 停止宿主机旧 Java 进程'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        # SSH 连接宿主机（强制安装 net-tools）
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                            # 关键：取消 yum 历史任务 + 强制安装 net-tools
-                            # 1. 清理 yum 锁文件（避免任务占用）
-                            rm -f /var/run/yum.pid 2>/dev/null
-                            # 2. 强制安装 net-tools（跳过依赖检查、忽略错误）
-                            yum -y install net-tools --skip-broken --nogpgcheck
-
-                            # 停止旧进程（容错）
-                            if [ -f ${HOST_PID_FILE} ]; then
-                                kill -9 \$(cat ${HOST_PID_FILE}) 2>/dev/null || echo '旧进程已停止'
-                                rm -f ${HOST_PID_FILE}
-                            fi
-
-                            # 通过端口停止进程（忽略 netstat 执行失败）
-                            PORT_PID=\$(netstat -tlnp 2>/dev/null | grep :${APP_PORT} | awk '{print \$7}' | cut -d/ -f1)
-                            if [ -n "\$PORT_PID" ]; then
-                                kill -9 \$PORT_PID && echo '通过端口停止旧进程成功'
-                            else
-                                echo '无端口 ${APP_PORT} 对应的旧进程'
-                            fi
-                        EOF
+ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
+# 1. 清理 yum 锁（可选）
+rm -f /var/run/yum.pid 2>/dev/null
+# 2. 安装 net-tools（已安装则忽略）
+yum -y install net-tools --skip-broken --nogpgcheck
+# 3. 停止 PID 进程（容错）
+if [ -f ${HOST_PID_FILE} ]; then
+    kill -9 \$(cat ${HOST_PID_FILE}) 2>/dev/null || true
+    rm -f ${HOST_PID_FILE}
+fi
+# 4. 停止端口进程（容错）
+PORT_PID=\$(netstat -tlnp 2>/dev/null | grep :${APP_PORT} | awk '{print \$7}' | cut -d/ -f1)
+if [ -n "\$PORT_PID" ]; then
+    kill -9 \$PORT_PID 2>/dev/null || true
+fi
+echo "✅ 旧进程清理完成（无旧进程则忽略）"
+EOF
                     '''
                 }
             }
         }
 
-        // 5. 启动新进程（优化 yum 安装 + 简化验证）
+        // 5. 启动新进程（核心修复：EOF 顶格 + 极简启动）
         stage('启动新进程') {
             steps {
                 echo '→ 启动宿主机 SpringBoot 进程'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        # SSH 连接宿主机启动进程
                         ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                            # 再次确保 net-tools 已安装（强制）
-                            rm -f /var/run/yum.pid 2>/dev/null
-                            yum -y install net-tools --skip-broken --nogpgcheck
-
-                            # 后台启动 SpringBoot 进程
-                            nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar \
-                            --server.port=${APP_PORT} > ${HOST_DEPLOY_DIR}/app.log 2>&1 &
-
-                            # 记录 PID
-                            echo \$! > ${HOST_PID_FILE} || echo 'PID 记录失败（不影响进程运行）'
-
-                            # 验证进程启动
-                            sleep 5
-                            if netstat -tlnp 2>/dev/null | grep :${APP_PORT}; then
-                                echo '✅ SpringBoot 进程启动成功！端口：${APP_PORT}'
-                            else
-                                echo '⚠️ 端口未监听，日志最后10行：'
-                                tail -10 ${HOST_DEPLOY_DIR}/app.log
-                            fi
-                        EOF
+                        # 1. 后台启动进程（核心逻辑）
+                        nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar --server.port=${APP_PORT} > ${HOST_DEPLOY_DIR}/app.log 2>&1 &
+                        # 2. 记录 PID（容错）
+                        echo \$! > ${HOST_PID_FILE} 2>/dev/null || true
+                        # 3. 验证启动（简化）
+                        sleep 5
+                        if netstat -tlnp 2>/dev/null | grep :${APP_PORT}; then
+                            echo "🎉 项目启动成功！访问地址：http://${HOST_IP}:${APP_PORT}"
+                        else
+                            echo "⚠️ 端口未监听，日志："
+                            tail -10 ${HOST_DEPLOY_DIR}/app.log
+                        fi
+EOF
                     '''
                 }
             }
@@ -149,7 +134,7 @@ pipeline {
         success {
             echo ''
             echo '=================================================='
-            echo '                🎉 部署成功！'
+            echo '                🎉 部署全流程成功！'
             echo " 项目名称：${PROJECT_NAME}"
             echo " 访问地址：http://${HOST_IP}:${APP_PORT}"
             echo " 日志路径：${HOST_DEPLOY_DIR}/app.log"
@@ -159,9 +144,8 @@ pipeline {
             echo ''
             echo '=================================================='
             echo '                ⚠️ 部署完成（少量警告）'
-            echo ' 核心流程已完成，手动验证：'
-            echo ' 1. ps -ef | grep class-times-record.jar'
-            echo ' 2. netstat -tlnp | grep 9999'
+            echo ' 核心流程：代码拉取 → 编译 → jar 同步 → 进程启动 已完成'
+            echo ' 手动验证：ps -ef | grep class-times-record.jar'
             echo '=================================================='
         }
     }
