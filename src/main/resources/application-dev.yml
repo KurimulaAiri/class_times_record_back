@@ -1,6 +1,6 @@
+database-address: 121.196.229.10
 server:
   port: 9999
-  address: 121.196.229.10
 logging:
   level:
     org.springframework.web: DEBUG

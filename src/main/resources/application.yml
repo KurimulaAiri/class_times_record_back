@@ -8,7 +8,7 @@ spring:
   # 数据库驱动等通用配置可以放在这里
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${server.address}:3306/class_times_record?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    url: jdbc:mysql://${database-address}:3306/class_times_record?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
     username: class_times_record
     password: 8BCnbZjTT8ZxmBj6
 
