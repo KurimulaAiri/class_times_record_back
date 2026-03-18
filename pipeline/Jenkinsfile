@@ -118,7 +118,7 @@ EOF
                         # 启动进程（核心修改：添加 --spring.profiles.active=prod 激活生产环境）
                         nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar \
                         --server.port=${APP_PORT} \
-                        --spring.profiles.active=prod > ${HOST_DEPLOY_DIR}/app.log 2>&1 &
+                        --spring.profiles.active=prod > ${HOST_DEPLOY_DIR}/class-times-record.log 2>&1 &
 
                         echo \$! > ${HOST_PID_FILE} 2>/dev/null || true
 
