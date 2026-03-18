@@ -100,10 +100,10 @@ EOF
             }
         }
 
-        // 5. 启动新进程（核心修改：打印全部日志）
+        // 5. 启动新进程（核心修改：激活 prod 环境 + 打印全部日志）
         stage('启动新进程') {
             steps {
-                echo '→ 启动宿主机 SpringBoot 进程'
+                echo '→ 启动宿主机 SpringBoot 进程（prod 环境）'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
                         ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
@@ -115,14 +115,17 @@ EOF
                             exit 1
                         fi
 
-                        # 启动进程
-                        nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar --server.port=${APP_PORT} > ${HOST_DEPLOY_DIR}/app.log 2>&1 &
+                        # 启动进程（核心修改：添加 --spring.profiles.active=prod 激活生产环境）
+                        nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar \
+                        --server.port=${APP_PORT} \
+                        --spring.profiles.active=prod > ${HOST_DEPLOY_DIR}/app.log 2>&1 &
+
                         echo \$! > ${HOST_PID_FILE} 2>/dev/null || true
 
                         # 验证启动结果（核心修改：打印全部日志）
                         sleep 5
                         if netstat -tlnp 2>/dev/null | grep :${APP_PORT}; then
-                            echo "🎉 项目启动成功！访问地址：http://${HOST_IP}:${APP_PORT}"
+                            echo "🎉 项目启动成功！（prod 环境）访问地址：http://${HOST_IP}:${APP_PORT}"
                         else
                             echo "❌ 项目启动失败，完整日志："
                             cat ${HOST_DEPLOY_DIR}/app.log  # 替换 tail -20 为 cat，打印全部日志
@@ -141,6 +144,7 @@ EOF
             echo '=================================================='
             echo '                🎉 部署全流程成功！'
             echo " 项目名称：${PROJECT_NAME}"
+            echo " 运行环境：prod（生产环境）"
             echo " 访问地址：http://${HOST_IP}:${APP_PORT}"
             echo " 日志路径：${HOST_DEPLOY_DIR}/app.log"
             echo '=================================================='
