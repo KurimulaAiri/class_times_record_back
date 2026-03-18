@@ -16,7 +16,7 @@ pipeline {
         HOST_USER           = 'root'
         HOST_IP             = '172.21.0.1'
         HOST_SSH_PORT       = 25184
-        HOST_JAVA_CMD       = '/www/server/java/jdk-17.0.8/bin/java'  // 替换为你宿主机的实际 Java 路径
+        HOST_JAVA_CMD       = '/www/server/java/jdk-17.0.8/bin/java'  // 你的 Java 实际路径
         HOST_DEPLOY_DIR     = '/opt/java-deploy/class_times_record_back'
         HOST_PID_FILE       = "${HOST_DEPLOY_DIR}/${PROJECT_NAME}.pid"
     }
@@ -100,7 +100,7 @@ EOF
             }
         }
 
-        // 5. 启动新进程（修复 Java 路径）
+        // 5. 启动新进程（核心修改：打印全部日志）
         stage('启动新进程') {
             steps {
                 echo '→ 启动宿主机 SpringBoot 进程'
@@ -119,13 +119,13 @@ EOF
                         nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar --server.port=${APP_PORT} > ${HOST_DEPLOY_DIR}/app.log 2>&1 &
                         echo \$! > ${HOST_PID_FILE} 2>/dev/null || true
 
-                        # 验证启动结果
+                        # 验证启动结果（核心修改：打印全部日志）
                         sleep 5
                         if netstat -tlnp 2>/dev/null | grep :${APP_PORT}; then
                             echo "🎉 项目启动成功！访问地址：http://${HOST_IP}:${APP_PORT}"
                         else
-                            echo "❌ 项目启动失败，日志最后20行："
-                            tail -20 ${HOST_DEPLOY_DIR}/app.log
+                            echo "❌ 项目启动失败，完整日志："
+                            cat ${HOST_DEPLOY_DIR}/app.log  # 替换 tail -20 为 cat，打印全部日志
                             exit 1
                         fi
 EOF
