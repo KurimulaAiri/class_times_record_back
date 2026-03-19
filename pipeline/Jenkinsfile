@@ -77,77 +77,102 @@ pipeline {
         }
 
         // 4. 停止旧进程
-// 4. 停止旧进程
         stage('停止旧进程') {
             steps {
-                echo '→ 正在安全停止宿主机端口为 ${APP_PORT} 的 Java 进程'
+                echo "→ 正在安全停止宿主机端口为 ${APP_PORT} 的 Java 进程"
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
                         ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
-                        # 注意：上面的 EOF 加了引号 'EOF'，防止 Jenkins 在本地解析内部的 $ 变量
+                        # --- 远程执行开始 ---
 
-                        # 1. 尝试通过 PID 文件停止
+                        # 1. 优先通过 PID 文件停止
                         if [ -f "${HOST_PID_FILE}" ]; then
-                            OLD_PID=$(cat ${HOST_PID_FILE})
+                            OLD_PID=$(cat "${HOST_PID_FILE}")
                             echo "找到 PID 文件，尝试停止进程: $OLD_PID"
                             if ps -p $OLD_PID > /dev/null; then
                                 kill $OLD_PID || kill -9 $OLD_PID
                                 echo "✅ 已通过 PID 文件停止进程"
                             fi
-                            rm -f ${HOST_PID_FILE}
+                            rm -f "${HOST_PID_FILE}"
                         fi
 
-                        # 2. 强制通过端口检查（兜底方案）
-                        # 使用 lsof 或 netstat 获取 PID。这里用更通用的 awk 处理方式
-                        PORT_PID=$(lsof -t -i:${APP_PORT} || netstat -lnpt | grep ":${APP_PORT} " | awk '{print $7}' | cut -d'/' -f1)
+                        # 2. 强制通过端口检查（防止 PID 文件失效后的残留进程）
+                        # 尝试多种方式获取 PID：lsof (最准) 或 netstat
+                        PORT_PID=$(lsof -t -i:${APP_PORT} 2>/dev/null || netstat -lnpt 2>/dev/null | grep ":${APP_PORT} " | awk '{print $7}' | cut -d'/' -f1 | grep -o '[0-9]\+')
 
                         if [ -n "$PORT_PID" ]; then
                             echo "警告：端口 ${APP_PORT} 仍被进程 $PORT_PID 占用，执行强制杀除"
-                            # 过滤掉可能非数字的情况
-                            CLEAN_PID=$(echo $PORT_PID | grep -o '[0-9]\\+')
-                            for pid in $CLEAN_PID; do
+                            for pid in $PORT_PID; do
                                 kill -9 $pid 2>/dev/null && echo "✅ 已杀除残留进程: $pid"
                             done
                         else
-                            echo "✅ 端口 ${APP_PORT} 目前是空闲的"
+                            echo "✅ 端口 ${APP_PORT} 目前干净，可以启动"
                         fi
+
+                        # --- 远程执行结束 ---
 EOF
                     '''
                 }
             }
         }
 
-        // 5. 启动新进程（核心修改：激活 prod 环境 + 打印全部日志）
+        // 5. 启动新进程
         stage('启动新进程') {
             steps {
                 echo '→ 启动宿主机 SpringBoot 进程（prod 环境）'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                        # 验证 Java 路径是否存在
-                        if [ ! -f ${HOST_JAVA_CMD} ]; then
-                            echo "❌ Java 路径错误：${HOST_JAVA_CMD} 不存在"
-                            echo "✅ 可用的 Java 路径："
-                            find / -name java -type f -executable 2>/dev/null | head -5
-                            exit 1
-                        fi
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
+                        # --- 远程执行开始 ---
 
-                        # 启动进程（核心修改：添加 --spring.profiles.active=prod 激活生产环境）
+                        LOG_FILE="${HOST_DEPLOY_DIR}/${PROJECT_NAME}.log"
+
+                        # 1. 异步启动项目
+                        echo "开始启动项目并记录日志到: ${LOG_FILE}"
                         nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar \
-                        --server.port=${APP_PORT} \
-                        --spring.profiles.active=prod > ${HOST_DEPLOY_DIR}/class-times-record.log 2>&1 &
+                            --server.port=${APP_PORT} \
+                            --spring.profiles.active=prod > "${LOG_FILE}" 2>&1 &
 
-                        echo \$! > ${HOST_PID_FILE} 2>/dev/null || true
+                        NEW_PID=$!
+                        echo $NEW_PID > "${HOST_PID_FILE}"
 
-                        # 验证启动结果（核心修改：打印全部日志）
-                        sleep 5
-                        if netstat -tlnp 2>/dev/null | grep :${APP_PORT}; then
-                            echo "🎉 项目启动成功！（prod 环境）访问地址：http://${HOST_IP}:${APP_PORT}"
+
+                        # 2. 动态监测日志（最多等待 60 秒）
+                        echo "正在等待 Spring Boot 完成初始化..."
+                        MAX_WAIT=60
+                        CUR=0
+
+                        SUCCESS=false
+
+                        while [ $CUR -lt $MAX_WAIT ]; do
+                            # 检查日志是否出现成功标识
+                            if grep -q "Started .* in .* seconds" "${LOG_FILE}"; then
+                                SUCCESS=true
+                                break
+                            fi
+
+                            # 检查进程是否意外挂掉（例如数据库连不上）
+                            if ! ps -p $NEW_PID > /dev/null; then
+                                echo "❌ 进程启动后异常退出！最后 50 行日志："
+                                tail -n 50 "${LOG_FILE}"
+                                exit 1
+                            fi
+
+                            sleep 1
+                            CUR=$((CUR + 1))
+
+                            [ $((CUR % 10)) -eq 0 ] && echo "已等待 ${CUR}s..."
+                        done
+
+                        if [ "$SUCCESS" = true ]; then
+                            echo "🎉 项目启动成功！PID: $NEW_PID"
+                            echo "访问地址：http://${HOST_IP}:${APP_PORT}"
                         else
-                            echo "❌ 项目启动失败，完整日志："
-                            cat ${HOST_DEPLOY_DIR}/app.log  # 替换 tail -20 为 cat，打印全部日志
+                            echo "❌ 启动超时，请检查完整日志：${LOG_FILE}"
                             exit 1
                         fi
+
+                        # --- 远程执行结束 ---
 EOF
                     '''
                 }
