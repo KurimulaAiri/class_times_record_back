@@ -9,14 +9,14 @@ pipeline {
         APP_PORT            = 9999
         MAVEN_BUILD_CMD     = 'clean package -DskipTests'
 
-        // 容器内共享目录（已挂载）
+        // 容器内共享目录（已挂载到宿主机 /opt/java-deploy/...）
         CONTAINER_DEPLOY_DIR = '/opt/deploy/class_times_record_back'
 
-        // 宿主机配置（核心：修复 Java 路径）
+        // 宿主机配置
         HOST_USER           = 'root'
         HOST_IP             = '172.21.0.1'
         HOST_SSH_PORT       = 25184
-        HOST_JAVA_CMD       = '/www/server/java/jdk-17.0.8/bin/java'  // 你的 Java 实际路径
+        HOST_JAVA_CMD       = '/www/server/java/jdk-17.0.8/bin/java'
         HOST_DEPLOY_DIR     = '/opt/java-deploy/class_times_record_back'
         HOST_PID_FILE       = "${HOST_DEPLOY_DIR}/${PROJECT_NAME}.pid"
     }
@@ -76,103 +76,76 @@ pipeline {
             }
         }
 
-        // 4. 停止旧进程
+        // 4. 停止旧进程 (修复重点：防止变量在容器内解析)
         stage('停止旧进程') {
             steps {
-                echo "→ 正在安全停止宿主机端口为 ${APP_PORT} 的 Java 进程"
+                echo "→ 停止宿主机端口为 ${APP_PORT} 的进程"
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                        # --- 远程执行开始 ---
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
+                        # 注入变量（因为使用了 'EOF'，需要重新手动指定这些来自 Jenkins 的变量）
+                        PORT=''' + APP_PORT + '''
+                        PID_FILE=''' + HOST_PID_FILE + '''
 
-                        # 1. 优先通过 PID 文件停止
-                        if [ -f "${HOST_PID_FILE}" ]; then
-                            OLD_PID=$(cat "${HOST_PID_FILE}")
-                            echo "找到 PID 文件，尝试停止进程: $OLD_PID"
-                            if ps -p $OLD_PID > /dev/null; then
-                                kill $OLD_PID || kill -9 $OLD_PID
-                                echo "✅ 已通过 PID 文件停止进程"
-                            fi
-                            rm -f "${HOST_PID_FILE}"
+                        # 1. 尝试通过 PID 文件停止
+                        if [ -f "$PID_FILE" ]; then
+                            OLD_PID=$(cat "$PID_FILE")
+                            kill -9 $OLD_PID 2>/dev/null || true
+                            rm -f "$PID_FILE"
                         fi
 
-                        # 2. 强制通过端口检查（防止 PID 文件失效后的残留进程）
-                        # 尝试多种方式获取 PID：lsof (最准) 或 netstat
-                        PORT_PID=$(lsof -t -i:${APP_PORT} 2>/dev/null || netstat -lnpt 2>/dev/null | grep ":${APP_PORT} " | awk '{print $7}' | cut -d'/' -f1 | grep -o '[0-9]\\+')
-
+                        # 2. 检查端口占用（解决 grep 转义报错，改用 tr 过滤）
+                        PORT_PID=$(netstat -tlnp 2>/dev/null | grep ":$PORT " | awk '{print $7}' | cut -d/ -f1 | tr -cd '0-9\\n')
                         if [ -n "$PORT_PID" ]; then
-                            echo "警告：端口 ${APP_PORT} 仍被进程 $PORT_PID 占用，执行强制杀除"
-                            for pid in $PORT_PID; do
-                                kill -9 $pid 2>/dev/null && echo "✅ 已杀除残留进程: $pid"
-                            done
-                        else
-                            echo "✅ 端口 ${APP_PORT} 目前干净，可以启动"
+                            echo "杀除端口 $PORT 残留进程: $PORT_PID"
+                            kill -9 $PORT_PID 2>/dev/null || true
                         fi
-
-                        # --- 远程执行结束 ---
+                        echo "✅ 旧进程清理完成"
 EOF
                     '''
                 }
             }
         }
 
-        // 5. 启动新进程
+        // 5. 启动新进程 (修复重点：路径一致性 + 动态监测)
         stage('启动新进程') {
             steps {
-                echo '→ 启动宿主机 SpringBoot 进程（prod 环境）'
+                echo "→ 启动宿主机进程（端口: ${APP_PORT}）"
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                        # --- 远程执行开始 ---
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
+                        # 注入变量
+                        JAVA_CMD=''' + HOST_JAVA_CMD + '''
+                        DEPLOY_DIR=''' + HOST_DEPLOY_DIR + '''
+                        PROJ_NAME=''' + PROJECT_NAME + '''
+                        PORT=''' + APP_PORT + '''
+                        PID_FILE=''' + HOST_PID_FILE + '''
+                        LOG_FILE="$DEPLOY_DIR/$PROJ_NAME.log"
 
-                        LOG_FILE="${HOST_DEPLOY_DIR}/${PROJECT_NAME}.log"
+                        # 执行启动
+                        nohup $JAVA_CMD -jar $DEPLOY_DIR/$PROJ_NAME.jar \
+                            --server.port=$PORT \
+                            --spring.profiles.active=prod > "$LOG_FILE" 2>&1 &
 
-                        # 1. 异步启动项目
-                        echo "开始启动项目并记录日志到: ${LOG_FILE}"
-                        nohup ${HOST_JAVA_CMD} -jar ${HOST_DEPLOY_DIR}/${PROJECT_NAME}.jar \
-                            --server.port=${APP_PORT} \
-                            --spring.profiles.active=prod > "${LOG_FILE}" 2>&1 &
+                        echo $! > "$PID_FILE"
 
-                        NEW_PID=$!
-                        echo $NEW_PID > "${HOST_PID_FILE}"
-
-
-                        # 2. 动态监测日志（最多等待 60 秒）
-                        echo "正在等待 Spring Boot 完成初始化..."
-                        MAX_WAIT=60
-                        CUR=0
-
-                        SUCCESS=false
-
-                        while [ $CUR -lt $MAX_WAIT ]; do
-                            # 检查日志是否出现成功标识
-                            if grep -q "Started .* in .* seconds" "${LOG_FILE}"; then
-                                SUCCESS=true
-                                break
+                        # 动态监测日志，看到 Started 标识才认为成功
+                        echo "等待启动中，查看日志: $LOG_FILE"
+                        for i in {1..60}; do
+                            if grep -q "Started .* in .* seconds" "$LOG_FILE" 2>/dev/null; then
+                                echo "🎉 启动成功！"
+                                exit 0
                             fi
-
-                            # 检查进程是否意外挂掉（例如数据库连不上）
-                            if ! ps -p $NEW_PID > /dev/null; then
-                                echo "❌ 进程启动后异常退出！最后 50 行日志："
-                                tail -n 50 "${LOG_FILE}"
+                            # 进程是否还在运行
+                            if ! ps -p $(cat $PID_FILE) > /dev/null; then
+                                echo "❌ 启动失败，查看日志末尾："
+                                tail -n 20 "$LOG_FILE"
                                 exit 1
                             fi
-
                             sleep 1
-                            CUR=$((CUR + 1))
-
-                            [ $((CUR % 10)) -eq 0 ] && echo "已等待 ${CUR}s..."
                         done
-
-                        if [ "$SUCCESS" = true ]; then
-                            echo "🎉 项目启动成功！PID: $NEW_PID"
-                            echo "访问地址：http://${HOST_IP}:${APP_PORT}"
-                        else
-                            echo "❌ 启动超时，请检查完整日志：${LOG_FILE}"
-                            exit 1
-                        fi
-
-                        # --- 远程执行结束 ---
+                        echo "❌ 启动超时"
+                        exit 1
 EOF
                     '''
                 }
