@@ -77,23 +77,40 @@ pipeline {
         }
 
         // 4. 停止旧进程
+// 4. 停止旧进程
         stage('停止旧进程') {
             steps {
-                echo '→ 停止宿主机旧 Java 进程'
+                echo '→ 正在安全停止宿主机端口为 ${APP_PORT} 的 Java 进程'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
-                        rm -f /var/run/yum.pid 2>/dev/null
-                        yum -y install net-tools --skip-broken --nogpgcheck
-                        if [ -f ${HOST_PID_FILE} ]; then
-                            kill -9 \$(cat ${HOST_PID_FILE}) 2>/dev/null || true
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
+                        # 注意：上面的 EOF 加了引号 'EOF'，防止 Jenkins 在本地解析内部的 $ 变量
+
+                        # 1. 尝试通过 PID 文件停止
+                        if [ -f "${HOST_PID_FILE}" ]; then
+                            OLD_PID=$(cat ${HOST_PID_FILE})
+                            echo "找到 PID 文件，尝试停止进程: $OLD_PID"
+                            if ps -p $OLD_PID > /dev/null; then
+                                kill $OLD_PID || kill -9 $OLD_PID
+                                echo "✅ 已通过 PID 文件停止进程"
+                            fi
                             rm -f ${HOST_PID_FILE}
                         fi
-                        PORT_PID=\$(netstat -tlnp 2>/dev/null | grep :${APP_PORT} | awk '{print \$7}' | cut -d/ -f1)
-                        if [ -n "\$PORT_PID" ]; then
-                            kill -9 \$PORT_PID 2>/dev/null || true
+
+                        # 2. 强制通过端口检查（兜底方案）
+                        # 使用 lsof 或 netstat 获取 PID。这里用更通用的 awk 处理方式
+                        PORT_PID=$(lsof -t -i:${APP_PORT} || netstat -lnpt | grep ":${APP_PORT} " | awk '{print $7}' | cut -d'/' -f1)
+
+                        if [ -n "$PORT_PID" ]; then
+                            echo "警告：端口 ${APP_PORT} 仍被进程 $PORT_PID 占用，执行强制杀除"
+                            # 过滤掉可能非数字的情况
+                            CLEAN_PID=$(echo $PORT_PID | grep -o '[0-9]\\+')
+                            for pid in $CLEAN_PID; do
+                                kill -9 $pid 2>/dev/null && echo "✅ 已杀除残留进程: $pid"
+                            done
+                        else
+                            echo "✅ 端口 ${APP_PORT} 目前是空闲的"
                         fi
-                        echo "✅ 旧进程清理完成"
 EOF
                     '''
                 }
