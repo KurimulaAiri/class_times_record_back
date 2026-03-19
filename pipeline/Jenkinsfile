@@ -98,7 +98,7 @@ pipeline {
 
                         # 2. 强制通过端口检查（防止 PID 文件失效后的残留进程）
                         # 尝试多种方式获取 PID：lsof (最准) 或 netstat
-                        PORT_PID=$(lsof -t -i:${APP_PORT} 2>/dev/null || netstat -lnpt 2>/dev/null | grep ":${APP_PORT} " | awk '{print $7}' | cut -d'/' -f1 | grep -o '[0-9]\+')
+                        PORT_PID=$(lsof -t -i:${APP_PORT} 2>/dev/null || netstat -lnpt 2>/dev/null | grep ":${APP_PORT} " | awk '{print $7}' | cut -d'/' -f1 | grep -o '[0-9]\\+')
 
                         if [ -n "$PORT_PID" ]; then
                             echo "警告：端口 ${APP_PORT} 仍被进程 $PORT_PID 占用，执行强制杀除"
