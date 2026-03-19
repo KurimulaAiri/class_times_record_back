@@ -32,6 +32,5 @@
                 where is_delete = '0'
                   and stu_name = #{stuName}
                   and course_name = #{courseName}
-
     </select>
 </mapper>
