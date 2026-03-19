@@ -82,7 +82,7 @@ pipeline {
                 echo "→ 正在安全停止宿主机端口为 ${APP_PORT} 的 Java 进程"
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
                         # --- 远程执行开始 ---
 
                         # 1. 优先通过 PID 文件停止
@@ -122,7 +122,7 @@ EOF
                 echo '→ 启动宿主机 SpringBoot 进程（prod 环境）'
                 withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
                     sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
+                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << EOF
                         # --- 远程执行开始 ---
 
                         LOG_FILE="${HOST_DEPLOY_DIR}/${PROJECT_NAME}.log"
