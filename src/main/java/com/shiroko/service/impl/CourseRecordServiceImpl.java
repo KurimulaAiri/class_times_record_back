@@ -1,6 +1,6 @@
 package com.shiroko.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shiroko.converter.CourseRecordConverter;
 import com.shiroko.mapper.CourseRecordMapper;
 import com.shiroko.repository.dto.QueryCourseRecordDTO;
@@ -34,10 +34,10 @@ public class CourseRecordServiceImpl implements CourseRecordService {
 
     @Override
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
-        QueryWrapper<CourseRecord> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("stu_name", dto.getStuName());
-        queryWrapper.eq("course_name", dto.getCourseName());
-        queryWrapper.eq("is_delete", "0");
+        LambdaQueryWrapper<CourseRecord> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseRecord::getStuName, dto.getStuName());
+        queryWrapper.eq(CourseRecord::getCourseName, dto.getCourseName());
+        queryWrapper.eq(CourseRecord::getIsDelete, false);
         List<CourseRecord> courseRecords = courseRecordMapper.selectList(queryWrapper);
         List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(courseRecords);
         QueryCourseRecordVO vo = new QueryCourseRecordVO(voList);

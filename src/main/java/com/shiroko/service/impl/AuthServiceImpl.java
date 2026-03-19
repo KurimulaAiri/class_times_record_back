@@ -5,7 +5,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.vo.LoginVO;
 import com.shiroko.service.AuthService;
+import com.shiroko.service.UserService;
 import com.shiroko.util.JwtUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -25,8 +27,17 @@ public class AuthServiceImpl implements AuthService {
     @Value("${uni-app.wx.secret}")
     private String secret;
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final JwtUtils jwtUtils = new JwtUtils();
+    private final RestTemplate restTemplate;
+    private final JwtUtils jwtUtils;
+    private final UserService userService;
+
+    @Autowired
+    private AuthServiceImpl(JwtUtils jwtUtils, UserService userService) {
+        this.restTemplate = new RestTemplate();
+        this.jwtUtils = jwtUtils;
+        this.userService = userService;
+    }
+
 
     @Override
     public ResponseDTO<LoginVO> wxLogin(String code) {
@@ -47,10 +58,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 4. 业务逻辑：根据 openid 去数据库查用户，没有则注册，有则更新
-        // Long userId = userService.saveOrUpdateUser(openid);
+        Long userId = userService.saveOrUpdateUser(openid);
 
         // 5. 生成自定义 Token (推荐 JWT)
-        String token = jwtUtils.createToken(1L);
+        String token = jwtUtils.createToken(userId);
 
         return ResponseDTO.success(new LoginVO(token, openid));
 

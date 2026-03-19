@@ -1,0 +1,38 @@
+package com.shiroko.config;
+
+import com.shiroko.interceptor.JwtInterceptor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * Description: Spring MVC 配置类
+ *
+ * @author Guguguy
+ * @version 1.0
+ * @since 2026/3/19 下午11:15
+ */
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    private final JwtInterceptor jwtInterceptor;
+
+    // 注入你刚才写的 JWT 拦截器
+    public WebConfig(JwtInterceptor jwtInterceptor) {
+        this.jwtInterceptor = jwtInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(jwtInterceptor)
+                .addPathPatterns("/**")             // 默认拦截所有路径
+                .excludePathPatterns(               // 以下路径不拦截：
+                        "/auth/login",              // 1. 登录接口
+                        "/auth/register",           // 2. 注册接口（如果有）
+                        "/error",                   // 3. SpringBoot 默认错误页
+                        "/static/**",               // 4. 静态资源
+                        "/swagger-ui/**",           // 5. 文档页面（如果用了 Swagger）
+                        "/v3/api-docs/**"
+                );
+    }
+}

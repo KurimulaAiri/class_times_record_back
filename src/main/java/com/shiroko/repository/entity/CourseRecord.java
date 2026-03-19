@@ -22,7 +22,7 @@ public class CourseRecord implements Serializable {
      * 表id
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 学生姓名
@@ -40,13 +40,13 @@ public class CourseRecord implements Serializable {
      * 课时总数
      */
     @TableField(value = "course_total_time")
-    private Integer courseTotalTime;
+    private Long courseTotalTime;
 
     /**
      * 课程剩余次数
      */
     @TableField(value = "course_rest_time")
-    private Integer courseRestTime;
+    private Long courseRestTime;
 
     /**
      * 上次上课时间
@@ -58,13 +58,13 @@ public class CourseRecord implements Serializable {
      * 课程归属管理群组
      */
     @TableField(value = "course_admin_group_id")
-    private Integer courseAdminGroupId;
+    private Long courseAdminGroupId;
 
     /**
      * 课程归属人
      */
     @TableField(value = "course_owner_user_id")
-    private Integer courseOwnerUserId;
+    private Long courseOwnerUserId;
 
     /**
      * 课程备注
