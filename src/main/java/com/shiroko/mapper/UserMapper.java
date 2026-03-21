@@ -2,6 +2,7 @@ package com.shiroko.mapper;
 
 import com.shiroko.repository.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * Description: 用户Mapper接口
@@ -10,6 +11,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @version 1.0
  * @since 2026/3/19 下午11:34
  */
+@Mapper
 public interface UserMapper extends BaseMapper<User> {
 
 }

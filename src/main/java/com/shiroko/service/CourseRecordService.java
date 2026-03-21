@@ -1,11 +1,10 @@
 package com.shiroko.service;
 
+import com.shiroko.repository.dto.DeleteCourseRecordDTO;
+import com.shiroko.repository.dto.InsertCourseRecordDTO;
 import com.shiroko.repository.dto.QueryCourseRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.QueryCourseRecordVO;
-
-import java.util.List;
 
 /**
  * Description: TODO
@@ -20,4 +19,8 @@ public interface CourseRecordService {
      * @return 所有课程记录列表
      */
     ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto);
+
+    ResponseDTO<Object> addCourseRecord(InsertCourseRecordDTO insertCourseRecordDTO);
+
+    ResponseDTO<Object> deleteCourseRecord(DeleteCourseRecordDTO deleteCourseRecordDTO);
 }

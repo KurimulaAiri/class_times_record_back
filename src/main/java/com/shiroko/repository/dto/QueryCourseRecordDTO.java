@@ -1,7 +1,5 @@
 package com.shiroko.repository.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,10 +16,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class QueryCourseRecordDTO {
 
-    @NotBlank(message = "stuName 不能为空")
     private String stuName;
 
-    @NotBlank(message = "courseName 不能为空")
     private String courseName;
 
     private Long currentPage;

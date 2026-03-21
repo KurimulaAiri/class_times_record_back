@@ -1,5 +1,6 @@
 package com.shiroko.converter;
 
+import com.shiroko.repository.dto.InsertCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.CourseRecordVO;
 import org.mapstruct.Mapper;
@@ -22,4 +23,6 @@ public interface CourseRecordConverter extends BaseConverter<CourseRecord, Cours
     @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateToString") // 自定义转换规则
     @Override
     CourseRecordVO pojoToVO(CourseRecord pojo);
+
+    CourseRecord insertDtoToPojo(InsertCourseRecordDTO insertCourseRecordDTO);
 }

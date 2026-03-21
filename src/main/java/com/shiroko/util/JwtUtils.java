@@ -22,7 +22,7 @@ public class JwtUtils {
 
     // 签名密钥（生产环境建议从配置文件读取，长度至少32位）
     private static final String SECRET_KEY = "shiroko_project_secret_key_at_least_32_chars_long";
-    private static final long EXPIRATION_TIME = 86400000; // 有效期 24 小时
+    private static final long EXPIRATION_TIME = 1000 * 60 * 5; // 有效期 5 分钟
 
     private static final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 

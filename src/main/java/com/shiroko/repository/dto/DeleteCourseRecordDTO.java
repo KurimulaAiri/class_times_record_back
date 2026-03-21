@@ -1,27 +1,23 @@
-package com.shiroko.repository.vo;
+package com.shiroko.repository.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * Description: TODO
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/2/7 上午1:30
+ * @since 2026/3/21 下午4:07
  */
 @EqualsAndHashCode(callSuper = true)
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueryCourseRecordVO extends BaseVO {
-
-    private List<CourseRecordVO> courseRecords;
-
-    private Integer total;
-
+@Data
+public class DeleteCourseRecordDTO extends BaseDTO {
+    @NotNull(message = "课程记录ID不能为空")
+    private Long courseRecordId;
 }

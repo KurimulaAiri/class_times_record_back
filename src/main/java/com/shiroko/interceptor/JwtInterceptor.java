@@ -10,6 +10,8 @@ import com.shiroko.util.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,8 @@ import java.util.Date;
  */
 @Component
 public class JwtInterceptor implements HandlerInterceptor {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtInterceptor.class);
 
     private final JwtUtils jwtUtils;
 
@@ -59,7 +63,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 dto.setMessage("未登录！");
                 response.getWriter().write(JSON.toJSONString(dto));
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("响应写入失败", e);
             }
             return false;
         }
@@ -74,7 +78,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 dto.setMessage("登录过期，请重新登录！");
                 response.getWriter().write(JSON.toJSONString(dto));
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("响应写入失败", e);
             }
             return false;
         }

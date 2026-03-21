@@ -3,6 +3,8 @@ package com.shiroko.exception.handler;
 import com.shiroko.repository.dto.ResponseDTO;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -24,6 +26,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice // 该注解已包含@ResponseBody，确保返回JSON
 public class GlobalExceptionHandler {
 
+    private final Logger logger;
+
+
+    public GlobalExceptionHandler() {
+        this.logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    }
+
     // 处理参数校验异常
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ResponseDTO<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
@@ -37,7 +46,7 @@ public class GlobalExceptionHandler {
     // 处理SQL错误/运行时异常（核心修复）
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResponseDTO<Void>> handleRuntimeException(RuntimeException e) {
-        e.printStackTrace(); // 打印异常栈，方便排查SQL错误
+        logger.error("系统异常：{}", e.getMessage()); // 打印异常栈，方便排查SQL错误
         // 返回500状态码+JSON，而非视图
         return new ResponseEntity<>(ResponseDTO.fail("系统异常：" + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -61,6 +70,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ResponseDTO<Void>> handleMediaTypeError(HttpMediaTypeNotSupportedException e) {
-        return new ResponseEntity<>(ResponseDTO.fail("请求格式错误：仅支持application/json"), HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        return new ResponseEntity<>(ResponseDTO.fail("请求格式错误：仅支持application/json" + e.getSupportedMediaTypes()), HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
 }

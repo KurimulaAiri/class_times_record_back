@@ -30,6 +30,10 @@ public class ResponseDTO<T> {
         return new ResponseDTO<>(200L, "success", data, LocalDateTime.now().toString());
     }
 
+    public static <T> ResponseDTO<T> success(String message, T data) {
+        return new ResponseDTO<>(200L, message, data, LocalDateTime.now().toString());
+    }
+
     public static <T> ResponseDTO<T> fail(String message) {
         return new ResponseDTO<>(400L, message, null, LocalDateTime.now().toString());
     }

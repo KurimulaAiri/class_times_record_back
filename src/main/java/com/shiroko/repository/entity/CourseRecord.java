@@ -9,6 +9,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 课程记录
@@ -17,6 +18,7 @@ import lombok.Data;
  */
 @TableName(value ="course_record")
 @Data
+@Accessors(chain = true)
 public class CourseRecord implements Serializable {
     /**
      * 表id
@@ -55,12 +57,6 @@ public class CourseRecord implements Serializable {
     private Date courseLastTime;
 
     /**
-     * 课程归属管理群组
-     */
-    @TableField(value = "course_admin_group_id")
-    private Long courseAdminGroupId;
-
-    /**
      * 课程归属人
      */
     @TableField(value = "course_owner_user_id")
@@ -76,7 +72,7 @@ public class CourseRecord implements Serializable {
      * 逻辑删除
      */
     @TableField(value = "is_delete")
-    private String isDelete;
+    private Boolean isDelete;
 
     /**
      * 记录创建时间
@@ -112,7 +108,6 @@ public class CourseRecord implements Serializable {
             && (this.getCourseTotalTime() == null ? other.getCourseTotalTime() == null : this.getCourseTotalTime().equals(other.getCourseTotalTime()))
             && (this.getCourseRestTime() == null ? other.getCourseRestTime() == null : this.getCourseRestTime().equals(other.getCourseRestTime()))
             && (this.getCourseLastTime() == null ? other.getCourseLastTime() == null : this.getCourseLastTime().equals(other.getCourseLastTime()))
-            && (this.getCourseAdminGroupId() == null ? other.getCourseAdminGroupId() == null : this.getCourseAdminGroupId().equals(other.getCourseAdminGroupId()))
             && (this.getCourseOwnerUserId() == null ? other.getCourseOwnerUserId() == null : this.getCourseOwnerUserId().equals(other.getCourseOwnerUserId()))
             && (this.getCourseRemark() == null ? other.getCourseRemark() == null : this.getCourseRemark().equals(other.getCourseRemark()))
             && (this.getIsDelete() == null ? other.getIsDelete() == null : this.getIsDelete().equals(other.getIsDelete()))
@@ -130,7 +125,6 @@ public class CourseRecord implements Serializable {
         result = prime * result + ((getCourseTotalTime() == null) ? 0 : getCourseTotalTime().hashCode());
         result = prime * result + ((getCourseRestTime() == null) ? 0 : getCourseRestTime().hashCode());
         result = prime * result + ((getCourseLastTime() == null) ? 0 : getCourseLastTime().hashCode());
-        result = prime * result + ((getCourseAdminGroupId() == null) ? 0 : getCourseAdminGroupId().hashCode());
         result = prime * result + ((getCourseOwnerUserId() == null) ? 0 : getCourseOwnerUserId().hashCode());
         result = prime * result + ((getCourseRemark() == null) ? 0 : getCourseRemark().hashCode());
         result = prime * result + ((getIsDelete() == null) ? 0 : getIsDelete().hashCode());
@@ -150,7 +144,6 @@ public class CourseRecord implements Serializable {
                 ", course_total_time=" + courseTotalTime +
                 ", course_rest_time=" + courseRestTime +
                 ", course_last_time=" + courseLastTime +
-                ", course_admin_group_id=" + courseAdminGroupId +
                 ", course_owner_user_id=" + courseOwnerUserId +
                 ", course_remark=" + courseRemark +
                 ", is_delete=" + isDelete +

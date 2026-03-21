@@ -1,13 +1,13 @@
 package com.shiroko.controller;
 
+import com.shiroko.repository.dto.DeleteCourseRecordDTO;
+import com.shiroko.repository.dto.InsertCourseRecordDTO;
 import com.shiroko.repository.dto.QueryCourseRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.vo.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Description: TODO
@@ -34,8 +34,17 @@ public class CourseRecordController {
      */
     @PostMapping("/get")
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(@Valid @RequestBody QueryCourseRecordDTO dto) {
-        System.out.println("dto = " + dto);
+        // System.out.println("dto = " + dto);
         return courseRecordService.getCourseRecords(dto);
     }
 
+    @PostMapping("/add")
+    public ResponseDTO<Object> addCourseRecord(@Valid @RequestBody InsertCourseRecordDTO insertCourseRecordDTO) {
+        return courseRecordService.addCourseRecord(insertCourseRecordDTO);
+    }
+
+    @PostMapping("/delete")
+    public ResponseDTO<Object> deleteCourseRecord(@Valid @RequestBody DeleteCourseRecordDTO deleteCourseRecordDTO) {
+        return courseRecordService.deleteCourseRecord(deleteCourseRecordDTO);
+    }
 }
