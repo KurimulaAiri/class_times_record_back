@@ -4,10 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 /**
- * Description: TODO
+ * Description: 课程记录VO
  *
  * @author Guguguy
  * @version 1.0
@@ -43,14 +41,16 @@ public class CourseRecordVO {
     private Integer courseRestTime;
 
     /**
+     * 课程状态
+     * 0：未完成
+     * 1：已完成
+     */
+    private Long courseStatus;
+
+    /**
      * 上次上课时间
      */
     private String courseLastTimeStr;
-
-    /**
-     * 课程归属管理群组
-     */
-    private Integer courseAdminGroupId;
 
     /**
      * 课程归属人

@@ -6,10 +6,7 @@ import com.shiroko.context.UserContext;
 import com.shiroko.converter.CourseRecordConverter;
 import com.shiroko.mapper.PermissionRecordMapper;
 import com.shiroko.mapper.CourseRecordMapper;
-import com.shiroko.repository.dto.DeleteCourseRecordDTO;
-import com.shiroko.repository.dto.InsertCourseRecordDTO;
-import com.shiroko.repository.dto.QueryCourseRecordDTO;
-import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.*;
 import com.shiroko.repository.entity.PermissionRecord;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.CourseRecordVO;
@@ -53,8 +50,8 @@ public class CourseRecordServiceImpl implements CourseRecordService {
     }
 
     @Override
-    public ResponseDTO<Object> addCourseRecord(InsertCourseRecordDTO insertCourseRecordDTO) {
-        CourseRecord courseRecord = courseRecordConverter.insertDtoToPojo(insertCourseRecordDTO);
+    public ResponseDTO<Object> addCourseRecord(InsertCourseRecordDTO dto) {
+        CourseRecord courseRecord = courseRecordConverter.insertDtoToPojo(dto);
         courseRecord.setCourseOwnerUserId(UserContext.getUser().getId());
         int rowsInserted = courseRecordMapper.insert(
                 courseRecord
@@ -68,12 +65,22 @@ public class CourseRecordServiceImpl implements CourseRecordService {
     }
 
     @Override
-    public ResponseDTO<Object> deleteCourseRecord(DeleteCourseRecordDTO deleteCourseRecordDTO) {
+    public ResponseDTO<Object> deleteCourseRecord(DeleteCourseRecordDTO dto) {
         int rowsDeleted = courseRecordMapper.updateById(
                 new CourseRecord()
-                        .setId(deleteCourseRecordDTO.getCourseRecordId())
+                        .setId(dto.getCourseRecordId())
                         .setIsDelete(true)
         );
         return ResponseDTO.success("删除成功，影响记录数：" + rowsDeleted);
+    }
+
+    @Override
+    public ResponseDTO<Object> updateCourseRecord(UpdateCourseRecordDTO dto) {
+        CourseRecord courseRecord = courseRecordConverter.updateDtoToPojo(dto);
+        System.out.println(courseRecord);
+        int rowsUpdated = courseRecordMapper.updateById(
+                courseRecord
+        );
+        return ResponseDTO.success("更新成功，影响记录数：" + rowsUpdated);
     }
 }

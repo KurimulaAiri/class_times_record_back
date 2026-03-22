@@ -51,6 +51,15 @@ public class CourseRecord implements Serializable {
     private Long courseRestTime;
 
     /**
+     * 课程状态
+     * 0：
+     * 1：未完成
+     * 2：已完成
+     */
+    @TableField(value = "course_status")
+    private Long courseStatus;
+
+    /**
      * 上次上课时间
      */
     @TableField(value = "course_last_time")
@@ -107,6 +116,7 @@ public class CourseRecord implements Serializable {
             && (this.getCourseName() == null ? other.getCourseName() == null : this.getCourseName().equals(other.getCourseName()))
             && (this.getCourseTotalTime() == null ? other.getCourseTotalTime() == null : this.getCourseTotalTime().equals(other.getCourseTotalTime()))
             && (this.getCourseRestTime() == null ? other.getCourseRestTime() == null : this.getCourseRestTime().equals(other.getCourseRestTime()))
+            && (this.getCourseStatus() == null ? other.getCourseStatus() == null : this.getCourseStatus().equals(other.getCourseStatus()))
             && (this.getCourseLastTime() == null ? other.getCourseLastTime() == null : this.getCourseLastTime().equals(other.getCourseLastTime()))
             && (this.getCourseOwnerUserId() == null ? other.getCourseOwnerUserId() == null : this.getCourseOwnerUserId().equals(other.getCourseOwnerUserId()))
             && (this.getCourseRemark() == null ? other.getCourseRemark() == null : this.getCourseRemark().equals(other.getCourseRemark()))
@@ -124,6 +134,7 @@ public class CourseRecord implements Serializable {
         result = prime * result + ((getCourseName() == null) ? 0 : getCourseName().hashCode());
         result = prime * result + ((getCourseTotalTime() == null) ? 0 : getCourseTotalTime().hashCode());
         result = prime * result + ((getCourseRestTime() == null) ? 0 : getCourseRestTime().hashCode());
+        result = prime * result + ((getCourseStatus() == null) ? 0 : getCourseStatus().hashCode());
         result = prime * result + ((getCourseLastTime() == null) ? 0 : getCourseLastTime().hashCode());
         result = prime * result + ((getCourseOwnerUserId() == null) ? 0 : getCourseOwnerUserId().hashCode());
         result = prime * result + ((getCourseRemark() == null) ? 0 : getCourseRemark().hashCode());
@@ -143,6 +154,7 @@ public class CourseRecord implements Serializable {
                 ", course_name=" + courseName +
                 ", course_total_time=" + courseTotalTime +
                 ", course_rest_time=" + courseRestTime +
+                ", course_status=" + courseStatus +
                 ", course_last_time=" + courseLastTime +
                 ", course_owner_user_id=" + courseOwnerUserId +
                 ", course_remark=" + courseRemark +

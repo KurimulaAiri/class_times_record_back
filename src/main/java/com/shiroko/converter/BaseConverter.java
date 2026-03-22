@@ -24,7 +24,7 @@ public interface BaseConverter<T, V> {
     @Named("dateToString")
     default String dateToString(Date date) {
         if (date == null) {
-            return null;
+            return "暂无记录";
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return sdf.format(date);

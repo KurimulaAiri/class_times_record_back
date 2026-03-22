@@ -1,6 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.dto.InsertCourseRecordDTO;
+import com.shiroko.repository.dto.UpdateCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.CourseRecordVO;
 import org.mapstruct.Mapper;
@@ -25,4 +26,7 @@ public interface CourseRecordConverter extends BaseConverter<CourseRecord, Cours
     CourseRecordVO pojoToVO(CourseRecord pojo);
 
     CourseRecord insertDtoToPojo(InsertCourseRecordDTO insertCourseRecordDTO);
+
+    @Mapping(source = "id", target = "id")
+    CourseRecord updateDtoToPojo(UpdateCourseRecordDTO updateCourseRecordDTO);
 }
