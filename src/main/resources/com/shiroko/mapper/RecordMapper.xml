@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shiroko.mapper.RecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.Record">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="recordTime" column="record_time" jdbcType="TIMESTAMP"/>
+            <result property="recordRemark" column="record_remark" jdbcType="VARCHAR"/>
+            <result property="recordType" column="record_type" jdbcType="INTEGER"/>
+            <result property="recordChange" column="record_change" jdbcType="INTEGER"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,record_time,record_remark,
+        record_type,record_change,create_time,
+        update_time
+    </sql>
+</mapper>

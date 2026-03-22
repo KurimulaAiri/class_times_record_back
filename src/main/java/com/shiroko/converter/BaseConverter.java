@@ -2,8 +2,8 @@ package com.shiroko.converter;
 
 import org.mapstruct.Named;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -22,11 +22,14 @@ public interface BaseConverter<T, V> {
 
     // 自定义日期转换方法
     @Named("dateToString")
-    default String dateToString(Date date) {
+    default String dateToString(LocalDateTime date) {
         if (date == null) {
             return "暂无记录";
         }
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return sdf.format(date);
+        // 1. 定义格式化器
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // 2. 直接对 LocalDateTime 进行格式化
+        return date.format(formatter);
     }
 }

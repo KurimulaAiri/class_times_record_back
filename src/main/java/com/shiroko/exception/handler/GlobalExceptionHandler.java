@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
     // 处理SQL错误/运行时异常（核心修复）
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResponseDTO<Void>> handleRuntimeException(RuntimeException e) {
-        logger.error("系统异常：{}", e.getMessage()); // 打印异常栈，方便排查SQL错误
+        logger.error("系统异常：{}", (Object) e.getStackTrace()); // 打印异常栈，方便排查SQL错误
         // 返回500状态码+JSON，而非视图
         return new ResponseEntity<>(ResponseDTO.fail("系统异常：" + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }

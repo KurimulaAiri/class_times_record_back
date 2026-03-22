@@ -20,6 +20,10 @@ public class QueryCourseRecordDTO {
 
     private String courseName;
 
+    private String courseRemark;
+
+    private Long courseStatus;
+
     private Long currentPage;
 
     private Long pageSize;

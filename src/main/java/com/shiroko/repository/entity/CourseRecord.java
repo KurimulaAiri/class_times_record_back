@@ -7,7 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -63,7 +64,7 @@ public class CourseRecord implements Serializable {
      * 上次上课时间
      */
     @TableField(value = "course_last_time")
-    private Date courseLastTime;
+    private LocalDateTime courseLastTime;
 
     /**
      * 课程归属人
@@ -87,13 +88,13 @@ public class CourseRecord implements Serializable {
      * 记录创建时间
      */
     @TableField(value = "create_time")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 记录更新时间
      */
     @TableField(value = "update_time")
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     @Serial
     @TableField(exist = false)

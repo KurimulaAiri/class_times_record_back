@@ -70,8 +70,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="AdminGroupRecord" />
-                  <option name="tableName" value="admin_group_record" />
+                  <option name="className" value="Record" />
+                  <option name="tableName" value="record" />
                 </TableUIInfo>
               </list>
             </option>
