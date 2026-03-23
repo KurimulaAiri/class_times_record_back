@@ -1,5 +1,7 @@
 package com.shiroko.service;
 
+import com.shiroko.repository.dto.BindPermissionRecordDTO;
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.PermissionRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -12,4 +14,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface PermissionRecordService extends IService<PermissionRecord> {
 
+    ResponseDTO<Object> bindPermissionRecord(BindPermissionRecordDTO bindPermissionRecordDTO);
 }

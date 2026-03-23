@@ -14,6 +14,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 @Mapper
 public interface PermissionRecordMapper extends BaseMapper<PermissionRecord> {
 
+    int upsertPermission(PermissionRecord record);
+
 }
 
 

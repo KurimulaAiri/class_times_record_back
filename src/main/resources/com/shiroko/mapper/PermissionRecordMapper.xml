@@ -14,4 +14,11 @@
     <sql id="Base_Column_List">
         id,course_record_id,user_id,permission_type
     </sql>
+
+    <insert id="upsertPermission" parameterType="com.shiroko.repository.entity.PermissionRecord">
+        INSERT INTO permission_record (user_id, course_record_id, permission_type)
+        VALUES (#{userId}, #{courseRecordId}, #{permissionType})
+        ON DUPLICATE KEY UPDATE permission_type = #{permissionType}
+    </insert>
+
 </mapper>
