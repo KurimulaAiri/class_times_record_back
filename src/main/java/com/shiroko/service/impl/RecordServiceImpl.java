@@ -88,12 +88,18 @@ public class RecordServiceImpl extends ServiceImpl<RecordMapper, Record> impleme
 
     @Override
     public ResponseDTO<QueryRecordVO> getRecord(QueryRecordDTO queryRecordDTO) {
-        Page<Record> recordPage = recordMapper.selectPage(new Page<>(queryRecordDTO.getCurrentPage(), queryRecordDTO.getPageSize()), new LambdaQueryWrapper<Record>()
-                .eq(Record::getCourseRecordId, queryRecordDTO.getCourseRecordId())
-                .orderByDesc(Record::getRecordTime));
+        System.out.println(queryRecordDTO);
+        Page<Record> recordPage = recordMapper.selectPage(
+                new Page<>(queryRecordDTO.getCurrentPage(),
+                        queryRecordDTO.getPageSize()),
+                new LambdaQueryWrapper<Record>()
+                    .eq(Record::getCourseRecordId, queryRecordDTO.getCourseRecordId())
+                    .orderByDesc(Record::getRecordTime)
+                    // 2. 核心修复：追加唯一 ID 排序，确保分页结果绝对确定
+                    .orderByDesc(Record::getId));
         List<Record> recordList = recordPage.getRecords();
         QueryRecordVO queryRecordVO = new QueryRecordVO()
-                .setRecordVOList(recordConverter.pojoListToVOList(recordList))
+                .setRecords(recordConverter.pojoListToVOList(recordList))
                 .setTotal(recordPage.getTotal());
         return ResponseDTO.success(queryRecordVO);
     }

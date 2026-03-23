@@ -20,7 +20,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class QueryRecordVO {
 
-    private List<RecordVO> recordVOList;
+    private List<RecordVO> records;
 
     private Long total;
 
