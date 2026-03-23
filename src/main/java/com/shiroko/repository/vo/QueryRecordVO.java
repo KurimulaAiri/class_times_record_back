@@ -2,25 +2,25 @@ package com.shiroko.repository.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
 /**
- * Description: TODO
+ * Description: 查询课程记录VO
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/2/7 上午1:30
+ * @since 2026/3/23 上午11:45
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueryCourseRecordVO extends BaseVO {
+@Accessors(chain = true)
+public class QueryRecordVO {
 
-    private List<CourseRecordVO> courseRecords;
+    private List<RecordVO> recordVOList;
 
     private Long total;
 

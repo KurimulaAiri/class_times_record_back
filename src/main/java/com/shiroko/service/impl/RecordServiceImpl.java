@@ -1,18 +1,24 @@
 package com.shiroko.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.RecordConverter;
 import com.shiroko.mapper.CourseRecordMapper;
 import com.shiroko.mapper.RecordMapper;
 import com.shiroko.repository.dto.InsertRecordDTO;
 import com.shiroko.repository.dto.InsertRecordsDTO;
+import com.shiroko.repository.dto.QueryRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.entity.Record;
+import com.shiroko.repository.vo.QueryRecordVO;
 import com.shiroko.service.RecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Description: 记录服务实现类
@@ -78,6 +84,18 @@ public class RecordServiceImpl extends ServiceImpl<RecordMapper, Record> impleme
             return ResponseDTO.success("插入成功，影响行数为" + recordResult);
         }
         return ResponseDTO.fail("插入失败");
+    }
+
+    @Override
+    public ResponseDTO<QueryRecordVO> getRecord(QueryRecordDTO queryRecordDTO) {
+        Page<Record> recordPage = recordMapper.selectPage(new Page<>(queryRecordDTO.getCurrentPage(), queryRecordDTO.getPageSize()), new LambdaQueryWrapper<Record>()
+                .eq(Record::getCourseRecordId, queryRecordDTO.getCourseRecordId())
+                .orderByDesc(Record::getRecordTime));
+        List<Record> recordList = recordPage.getRecords();
+        QueryRecordVO queryRecordVO = new QueryRecordVO()
+                .setRecordVOList(recordConverter.pojoListToVOList(recordList))
+                .setTotal(recordPage.getTotal());
+        return ResponseDTO.success(queryRecordVO);
     }
 }
 

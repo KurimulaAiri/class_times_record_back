@@ -2,7 +2,9 @@ package com.shiroko.controller;
 
 import com.shiroko.repository.dto.InsertRecordDTO;
 import com.shiroko.repository.dto.InsertRecordsDTO;
+import com.shiroko.repository.dto.QueryRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.vo.QueryRecordVO;
 import com.shiroko.service.RecordService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,11 @@ public class RecordController {
     @Autowired
     public RecordController(RecordService recordService) {
         this.recordService = recordService;
+    }
+
+    @RequestMapping("/get")
+    public ResponseDTO<QueryRecordVO> getRecord(@Valid @RequestBody QueryRecordDTO queryRecordDTO) {
+        return recordService.getRecord(queryRecordDTO);
     }
 
     @RequestMapping("/add")

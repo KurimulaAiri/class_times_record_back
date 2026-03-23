@@ -2,6 +2,7 @@ package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shiroko.context.UserContext;
 import com.shiroko.converter.CourseRecordConverter;
 import com.shiroko.mapper.CourseRecordMapper;
@@ -50,7 +51,8 @@ public class CourseRecordServiceImpl implements CourseRecordService {
                 StringUtils.isNotBlank(dto.getCourseRemark());
 
         qw.and(hasSearchText, wrapper ->
-                wrapper.like(StringUtils.isNotBlank(dto.getStuName()), CourseRecord::getStuName, dto.getStuName())
+                wrapper
+                        .like(StringUtils.isNotBlank(dto.getStuName()), CourseRecord::getStuName, dto.getStuName())
                         .or() // 显式调用 .or()
                         .like(StringUtils.isNotBlank(dto.getCourseName()), CourseRecord::getCourseName, dto.getCourseName())
                         .or()
@@ -59,11 +61,28 @@ public class CourseRecordServiceImpl implements CourseRecordService {
 
         // 3. 核心修改：增加排序逻辑
         // 通常列表展示建议使用 orderByDesc，让最新修改的记录出现在第一行
-        qw.orderByDesc(CourseRecord::getUpdateTime);
+        qw
+                .orderByDesc(CourseRecord::getUpdateTime)
+                .orderByDesc(CourseRecord::getId);
 
-        List<CourseRecord> courseRecords = courseRecordMapper.selectList(qw);
-        List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(courseRecords);
-        QueryCourseRecordVO vo = new QueryCourseRecordVO(voList, courseRecords.size());
+        QueryCourseRecordVO vo;
+
+        // 4. 分页查询
+        // 如果提供了当前页码和每页数量，就使用分页查询
+        // 否则，使用列表查询
+        if (dto.getCurrentPage() != null && dto.getPageSize() != null) {
+            Page<CourseRecord> courseRecords = courseRecordMapper.selectPage(
+                    new Page<>(dto.getCurrentPage(), dto.getPageSize()),
+                    qw
+            );
+            List<CourseRecord> records = courseRecords.getRecords();
+            List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(records);
+             vo = new QueryCourseRecordVO(voList, courseRecords.getTotal());
+        } else {
+            List<CourseRecord> records = courseRecordMapper.selectList(qw);
+            List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(records);
+            vo = new QueryCourseRecordVO(voList, (long) records.size());
+        }
         return ResponseDTO.success(vo);
     }
 
