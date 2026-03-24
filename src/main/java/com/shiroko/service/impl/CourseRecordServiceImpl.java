@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Description: TODO
@@ -40,8 +42,12 @@ public class CourseRecordServiceImpl implements CourseRecordService {
     @Override
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
         LambdaQueryWrapper<CourseRecord> qw = new LambdaQueryWrapper<>();
+        if (!dto.isShare()) {
+            qw
+                    .eq(CourseRecord::getCourseOwnerUserId, UserContext.getUser().getId());
+        }
         qw
-                .eq(CourseRecord::getCourseOwnerUserId, UserContext.getUser().getId())
+                .eq(dto.getId() != null, CourseRecord::getId, dto.getId())
                 .eq(dto.getCourseStatus() != null, CourseRecord::getCourseStatus, dto.getCourseStatus())
                 .eq(CourseRecord::getIsDelete, false);
         // 2. 三个字段之间的 OR 关系
@@ -77,10 +83,12 @@ public class CourseRecordServiceImpl implements CourseRecordService {
             );
             List<CourseRecord> records = courseRecords.getRecords();
             List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(records);
-             vo = new QueryCourseRecordVO(voList, courseRecords.getTotal());
+            injectPermissionType(voList);
+            vo = new QueryCourseRecordVO(voList, courseRecords.getTotal());
         } else {
             List<CourseRecord> records = courseRecordMapper.selectList(qw);
             List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(records);
+            injectPermissionType(voList);
             vo = new QueryCourseRecordVO(voList, (long) records.size());
         }
         return ResponseDTO.success(vo);
@@ -96,7 +104,7 @@ public class CourseRecordServiceImpl implements CourseRecordService {
         PermissionRecord permissionRecord = new PermissionRecord()
                 .setCourseRecordId(courseRecord.getId())
                 .setUserId(UserContext.getUser().getId())
-                .setPermissionType("admin");
+                .setPermissionType(1L);
         int rowsInsertedAdminGroupRecord = permissionRecordMapper.insert(permissionRecord);
         return ResponseDTO.success("添加成功，影响记录数：" + rowsInserted + "\n管理员分组记录数：" + rowsInsertedAdminGroupRecord, new int[]{rowsInserted, rowsInsertedAdminGroupRecord});
     }
@@ -119,5 +127,37 @@ public class CourseRecordServiceImpl implements CourseRecordService {
                 courseRecord
         );
         return ResponseDTO.success("更新成功，影响记录数：" + rowsUpdated);
+    }
+
+    private void injectPermissionType(List<CourseRecordVO> voList) {
+        // 2. 批量处理关联字段 (核心增强)
+        if (!voList.isEmpty()) {
+            // 2.1 提取当前页所有的 courseId
+            List<Long> courseIds = voList.stream()
+                    .map(CourseRecordVO::getId)
+                    .toList();
+
+            // 2.2 调用你写好的 Service 批量查询权限记录
+            // 假设你要查当前用户的权限类型，WHERE course_id IN (...) AND user_id = current
+            List<PermissionRecord> permissions = permissionRecordMapper.selectList(
+                    new LambdaQueryWrapper<PermissionRecord>()
+                            .in(PermissionRecord::getCourseRecordId, courseIds)
+                            .eq(PermissionRecord::getUserId, UserContext.getUser().getId())
+            );
+
+            // 2.3 将查询结果转为 Map 结构 (Key: courseId, Value: 权限字段)
+            Map<Long, Long> permissionMap = permissions.stream()
+                    .collect(Collectors.toMap(
+                            PermissionRecord::getCourseRecordId,
+                            PermissionRecord::getPermissionType, // 假设你要拿这个字段
+                            (existing, replacement) -> existing // 防止重复 Key 冲突
+                    ));
+
+            // 2.4 回填到 voList 中
+            voList.forEach(vo -> {
+                Long type = permissionMap.get(vo.getId());
+                vo.setPermissionType(type);
+            });
+        }
     }
 }

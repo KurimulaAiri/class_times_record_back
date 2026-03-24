@@ -48,7 +48,7 @@ public class PermissionRecord implements Serializable {
      * 权限类型 guest 访客 admin 管理员
      */
     @TableField(value = "permission_type")
-    private String permissionType;
+    private Long permissionType;
 
     @Serial
     @TableField(exist = false)

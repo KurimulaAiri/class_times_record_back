@@ -2,21 +2,21 @@ package com.shiroko.repository.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * Description: 绑定权限记录DTO类
+ * Description: 查询权限记录DTO
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/3/24 上午12:56
+ * @since 2026/3/24 下午2:48
  */
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class BindPermissionRecordDTO extends BaseDTO{
-    private Long courseRecordId;
+public class QueryPermissionRecordDTO {
+    private Long id;
     private Long permissionType;
+    private Long userId;
+    private Long courseRecordId;
 }

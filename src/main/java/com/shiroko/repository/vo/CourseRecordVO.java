@@ -18,7 +18,7 @@ public class CourseRecordVO {
     /**
      * 表id
      */
-    private Integer id;
+    private Long id;
 
     /**
      * 学生姓名
@@ -33,12 +33,12 @@ public class CourseRecordVO {
     /**
      * 课时总数
      */
-    private Integer courseTotalTime;
+    private Long courseTotalTime;
 
     /**
      * 课程剩余次数
      */
-    private Integer courseRestTime;
+    private Long courseRestTime;
 
     /**
      * 课程状态
@@ -55,7 +55,7 @@ public class CourseRecordVO {
     /**
      * 课程归属人
      */
-    private Integer courseOwnerUserId;
+    private Long courseOwnerUserId;
 
     /**
      * 课程备注
@@ -66,6 +66,11 @@ public class CourseRecordVO {
      * 逻辑删除
      */
     private String isDelete;
+
+    /**
+     * 权限名称
+     */
+    private Long permissionType;
 
     /**
      * 记录创建时间

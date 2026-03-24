@@ -16,6 +16,10 @@ import lombok.NoArgsConstructor;
 @Data
 public class QueryCourseRecordDTO {
 
+    private boolean isShare;
+
+    private Long id;
+
     private String stuName;
 
     private String courseName;
