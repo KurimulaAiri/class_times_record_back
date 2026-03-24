@@ -1,6 +1,7 @@
 package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shiroko.context.UserContext;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,10 +44,30 @@ public class CourseRecordServiceImpl implements CourseRecordService {
     @Override
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
         LambdaQueryWrapper<CourseRecord> qw = new LambdaQueryWrapper<>();
-        if (!dto.isShare()) {
-            qw
-                    .eq(CourseRecord::getCourseOwnerUserId, UserContext.getUser().getId());
+        System.out.println(dto);
+
+        // 1. 权限过滤逻辑修改
+
+        if(!dto.isShare()) {
+            // 1.2 分享/关联模式：先查权限表拿到所有关联的课程ID
+            List<PermissionRecord> permissions = permissionRecordMapper.selectList(
+                    new LambdaQueryWrapper<PermissionRecord>()
+                            .eq(PermissionRecord::getUserId, UserContext.getUser().getId())
+            );
+
+            if (CollectionUtils.isEmpty(permissions)) {
+                // 如果该用户没有任何权限记录，直接返回空结果，不走后面的大查询
+                return ResponseDTO.success(new QueryCourseRecordVO(new ArrayList<>(), 0L));
+            }
+
+            List<Long> authCourseIds = permissions.stream()
+                    .map(PermissionRecord::getCourseRecordId)
+                    .collect(Collectors.toList());
+
+            // 使用 IN 查询所有有权访问的课程
+            qw.in(CourseRecord::getId, authCourseIds);
         }
+
         qw
                 .eq(dto.getId() != null, CourseRecord::getId, dto.getId())
                 .eq(dto.getCourseStatus() != null, CourseRecord::getCourseStatus, dto.getCourseStatus())
