@@ -1,4 +1,7 @@
 # 基础配置文件
+crypto:
+  sm2:
+    private-key: 00b3b8e61213bbd5e7d001e0cd4e33015efc04ae68ae61f2a36da55d92903cb0eb
 spring:
   profiles:
     active: dev  # 默认激活开发环境

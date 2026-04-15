@@ -27,11 +27,13 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")             // 默认拦截所有路径
                 .excludePathPatterns(               // 以下路径不拦截：
-                        "/auth/login",              // 1. 登录接口
-                        "/auth/register",           // 2. 注册接口（如果有）
-                        "/error",                   // 3. SpringBoot 默认错误页
-                        "/static/**",               // 4. 静态资源
-                        "/swagger-ui/**",           // 5. 文档页面（如果用了 Swagger）
+                        "/auth/login_no_pwd",         //  登录接口（无需密码）
+                        "/auth/login_by_pwd",         //  登录接口（需要密码）
+                        "/auth/get_open_id",          //  获取openid接口
+                        "/auth/register",           //  注册接口（如果有）
+                        "/error",                   //  SpringBoot 默认错误页
+                        "/static/**",               //  静态资源
+                        "/swagger-ui/**",           //  文档页面（如果用了 Swagger）
                         "/v3/api-docs/**"
                 );
     }

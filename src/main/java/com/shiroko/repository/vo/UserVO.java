@@ -17,8 +17,7 @@ import lombok.NoArgsConstructor;
 public class UserVO {
     private Long userId;
     private String openid;
-    private String username;
-    private String phone;
+    private String account;
     private String createTimeStr;
     private String updateTimeStr;
    }

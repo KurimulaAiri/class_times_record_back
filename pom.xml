@@ -120,6 +120,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- 加密依赖 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
+        </dependency>
+
     </dependencies>
 
     <!-- 确保 pom.xml 中有以下配置（放在 <build><plugins> 标签内） -->

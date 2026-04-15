@@ -1,6 +1,5 @@
 package com.shiroko.repository.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class LoginDTO {
-    @NotBlank(message = "code不能为空")
     private String code;
+    private String openId;
+    private String role;
+    private String account;
+    private String password;
 }

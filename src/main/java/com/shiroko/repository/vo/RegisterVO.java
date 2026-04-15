@@ -5,16 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Description: TODO
+ * Description: 注册响应参数
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/3/19 下午4:08
+ * @since 2026/4/16 上午12:23
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginVO {
-    private String token;
+public class RegisterVO {
     private String openId;
 }
