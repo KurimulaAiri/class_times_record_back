@@ -6,6 +6,7 @@ import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.vo.QueryPermissionRecordVO;
 import com.shiroko.service.PermissionRecordService;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,12 +28,12 @@ public class PermissionRecordController {
         this.permissionRecordService = permissionRecordService;
     }
 
-    @RequestMapping("/bind")
+    @PostMapping("/bind")
     public ResponseDTO<Object> bindPermissionRecord(@Valid @RequestBody BindPermissionRecordDTO bindPermissionRecordDTO) {
         return permissionRecordService.bindPermissionRecord(bindPermissionRecordDTO);
     }
 
-    @RequestMapping("/get")
+    @PostMapping("/get")
     public ResponseDTO<QueryPermissionRecordVO> getPermissionRecord(@Valid @RequestBody QueryPermissionRecordDTO queryPermissionRecordDTO) {
         return permissionRecordService.getPermissionRecord(queryPermissionRecordDTO);
     }

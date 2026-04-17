@@ -9,9 +9,12 @@ import com.shiroko.repository.dto.LoginDTO;
 import com.shiroko.repository.dto.RegisterDTO;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.User;
+import com.shiroko.repository.entity.UserAuth;
 import com.shiroko.repository.vo.LoginVO;
 import com.shiroko.repository.vo.RegisterVO;
 import com.shiroko.service.AuthService;
+import com.shiroko.service.PermissionService;
+import com.shiroko.service.UserAuthService;
 import com.shiroko.service.UserService;
 import com.shiroko.util.JwtUtils;
 import com.shiroko.util.SM2Util;
@@ -53,21 +56,35 @@ public class AuthServiceImpl implements AuthService {
     @Value("${crypto.sm2.private-key:}")
     private String privateKey;
 
-    private static final Set<String> ALLOWED_ROLES = Set.of("teacher", "parent", "student");
+    private static final Set<Long> ALLOWED_ROLES = Set.of(1L, 2L, 3L, 4L);
 
     private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final RestTemplate restTemplate;
     private final JwtUtils jwtUtils;
+
     private final UserService userService;
+    private final PermissionService permissionService;
+    private final UserAuthService userAuthService;
+
     private final ApplicationContext applicationContext;
 
     @Autowired
-    private AuthServiceImpl(JwtUtils jwtUtils, UserService userService, ApplicationContext applicationContext) {
+    private AuthServiceImpl(
+            JwtUtils jwtUtils,
+            UserService userService,
+            PermissionService permissionService,
+            UserAuthService userAuthService,
+            ApplicationContext applicationContext
+    ) {
         this.applicationContext = applicationContext;
+
         this.restTemplate = new RestTemplate();
         this.jwtUtils = jwtUtils;
+
         this.userService = userService;
+        this.permissionService = permissionService;
+        this.userAuthService = userAuthService;
     }
 
 
@@ -95,29 +112,33 @@ public class AuthServiceImpl implements AuthService {
     public ResponseDTO<LoginVO> loginByPwd(LoginDTO dto) {
 
         String openId = dto.getOpenId();
-        String role = dto.getRole();
+        Long role = dto.getRole();
         String account = dto.getAccount();
         String password = SM2Util.decrypt(dto.getPassword(), privateKey);
 
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("open_id", openId);
-        queryWrapper.eq("account", account);
+        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenid, openId));
 
-        User user = userService.getOne(queryWrapper);
         if (user == null) {
             return ResponseDTO.fail("用户不存在");
         } else {
             if (ALLOWED_ROLES.contains(role)) {
                 if (hasRolePermission(user.getId(), role)) {
-                    String salt = user.getSalt();
+
+                    UserAuth userAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
+                            .eq(UserAuth::getUserId, user.getId())
+                            .eq(UserAuth::getRoleId, role)
+                    );
+
+                    String salt = userAuth.getSalt();
                     String encryptedPassword = SM3Util.digestWithSalt(password, salt);
-                    if (encryptedPassword.equals(user.getPassword())) {
+
+                    if (encryptedPassword.equals(userAuth.getPassword()) && userAuth.getAccount().equals(account)) {
                         return ResponseDTO.success(new LoginVO(jwtUtils.createToken(user.getId()), openId));
                     } else {
                         return ResponseDTO.fail("账号或密码错误");
                     }
                 } else {
-                    return ResponseDTO.fail("用户没有当前身份权限");
+                    return ResponseDTO.fail("用户身份不可用（当前用户为注册该身份或该身份被禁用）");
                 }
             } else {
                 return ResponseDTO.fail("非法角色参数");
@@ -148,17 +169,31 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public ResponseDTO<RegisterVO> register(RegisterDTO dto) {
+
+
+
         // 1. 账号唯一性检查
-        User existingUser = userService.getOne(new LambdaQueryWrapper<User>()
-                .eq(User::getAccount, dto.getAccount()));
-        if (existingUser != null) {
-            return ResponseDTO.fail("该账号已注册");
-        }
+        Long userRole = dto.getRole();
         String openId = dto.getOpenId();
-        existingUser = userService.getOne(new LambdaQueryWrapper<User>()
-                .eq(User::getOpenid, openId));
-        if (existingUser != null) {
+
+
+        // 2. 检查openid是否已注册，未注册则注册
+        Long userId = userService.saveOrUpdateUser(openId);
+
+        UserAuth existingUserAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
+                .eq(UserAuth::getUserId, userId)
+                .eq(UserAuth::getRoleId, userRole)
+        );
+        if (existingUserAuth != null) {
             return ResponseDTO.fail("该openid已注册");
+        }
+
+        existingUserAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
+                .eq(UserAuth::getAccount, dto.getAccount())
+                .eq(UserAuth::getRoleId, userRole)
+        );
+        if (existingUserAuth != null) {
+            return ResponseDTO.fail("该账号已注册");
         }
 
         // 2. 解密前端 SM2 密文得到明文
@@ -173,16 +208,20 @@ public class AuthServiceImpl implements AuthService {
         String hashedPassword = SM3Util.digestWithSalt(rawPassword, salt);
 
         // 5. 保存到数据库
-        User user = new User();
-        user.setAccount(dto.getAccount());
-        user.setPassword(hashedPassword); // 存入哈希后的密文
-        user.setSalt(salt);               // 必须存入盐值，否则登录时无法校验
-        user.setOpenid(openId);
 
-        userService.save(user);
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUserId(userId);
+        userAuth.setAccount(dto.getAccount());
+        userAuth.setPassword(hashedPassword); // 存入哈希后的密文
+        userAuth.setSalt(salt);               // 必须存入盐值，否则登录时无法校验
+        userAuth.setRoleId(userRole);
+
+        userAuthService.save(userAuth);
+
+
 
         // 6. 关联身份表 (如 Teacher/Parent)
-        saveIdentityRecord(user.getId(), dto.getRole());
+        saveIdentityRecord(userId, dto.getRole());
 
         return ResponseDTO.success(new RegisterVO(openId));
     }
@@ -191,13 +230,14 @@ public class AuthServiceImpl implements AuthService {
      * 通用角色权限校验
      *
      * @param userId 用户ID
-     * @param role   角色名 (例如: "teacher", "parent")
+     * @param role   角色ID (例如: 1L)
      */
-    private boolean hasRolePermission(Long userId, String role) {
+    private boolean hasRolePermission(Long userId, Long role) {
         try {
             // 1. 拼装 Service 的 Bean 名称 (遵循 Spring 默认命名规范：类名首字母小写)
             // 例如：role="teacher" -> beanName="teacherServiceImpl"
-            String beanName = role.toLowerCase() + "ServiceImpl";
+            String roleName = permissionService.getById(role).getPermissionName();
+            String beanName = roleName.toLowerCase() + "ServiceImpl";
 
             // 2. 从上下文动态获取 Service
             // 注意：所有的角色 Service 必须继承了 IService
@@ -222,6 +262,7 @@ public class AuthServiceImpl implements AuthService {
     private <T> boolean checkIdentity(IService<T> service, Long userId) {
         QueryWrapper<T> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", userId);
+        wrapper.eq("is_available", true);
         return service.count(wrapper) > 0;
     }
 
@@ -229,16 +270,17 @@ public class AuthServiceImpl implements AuthService {
      * 通用身份记录创建（使用 Spring ReflectionUtils）
      * 逻辑：根据角色名获取 Service -> 获取实体类 -> 实例化 -> 注入 userId -> 保存
      */
-    private void saveIdentityRecord(Long userId, String role) {
+    private void saveIdentityRecord(Long userId, Long role) {
         // 1. 拼装 Bean 名称，例如 "teacherServiceImpl"
-        String beanName = role.toLowerCase() + "ServiceImpl";
+        String roleName = permissionService.getById(role).getPermissionName();
+        String beanName = roleName.toLowerCase() + "ServiceImpl";
         IService<?> identityService = applicationContext.getBean(beanName, IService.class);
         // 调用泛型辅助方法，将 <?> 捕获为具体的 <T>
         handleSave(identityService, userId, role, beanName);
 
     }
 
-    private <T> void handleSave(IService<T> service, Long userId, String role, String beanName) {
+    private <T> void handleSave(IService<T> service, Long userId, Long role, String beanName) {
         try {
             // 此时我们有了具体的 T，可以安全地通过 T 获取 Class
             Class<T> entityClass = service.getEntityClass();

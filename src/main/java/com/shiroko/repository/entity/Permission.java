@@ -10,32 +10,32 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * Description: 教师实体类
+ * Description: 权限实体类
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/4/15 下午22:37
+ * @since 2026/4/17 下午22:30
  */
-@TableName(value ="teacher")
+@TableName(value ="permission")
 @Data
-public class Teacher implements Serializable {
+public class Permission implements Serializable {
     /**
-     * 老师id
+     * 
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 对于user_id
+     * 权限名称
      */
-    @TableField(value = "user_id")
-    private Long userId;
+    @TableField(value = "permission_name")
+    private String permissionName;
 
     /**
-     * 是否可用
+     * 权限权重
      */
-    @TableField(value = "is_available")
-    private Boolean isAvailable;
+    @TableField(value = "permission_weight")
+    private Integer permissionWeight;
 
     @Serial
     @TableField(exist = false)
@@ -52,10 +52,10 @@ public class Teacher implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        Teacher other = (Teacher) that;
+        Permission other = (Permission) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()))
-            && (this.getIsAvailable() == null ? other.getIsAvailable() == null : this.getIsAvailable().equals(other.getIsAvailable()));
+            && (this.getPermissionName() == null ? other.getPermissionName() == null : this.getPermissionName().equals(other.getPermissionName()))
+            && (this.getPermissionWeight() == null ? other.getPermissionWeight() == null : this.getPermissionWeight().equals(other.getPermissionWeight()));
     }
 
     @Override
@@ -63,8 +63,8 @@ public class Teacher implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-        result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
-        result = prime * result + ((getIsAvailable() == null) ? 0 : getIsAvailable().hashCode());
+        result = prime * result + ((getPermissionName() == null) ? 0 : getPermissionName().hashCode());
+        result = prime * result + ((getPermissionWeight() == null) ? 0 : getPermissionWeight().hashCode());
         return result;
     }
 
@@ -74,8 +74,8 @@ public class Teacher implements Serializable {
                 " [" +
                 "Hash = " + hashCode() +
                 ", id=" + id +
-                ", userId=" + userId +
-                ", isAvailable=" + isAvailable +
+                ", permissionName=" + permissionName +
+                ", permissionWeight=" + permissionWeight +
                 ", serialVersionUID=" + serialVersionUID +
                 "]";
     }

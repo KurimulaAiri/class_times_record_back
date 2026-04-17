@@ -8,6 +8,7 @@ import com.shiroko.repository.vo.QueryRecordVO;
 import com.shiroko.service.RecordService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,17 +30,17 @@ public class RecordController {
         this.recordService = recordService;
     }
 
-    @RequestMapping("/get")
+    @PostMapping("/get")
     public ResponseDTO<QueryRecordVO> getRecord(@Valid @RequestBody QueryRecordDTO queryRecordDTO) {
         return recordService.getRecord(queryRecordDTO);
     }
 
-    @RequestMapping("/add")
+    @PostMapping("/add")
     public ResponseDTO<Object> insertRecord(@Valid @RequestBody InsertRecordDTO insertRecordDTO) {
         return recordService.insertRecord(insertRecordDTO);
     }
 
-    @RequestMapping("/add_all")
+    @PostMapping("/add_all")
     public ResponseDTO<Object> insertRecords(@Valid @RequestBody InsertRecordsDTO insertRecordsDTO) {
         return recordService.insertRecords(insertRecordsDTO);
     }

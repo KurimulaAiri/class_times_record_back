@@ -34,24 +34,6 @@ public class User implements Serializable {
     private Long userPhoneNum;
 
     /**
-     * 用户账号
-     */
-    @TableField(value = "account")
-    private String account;
-
-    /**
-     * 用户密码
-     */
-    @TableField(value = "password")
-    private String password;
-
-    /**
-     *  盐值
-     */
-    @TableField(value = "salt")
-    private String salt;
-
-    /**
      * 微信当前小程序唯一标识
      */
     @TableField(value = "open_id")
@@ -92,9 +74,6 @@ public class User implements Serializable {
         }
         User other = (User) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-                && (this.getAccount() == null ? other.getAccount() == null : this.getAccount().equals(other.getAccount()))
-                && (this.getPassword() == null ? other.getPassword() == null : this.getPassword().equals(other.getPassword()))
-                && (this.getSalt() == null ? other.getSalt() == null : this.getSalt().equals(other.getSalt()))
                 && (this.getUserPhoneNum() == null ? other.getUserPhoneNum() == null : this.getUserPhoneNum().equals(other.getUserPhoneNum()))
                 && (this.getOpenid() == null ? other.getOpenid() == null : this.getOpenid().equals(other.getOpenid()))
                 && (this.getUnionId() == null ? other.getUnionId() == null : this.getUnionId().equals(other.getUnionId()))
@@ -108,9 +87,6 @@ public class User implements Serializable {
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
         result = prime * result + ((getUserPhoneNum() == null) ? 0 : getUserPhoneNum().hashCode());
-        result = prime * result + ((getAccount() == null) ? 0 : getAccount().hashCode());
-        result = prime * result + ((getPassword() == null) ? 0 : getPassword().hashCode());
-        result = prime * result + ((getSalt() == null) ? 0 : getSalt().hashCode());
         result = prime * result + ((getOpenid() == null) ? 0 : getOpenid().hashCode());
         result = prime * result + ((getUnionId() == null) ? 0 : getUnionId().hashCode());
         result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
@@ -125,9 +101,6 @@ public class User implements Serializable {
                 "Hash = " + hashCode() +
                 ", id=" + id +
                 ", userPhoneNum=" + userPhoneNum +
-                ", account=" + account +
-                ", password=" + password +
-                ", salt=" + salt +
                 ", openid=" + openid +
                 ", unionId=" + unionId +
                 ", createTime=" + createTime +

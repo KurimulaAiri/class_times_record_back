@@ -1,6 +1,7 @@
 package com.shiroko.repository.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,8 +21,8 @@ public class RegisterDTO {
     private String account;    // 账号
     @NotBlank(message = "密码不能为空")
     private String password;   // 密码 （SM2 加密后的密文）
-    @NotBlank(message = "角色不能为空")
-    private String role;       // 角色 （teacher / parent）
+    @NotNull(message = "角色不能为空")
+    private Long role;       // 角色 （teacher / parent）
     @NotBlank(message = "openid不能为空")
     private String openId;     // 微信openid
 }

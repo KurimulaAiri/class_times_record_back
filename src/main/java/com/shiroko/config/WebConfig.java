@@ -33,6 +33,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/auth/register",           //  注册接口（如果有）
                         "/error",                   //  SpringBoot 默认错误页
                         "/static/**",               //  静态资源
+                        "/v3/api-docs/**",             //  OpenAPI 文档
+                        "/v3/api-docs.yaml",             //  OpenAPI 文档
+                        "/swagger-ui.html",           //  文档页面（如果用了 Swagger）
                         "/swagger-ui/**",           //  文档页面（如果用了 Swagger）
                         "/v3/api-docs/**"
                 );
