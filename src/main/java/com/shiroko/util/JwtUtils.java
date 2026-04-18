@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Description: TODO
@@ -30,10 +31,11 @@ public class JwtUtils {
      * 生成 Token
      * @param userId 数据库中的用户自增ID
      */
-    public String createToken(Long userId) {
+    public String createToken(Long userId, Long roleId) {
         return Jwts.builder()
                 .setSubject("user_auth")
                 .claim("userId", userId) // 将用户ID存入载荷(Payload)
+                .claim("roleId", roleId) // 将角色ID存入载荷(Payload)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -61,16 +63,17 @@ public class JwtUtils {
     }
 
     /**
-     * 解析 Token 并获取用户 ID
+     * 解析 Token 并获取用户 ID 和角色 ID
      */
-    public Long getUserIdFromToken(String token) {
+    public Map<String, Object> getUserInfoFromToken(String token) {
+        Map<String, Object> claims;
         try {
-            Claims claims = Jwts.parserBuilder()
+             claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.get("userId", Long.class);
+            return claims;
         } catch (Exception e) {
             // Token 过期或非法
             return null;

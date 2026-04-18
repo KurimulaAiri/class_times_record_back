@@ -1,6 +1,6 @@
 package com.shiroko.context;
 
-import com.shiroko.repository.entity.User;
+import com.shiroko.repository.dto.UserDTO;
 
 /**
  * Description: 用户上下文
@@ -10,13 +10,13 @@ import com.shiroko.repository.entity.User;
  * @since 2026/3/19 下午5:05
  */
 public class UserContext {
-    private static final ThreadLocal<User> userThreadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<UserDTO> userThreadLocal = new ThreadLocal<>();
 
-    public static void setUser(User user) {
+    public static void setUser(UserDTO user) {
         userThreadLocal.set(user);
     }
 
-    public static User getUser() {
+    public static UserDTO getUser() {
         return userThreadLocal.get();
     }
 

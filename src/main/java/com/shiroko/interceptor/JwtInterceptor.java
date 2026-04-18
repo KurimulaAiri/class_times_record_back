@@ -3,6 +3,7 @@ package com.shiroko.interceptor;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shiroko.context.UserContext;
+import com.shiroko.converter.UserConverter;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.User;
 import com.shiroko.service.UserService;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Description: TODO
@@ -36,12 +38,15 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     private final UserService userService;
 
+    private final UserConverter userConverter;
+
     private final ResponseDTO<Void> dto;
 
     @Autowired
-    private JwtInterceptor(JwtUtils jwtUtils, UserService userService) {
+    private JwtInterceptor(JwtUtils jwtUtils, UserService userService, UserConverter userConverter) {
         this.jwtUtils = jwtUtils;
         this.userService = userService;
+        this.userConverter = userConverter;
         this.dto = new ResponseDTO<>();
     }
 
@@ -84,10 +89,15 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
 
-        Long userId = jwtUtils.getUserIdFromToken(token);
+
+        Map<String, Object> userInfo = jwtUtils.getUserInfoFromToken(token);
+        Long userId = Long.valueOf(userInfo.get("userId").toString());
+        Long roleId = Long.valueOf(userInfo.get("roleId").toString());
+
+
         // 存入当前线程，方便后续 Service 使用
         User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getId, userId));
-        UserContext.setUser(user);
+        UserContext.setUser(userConverter.pojoToDTO(user, roleId));
 
         // 3. 滑动过期逻辑：检查是否快过期了
         Claims claims = jwtUtils.parseClaims(token);
@@ -97,7 +107,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         if (remainingTime < refreshThreshold) {
             // 生成新 Token
-            String newToken = jwtUtils.createToken(userId);
+            String newToken = jwtUtils.createToken(userId, roleId);
             // 将新 Token 放入响应头，约定字段名为 "new-token"
             response.setHeader("new-token", newToken);
             // 记得处理跨域暴露 Header 问题

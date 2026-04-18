@@ -28,7 +28,6 @@ public class InsertRecordDTO extends BaseDTO {
     private LocalDateTime recordTime;
     @NotBlank(message = "记录类型不能为空")
     private Long recordType;
-
     private String recordRemark;
     @NotBlank(message = "记录变更不能为空")
     private Long recordChange;

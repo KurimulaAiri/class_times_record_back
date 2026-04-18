@@ -1,5 +1,6 @@
 package com.shiroko.converter;
 
+import com.shiroko.repository.dto.UserDTO;
 import com.shiroko.repository.entity.User;
 import com.shiroko.repository.vo.UserVO;
 import org.mapstruct.Mapper;
@@ -18,4 +19,7 @@ public interface UserConverter extends BaseConverter<User, UserVO> {
     @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateToString")
     @Override
     UserVO pojoToVO(User pojo);
+
+    @Mapping(target = "roleId", source = "roleId")
+    UserDTO pojoToDTO(User pojo, Long roleId);
 }

@@ -44,6 +44,7 @@ import java.util.UUID;
  * @since 2026/3/19 下午4:13
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     @Value("${uni-app.wx.app-id}")
@@ -101,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
         Long userId = userService.saveOrUpdateUser(openId);
 
         // 5. 生成自定义 Token (推荐 JWT)
-        String token = jwtUtils.createToken(userId);
+        String token = jwtUtils.createToken(userId, 0L);
 
         return ResponseDTO.success(new LoginVO(token, openId));
 
@@ -133,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
                     String encryptedPassword = SM3Util.digestWithSalt(password, salt);
 
                     if (encryptedPassword.equals(userAuth.getPassword()) && userAuth.getAccount().equals(account)) {
-                        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(user.getId()), openId));
+                        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(user.getId(), role), openId));
                     } else {
                         return ResponseDTO.fail("账号或密码错误");
                     }
