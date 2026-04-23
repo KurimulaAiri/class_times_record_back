@@ -28,10 +28,10 @@ public class CourseRecord implements Serializable {
     private Long id;
 
     /**
-     * 学生姓名
+     * 学生id
      */
-    @TableField(value = "stu_name")
-    private String stuName;
+    @TableField(value = "student_id")
+    private Long studentId;
 
     /**
      * 课程名
@@ -113,7 +113,7 @@ public class CourseRecord implements Serializable {
         }
         CourseRecord other = (CourseRecord) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getStuName() == null ? other.getStuName() == null : this.getStuName().equals(other.getStuName()))
+            && (this.getStudentId() == null ? other.getStudentId() == null : this.getStudentId().equals(other.getStudentId()))
             && (this.getCourseName() == null ? other.getCourseName() == null : this.getCourseName().equals(other.getCourseName()))
             && (this.getCourseTotalTime() == null ? other.getCourseTotalTime() == null : this.getCourseTotalTime().equals(other.getCourseTotalTime()))
             && (this.getCourseRestTime() == null ? other.getCourseRestTime() == null : this.getCourseRestTime().equals(other.getCourseRestTime()))
@@ -131,7 +131,7 @@ public class CourseRecord implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-        result = prime * result + ((getStuName() == null) ? 0 : getStuName().hashCode());
+        result = prime * result + ((getStudentId() == null) ? 0 : getStudentId().hashCode());
         result = prime * result + ((getCourseName() == null) ? 0 : getCourseName().hashCode());
         result = prime * result + ((getCourseTotalTime() == null) ? 0 : getCourseTotalTime().hashCode());
         result = prime * result + ((getCourseRestTime() == null) ? 0 : getCourseRestTime().hashCode());
@@ -151,7 +151,7 @@ public class CourseRecord implements Serializable {
                 " [" +
                 "Hash = " + hashCode() +
                 ", id=" + id +
-                ", stu_name=" + stuName +
+                ", student_id=" + studentId +
                 ", course_name=" + courseName +
                 ", course_total_time=" + courseTotalTime +
                 ", course_rest_time=" + courseRestTime +

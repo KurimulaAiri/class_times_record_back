@@ -20,6 +20,8 @@ public class QueryCourseRecordDTO {
 
     private Long id;
 
+    private Long userId;
+
     private String stuName;
 
     private String courseName;

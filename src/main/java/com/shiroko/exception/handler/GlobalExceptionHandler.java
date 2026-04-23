@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDTO<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
         String errorMsg = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining("；"));
+                .collect(Collectors.joining(";"));
         // 用ResponseEntity包装，明确返回JSON+HTTP状态码
         return new ResponseEntity<>(ResponseDTO.fail("参数校验失败：" + errorMsg), HttpStatus.BAD_REQUEST);
     }
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDTO<Void>> handleRuntimeException(RuntimeException e) {
         logger.error("系统异常：{}", (Object) e.getStackTrace()); // 打印异常栈，方便排查SQL错误
         // 返回500状态码+JSON，而非视图
-        return new ResponseEntity<>(ResponseDTO.fail("系统异常：" + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(ResponseDTO.fail(500L, "系统异常：" + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // 其他异常处理方法同理，都用ResponseEntity包装
@@ -56,15 +56,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDTO<Void>> handleConstraintViolation(ConstraintViolationException e) {
         String errorMsg = e.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining("；"));
-        return new ResponseEntity<>(ResponseDTO.fail("参数校验失败：" + errorMsg), HttpStatus.BAD_REQUEST);
+                .collect(Collectors.joining(";"));
+        return new ResponseEntity<>(ResponseDTO.fail(400L, "参数校验失败：" + errorMsg), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ResponseDTO<Void>> handleBindException(BindException e) {
         String errorMsg = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining("；"));
+                .collect(Collectors.joining(";"));
         return new ResponseEntity<>(ResponseDTO.fail("参数校验失败：" + errorMsg), HttpStatus.BAD_REQUEST);
     }
 

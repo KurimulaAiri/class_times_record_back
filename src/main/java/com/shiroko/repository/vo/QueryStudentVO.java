@@ -1,8 +1,23 @@
-package com.shiroko.repository.vo;/**
- * Description: TODO
+package com.shiroko.repository.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+/**
+ * Description: 查询学生VO类
+ *
  * @author Guguguy
- * @since 2026/4/24 上午1:08
  * @version 1.0
+ * @since 2026/4/24 上午1:08
  */
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class QueryStudentVO {
+    private List<StudentVO> list;
+    private Long total;
+
 }

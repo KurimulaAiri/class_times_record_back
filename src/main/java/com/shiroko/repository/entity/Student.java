@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 /**
@@ -22,26 +25,45 @@ public class Student implements Serializable {
      * 学生id
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 学生姓名
      */
     @TableField(value = "student_name")
-    private String student_name;
+    private String studentName;
+
+    /**
+     * 学生出生日期
+     */
+    @TableField(value = "birth")
+    private LocalDateTime birth;
+
+    /**
+     * 学生学校
+     */
+    @TableField(value = "school")
+    private String school;
+
+    /**
+     * 学生地址
+     */
+    @TableField(value = "address")
+    private String address;
 
     /**
      * 创建记录时间
      */
     @TableField(value = "create_time")
-    private Date create_time;
+    private LocalDateTime createTime;
 
     /**
      * 记录更新时间
      */
     @TableField(value = "update_time")
-    private Date update_time;
+    private LocalDateTime updateTime;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -58,9 +80,12 @@ public class Student implements Serializable {
         }
         Student other = (Student) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getStudent_name() == null ? other.getStudent_name() == null : this.getStudent_name().equals(other.getStudent_name()))
-            && (this.getCreate_time() == null ? other.getCreate_time() == null : this.getCreate_time().equals(other.getCreate_time()))
-            && (this.getUpdate_time() == null ? other.getUpdate_time() == null : this.getUpdate_time().equals(other.getUpdate_time()));
+            && (this.getStudentName() == null ? other.getStudentName() == null : this.getStudentName().equals(other.getStudentName()))
+            && (this.getBirth() == null ? other.getBirth() == null : this.getBirth().equals(other.getBirth()))
+            && (this.getSchool() == null ? other.getSchool() == null : this.getSchool().equals(other.getSchool()))
+            && (this.getAddress() == null ? other.getAddress() == null : this.getAddress().equals(other.getAddress()))
+            && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()))
+            && (this.getUpdateTime() == null ? other.getUpdateTime() == null : this.getUpdateTime().equals(other.getUpdateTime()));
     }
 
     @Override
@@ -68,24 +93,28 @@ public class Student implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
-        result = prime * result + ((getStudent_name() == null) ? 0 : getStudent_name().hashCode());
-        result = prime * result + ((getCreate_time() == null) ? 0 : getCreate_time().hashCode());
-        result = prime * result + ((getUpdate_time() == null) ? 0 : getUpdate_time().hashCode());
+        result = prime * result + ((getStudentName() == null) ? 0 : getStudentName().hashCode());
+        result = prime * result + ((getBirth() == null) ? 0 : getBirth().hashCode());
+        result = prime * result + ((getSchool() == null) ? 0 : getSchool().hashCode());
+        result = prime * result + ((getAddress() == null) ? 0 : getAddress().hashCode());
+        result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
+        result = prime * result + ((getUpdateTime() == null) ? 0 : getUpdateTime().hashCode());
         return result;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName());
-        sb.append(" [");
-        sb.append("Hash = ").append(hashCode());
-        sb.append(", id=").append(id);
-        sb.append(", student_name=").append(student_name);
-        sb.append(", create_time=").append(create_time);
-        sb.append(", update_time=").append(update_time);
-        sb.append(", serialVersionUID=").append(serialVersionUID);
-        sb.append("]");
-        return sb.toString();
+        return getClass().getSimpleName() +
+                " [" +
+                "Hash = " + hashCode() +
+                ", id=" + id +
+                ", studentName=" + studentName +
+                ", birth=" + birth +
+                ", school=" + school +
+                ", address=" + address +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", serialVersionUID=" + serialVersionUID +
+                "]";
     }
 }

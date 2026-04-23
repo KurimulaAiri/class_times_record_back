@@ -4,33 +4,58 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.CourseRecordMapper">
 
-    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.CourseRecord">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="stuName" column="stu_name" jdbcType="VARCHAR"/>
-            <result property="courseName" column="course_name" jdbcType="VARCHAR"/>
-            <result property="courseTotalTime" column="course_total_time" jdbcType="INTEGER"/>
-            <result property="courseRestTime" column="course_rest_time" jdbcType="INTEGER"/>
-            <result property="courseLastTime" column="course_last_time" jdbcType="TIMESTAMP"/>
-            <result property="courseAdminGroupId" column="couse_admin_group_id" jdbcType="INTEGER"/>
-            <result property="courseOwnerUserId" column="course_owner_user_id" jdbcType="INTEGER"/>
-            <result property="courseRemark" column="course_remark" jdbcType="VARCHAR"/>
-            <result property="isDelete" column="is_delete" jdbcType="VARCHAR"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-    </resultMap>
+    <select id="selectCourseCustomPage" resultType="com.shiroko.repository.entity.CourseRecord">
+        SELECT
+        cr.*,
+        s.student_name AS stuName
+        FROM course_record cr
+        LEFT JOIN student s ON cr.student_id = s.id
 
-    <sql id="Base_Column_List">
-        id,stu_name,course_name,
-        course_total_time,course_rest_time,course_last_time,
-        couse_admin_group_id,course_owner_user_id,course_remark,
-        is_delete,create_time,update_time
-    </sql>
+        # 分享查询时，不关联权限记录
+        <if test="!dto.isShare">
+            INNER JOIN permission_record pr ON cr.id = pr.course_record_id
+        </if>
 
-    <select id="getCourseRecords" resultMap="BaseResultMap">
-        select <include refid="Base_Column_List"/>
-            from course_record
-                where is_delete = '0'
-                  and stu_name = #{stuName}
-                  and course_name = #{courseName}
+        <where>
+            cr.is_delete = 0
+
+            <if test="!dto.isShare">
+                AND pr.user_id = #{dto.userId}
+            </if>
+
+            <if test="dto.id != null">
+                AND cr.id = #{dto.id}
+            </if>
+
+            <if test="dto.courseStatus != null">
+                AND cr.course_status = #{dto.courseStatus}
+            </if>
+
+            # 搜索条件
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName)
+                  or @org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseName)
+                  or @org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseRemark)">
+                AND (
+                <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName)">
+                    s.student_name LIKE CONCAT('%', #{dto.stuName}, '%')
+                </if>
+                <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseName)">
+                    <choose>
+                        <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName)">OR</when>
+                    </choose>
+                    cr.course_name LIKE CONCAT('%', #{dto.courseName}, '%')
+                </if>
+                <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseRemark)">
+                    <choose>
+                        <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName) or @org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseName)">OR</when>
+                    </choose>
+                    cr.course_remark LIKE CONCAT('%', #{dto.courseRemark}, '%')
+                </if>
+                )
+            </if>
+        </where>
+
+        ORDER BY cr.update_time DESC, cr.id DESC
     </select>
+
 </mapper>

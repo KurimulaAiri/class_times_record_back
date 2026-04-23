@@ -1,15 +1,15 @@
 package com.shiroko.controller;
 
-
-
 import com.shiroko.repository.dto.LoginDTO;
 import com.shiroko.repository.dto.RegisterDTO;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.group.LoginGroup;
 import com.shiroko.repository.vo.LoginVO;
 import com.shiroko.repository.vo.RegisterVO;
 import com.shiroko.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,12 +44,12 @@ public class AuthController {
      * @return 包含自定义 Token 的响应
      */
     @PostMapping("/login_no_pwd")
-    public ResponseDTO<LoginVO> login(@Valid @RequestBody LoginDTO dto) {
+    public ResponseDTO<LoginVO> login(@Validated(LoginGroup.LoginNoPwd.class) @RequestBody LoginDTO dto) {
         return authService.wxLogin(dto.getCode());
     }
 
     @PostMapping("/login_by_pwd")
-    public ResponseDTO<LoginVO> loginByPwd(@Valid @RequestBody LoginDTO dto) {
+    public ResponseDTO<LoginVO> loginByPwd(@Validated(LoginGroup.LoginByPwd.class) @RequestBody LoginDTO dto) {
         return authService.loginByPwd(dto);
     }
 

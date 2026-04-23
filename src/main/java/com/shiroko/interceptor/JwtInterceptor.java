@@ -88,12 +88,9 @@ public class JwtInterceptor implements HandlerInterceptor {
             return false;
         }
 
-
-
         Map<String, Object> userInfo = jwtUtils.getUserInfoFromToken(token);
         Long userId = Long.valueOf(userInfo.get("userId").toString());
         Long roleId = Long.valueOf(userInfo.get("roleId").toString());
-
 
         // 存入当前线程，方便后续 Service 使用
         User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getId, userId));
@@ -103,7 +100,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         Claims claims = jwtUtils.parseClaims(token);
         Date expiration = claims.getExpiration();
         long remainingTime = expiration.getTime() - System.currentTimeMillis();
-        long refreshThreshold = 30 * 60 * 1000L; // 设置阈值：如果剩余时间小于30分钟
+        long refreshThreshold = 5 * 60 * 1000L; // 设置阈值：如果剩余时间小于 5 分钟
 
         if (remainingTime < refreshThreshold) {
             // 生成新 Token

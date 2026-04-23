@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Description: TODO
+ * Description: 认证服务实现类
  *
  * @author Guguguy
  * @version 1.0
@@ -116,6 +116,8 @@ public class AuthServiceImpl implements AuthService {
         Long role = dto.getRole();
         String account = dto.getAccount();
         String password = SM2Util.decrypt(dto.getPassword(), privateKey);
+
+
 
         User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenid, openId));
 
