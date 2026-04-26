@@ -3,11 +3,14 @@ crypto:
   sm2:
     private-key: 00b3b8e61213bbd5e7d001e0cd4e33015efc04ae68ae61f2a36da55d92903cb0eb
 spring:
+  config:
+    import: "optional:classpath:git.properties"
   profiles:
     active: dev  # 默认激活开发环境
   # 通用配置
   application:
     name: class-times-record
+    version: 1.0.0
   # 数据库驱动等通用配置可以放在这里
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

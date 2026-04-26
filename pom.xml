@@ -133,6 +133,10 @@
             <artifactId>bcprov-jdk18on</artifactId>
             <version>1.78.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
     </dependencies>
 
@@ -165,6 +169,28 @@
                 <configuration>
                     <source>17</source> <!-- 和你用的 JDK 版本一致（17） -->
                     <target>17</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>4.9.10</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+
+                    <dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat>
+                    <dateFormatTimeZone>GMT+8</dateFormatTimeZone>
+
+                    <format>properties</format>
                 </configuration>
             </plugin>
         </plugins>
