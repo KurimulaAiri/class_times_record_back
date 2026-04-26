@@ -1,9 +1,9 @@
 package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shiroko.mapper.TeacherMapper;
 import com.shiroko.repository.entity.Teacher;
 import com.shiroko.service.TeacherService;
-import com.shiroko.mapper.TeacherMapper;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @version 1.0
  * @since 2026/4/15 下午22:37
  */
-@Service
+@Service("teacherService")
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService{
 
 }

@@ -1,7 +1,10 @@
 package com.shiroko.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shiroko.repository.entity.Permission;
+import com.shiroko.repository.entity.RoleBaseEntity;
 import com.shiroko.repository.entity.User;
+import com.shiroko.repository.vo.UserVO;
 
 /**
  * Description: TODO
@@ -12,4 +15,6 @@ import com.shiroko.repository.entity.User;
  */
 public interface UserService extends IService<User> {
     Long saveOrUpdateUser(String openid);
+
+    UserVO<RoleBaseEntity> getFullUserInfoByOpenid(String openid, Permission permission);
 }

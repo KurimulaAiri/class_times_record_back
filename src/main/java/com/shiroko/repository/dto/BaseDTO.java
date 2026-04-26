@@ -2,7 +2,6 @@ package com.shiroko.repository.dto;
 
 /**
  * Description: 基础 DTO 类，包含通用的字段和方法
- *
  * 有必要字段一定要加校验注解
  * 校验注解：
  * '@NotNull'：不能为空，用于对象类型

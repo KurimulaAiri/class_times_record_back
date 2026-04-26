@@ -4,12 +4,4 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.ParentMapper">
 
-    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.Parent">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="userId" column="user_id" jdbcType="INTEGER"/>
-    </resultMap>
-
-    <sql id="Base_Column_List">
-        id,user_id
-    </sql>
 </mapper>

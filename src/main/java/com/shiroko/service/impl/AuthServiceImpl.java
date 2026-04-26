@@ -8,10 +8,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.dto.LoginDTO;
 import com.shiroko.repository.dto.RegisterDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.entity.User;
+import com.shiroko.repository.entity.Permission;
+import com.shiroko.repository.entity.RoleBaseEntity;
 import com.shiroko.repository.entity.UserAuth;
 import com.shiroko.repository.vo.LoginVO;
 import com.shiroko.repository.vo.RegisterVO;
+import com.shiroko.repository.vo.UserVO;
 import com.shiroko.service.AuthService;
 import com.shiroko.service.PermissionService;
 import com.shiroko.service.UserAuthService;
@@ -23,9 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -33,7 +33,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -57,37 +57,16 @@ public class AuthServiceImpl implements AuthService {
     @Value("${crypto.sm2.private-key:}")
     private String privateKey;
 
-    private static final Set<Long> ALLOWED_ROLES = Set.of(1L, 2L, 3L, 4L);
-
     private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
     private final JwtUtils jwtUtils;
 
     private final UserService userService;
     private final PermissionService permissionService;
     private final UserAuthService userAuthService;
 
-    private final ApplicationContext applicationContext;
-
-    @Autowired
-    private AuthServiceImpl(
-            JwtUtils jwtUtils,
-            UserService userService,
-            PermissionService permissionService,
-            UserAuthService userAuthService,
-            ApplicationContext applicationContext
-    ) {
-        this.applicationContext = applicationContext;
-
-        this.restTemplate = new RestTemplate();
-        this.jwtUtils = jwtUtils;
-
-        this.userService = userService;
-        this.permissionService = permissionService;
-        this.userAuthService = userAuthService;
-    }
-
+    private final Map<String, IService<? extends RoleBaseEntity>> identityServiceMap;
 
     @Override
     public ResponseDTO<LoginVO> wxLogin(String code) {
@@ -104,8 +83,7 @@ public class AuthServiceImpl implements AuthService {
         // 5. 生成自定义 Token (推荐 JWT)
         String token = jwtUtils.createToken(userId, 0L);
 
-        return ResponseDTO.success(new LoginVO(token, openId));
-
+        return ResponseDTO.success(new LoginVO(token, openId, null));
 
     }
 
@@ -117,18 +95,20 @@ public class AuthServiceImpl implements AuthService {
         String account = dto.getAccount();
         String password = SM2Util.decrypt(dto.getPassword(), privateKey);
 
+        Permission permission = permissionService.getById(role);
 
+        UserVO<RoleBaseEntity> user = userService.getFullUserInfoByOpenid(openId, permission);
 
-        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getOpenid, openId));
+        // System.out.println(user);
 
         if (user == null) {
             return ResponseDTO.fail("用户不存在");
         } else {
-            if (ALLOWED_ROLES.contains(role)) {
-                if (hasRolePermission(user.getId(), role)) {
+            if (permission != null) {
+                if (hasRolePermission(user.getUserId(), role)) {
 
                     UserAuth userAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
-                            .eq(UserAuth::getUserId, user.getId())
+                            .eq(UserAuth::getUserId, user.getUserId())
                             .eq(UserAuth::getRoleId, role)
                     );
 
@@ -136,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
                     String encryptedPassword = SM3Util.digestWithSalt(password, salt);
 
                     if (encryptedPassword.equals(userAuth.getPassword()) && userAuth.getAccount().equals(account)) {
-                        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(user.getId(), role), openId));
+                        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(user.getUserId(), role), openId, user));
                     } else {
                         return ResponseDTO.fail("账号或密码错误");
                     }
@@ -166,7 +146,7 @@ public class AuthServiceImpl implements AuthService {
         if (openid == null) {
             return ResponseDTO.fail("微信登录失败：" + jsonObject.getString("errmsg"));
         }
-        return ResponseDTO.success(new LoginVO(null, openid));
+        return ResponseDTO.success(new LoginVO(null, openid, null));
     }
 
     @Override
@@ -240,11 +220,11 @@ public class AuthServiceImpl implements AuthService {
             // 1. 拼装 Service 的 Bean 名称 (遵循 Spring 默认命名规范：类名首字母小写)
             // 例如：role="teacher" -> beanName="teacherServiceImpl"
             String roleName = permissionService.getById(role).getPermissionName();
-            String beanName = roleName.toLowerCase() + "ServiceImpl";
+            String beanName = roleName.toLowerCase() + "Service";
 
             // 2. 从上下文动态获取 Service
             // 注意：所有的角色 Service 必须继承了 IService
-            IService<?> roleService = applicationContext.getBean(beanName, IService.class);
+            IService<?> roleService = identityServiceMap.get(beanName);
 
             // 3. 构造通用查询条件
             QueryWrapper<Object> wrapper = new QueryWrapper<>();
@@ -274,10 +254,11 @@ public class AuthServiceImpl implements AuthService {
      * 逻辑：根据角色名获取 Service -> 获取实体类 -> 实例化 -> 注入 userId -> 保存
      */
     private void saveIdentityRecord(Long userId, Long role) {
-        // 1. 拼装 Bean 名称，例如 "teacherServiceImpl"
+        // 1. 拼装 Bean 名称，例如 "teacherService"
         String roleName = permissionService.getById(role).getPermissionName();
-        String beanName = roleName.toLowerCase() + "ServiceImpl";
-        IService<?> identityService = applicationContext.getBean(beanName, IService.class);
+        String beanName = roleName.toLowerCase() + "Service";
+
+        IService<?> identityService = identityServiceMap.get(beanName);
         // 调用泛型辅助方法，将 <?> 捕获为具体的 <T>
         handleSave(identityService, userId, role, beanName);
 

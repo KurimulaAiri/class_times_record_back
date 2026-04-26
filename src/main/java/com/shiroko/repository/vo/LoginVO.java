@@ -1,5 +1,6 @@
 package com.shiroko.repository.vo;
 
+import com.shiroko.repository.entity.RoleBaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,4 +18,5 @@ import lombok.NoArgsConstructor;
 public class LoginVO {
     private String token;
     private String openId;
+    private UserVO<RoleBaseEntity> user;
 }

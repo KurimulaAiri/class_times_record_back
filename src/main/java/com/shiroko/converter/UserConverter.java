@@ -1,6 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.dto.UserDTO;
+import com.shiroko.repository.entity.RoleBaseEntity;
 import com.shiroko.repository.entity.User;
 import com.shiroko.repository.vo.UserVO;
 import org.mapstruct.Mapper;
@@ -14,11 +15,13 @@ import org.mapstruct.Mapping;
  * @since 2026/3/19 下午11:52
  */
 @Mapper(componentModel = "spring")
-public interface UserConverter extends BaseConverter<User, UserVO> {
+public interface UserConverter extends BaseConverter<User, UserVO<RoleBaseEntity>> {
+
+    @Mapping(target = "userId", source = "id")
     @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateToString")
     @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateToString")
     @Override
-    UserVO pojoToVO(User pojo);
+    UserVO<RoleBaseEntity> pojoToVO(User pojo);
 
     @Mapping(target = "roleId", source = "roleId")
     UserDTO pojoToDTO(User pojo, Long roleId);

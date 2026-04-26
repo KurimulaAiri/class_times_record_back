@@ -14,10 +14,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserVO {
+public class UserVO<RoleBaseEntity> {
     private Long userId;
-    private String openid;
-    private String account;
+    private RoleBaseEntity identityInfo;
     private String createTimeStr;
     private String updateTimeStr;
    }

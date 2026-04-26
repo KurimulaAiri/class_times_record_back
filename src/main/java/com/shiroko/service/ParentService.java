@@ -1,14 +1,14 @@
 package com.shiroko.service;
 
-import com.shiroko.repository.entity.Parent;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shiroko.repository.entity.Parent;
 
 /**
- * Description: 家长数据库Service
+ * Description: 家长类Service接口
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/4/17 下午23:14
+ * @since 2026/4/24 下午21:24
  */
 public interface ParentService extends IService<Parent> {
 
