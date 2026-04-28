@@ -13,9 +13,7 @@ public interface LoginGroup {
 
     interface LoginByPwd {}
 
-    interface LoginByToken {
-    }
+    interface LoginByToken {}
 
-    interface LoginOut {
-    }
+    interface LoginOut {}
 }
