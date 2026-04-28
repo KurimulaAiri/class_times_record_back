@@ -1,7 +1,7 @@
 package com.shiroko.repository.dto.group;
 
 /**
- * Description: TODO
+ * Description: 登录参数校验分组
  *
  * @author Guguguy
  * @version 1.0
@@ -13,4 +13,7 @@ public interface LoginGroup {
 
     interface LoginByPwd {}
 
+    interface LoginByToken {}
+
+    interface LoginOut {}
 }

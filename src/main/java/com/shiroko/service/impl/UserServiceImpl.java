@@ -65,6 +65,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 4. 初始化 VO 并拷贝 User 的基础信息
         UserVO<RoleBaseEntity> vo = userConverter.pojoToVO(user);
 
+        vo.setRoleId(permission.getId());
+
         // 5. 动态查询具体的身份实体（Teacher/Parent 等）并填充
         // 传入 user.getId()，因为身份表里存的是业务用户的 ID
         fillIdentityDetail(permissionService, vo, user.getId());
@@ -74,6 +76,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * 泛型辅助方法：根据 userId 在动态的业务表中查询记录
+     * @param service 业务表的 Service Bean
+     * @param vo      用户 VO，用于填充身份信息
+     * @param userId  用户 ID
      */
     private <T extends RoleBaseEntity> void fillIdentityDetail(IService<T> service, UserVO<RoleBaseEntity> vo, Long userId) {
         if (userId == null) return;

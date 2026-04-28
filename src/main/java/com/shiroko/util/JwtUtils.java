@@ -64,6 +64,8 @@ public class JwtUtils {
 
     /**
      * 解析 Token 并获取用户 ID 和角色 ID
+     * @param token 要解析的 Token
+     * @return 包含用户 ID (userId) 和角色 ID (roleId) 的 Map, 如果 Token 无效则返回 null
      */
     public Map<String, Object> getUserInfoFromToken(String token) {
         Map<String, Object> claims;

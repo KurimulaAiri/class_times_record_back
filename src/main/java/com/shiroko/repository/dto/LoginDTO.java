@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Description: TODO
+ * Description: 登录DTO
  *
  * @author Guguguy
  * @version 1.0
@@ -17,11 +17,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class LoginDTO {
-
     @NotNull(message = "code不能为空", groups = LoginGroup.LoginNoPwd.class)
     private String code;
 
-    @NotNull(message = "openId不能为空", groups = LoginGroup.LoginByPwd.class)
+    @NotNull(message = "openId不能为空", groups = { LoginGroup.LoginByPwd.class, LoginGroup.LoginByToken.class })
     private String openId;
 
     @NotNull(message = "role不能为空", groups = LoginGroup.LoginByPwd.class)
@@ -32,4 +31,7 @@ public class LoginDTO {
 
     @NotNull(message = "password不能为空", groups = LoginGroup.LoginByPwd.class)
     private String password;
+
+    @NotNull(message = "token不能为空", groups = { LoginGroup.LoginByToken.class, LoginGroup.LoginOut.class })
+    private String token;
 }

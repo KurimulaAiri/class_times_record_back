@@ -1,6 +1,7 @@
 package com.shiroko.config;
 
 import com.shiroko.interceptor.JwtInterceptor;
+import com.shiroko.interceptor.UserInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -16,14 +17,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final JwtInterceptor jwtInterceptor;
+    private final UserInterceptor userInterceptor;
 
     // 注入你刚才写的 JWT 拦截器
-    public WebConfig(JwtInterceptor jwtInterceptor) {
+    public WebConfig(JwtInterceptor jwtInterceptor, UserInterceptor userInterceptor) {
         this.jwtInterceptor = jwtInterceptor;
+        this.userInterceptor = userInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(userInterceptor)
+                .addPathPatterns("/**");
+        // 注册用户拦截器
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")             // 默认拦截所有路径
                 .excludePathPatterns(               // 以下路径不拦截：
