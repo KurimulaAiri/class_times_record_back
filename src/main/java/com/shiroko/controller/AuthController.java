@@ -53,6 +53,16 @@ public class AuthController {
         return authService.loginByPwd(dto);
     }
 
+    @PostMapping("/login_by_token")
+    public ResponseDTO<LoginVO> loginByToken(@Validated(LoginGroup.LoginByToken.class) @RequestBody LoginDTO dto) {
+        return authService.loginByToken(dto);
+    }
+
+    @PostMapping("/logout")
+    public ResponseDTO<String> logout(@Validated(LoginGroup.LoginOut.class) @RequestBody LoginDTO dto) {
+        return authService.logout(dto);
+    }
+
     @PostMapping("/register")
     public ResponseDTO<RegisterVO> register(@Valid @RequestBody RegisterDTO dto) {
         return authService.register(dto);

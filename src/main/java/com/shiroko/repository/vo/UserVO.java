@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserVO<RoleBaseEntity> {
     private Long userId;
+    private Long roleId;
     private RoleBaseEntity identityInfo;
     private String createTimeStr;
     private String updateTimeStr;

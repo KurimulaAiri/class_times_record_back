@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shiroko.context.UserContext;
 import com.shiroko.repository.dto.LoginDTO;
 import com.shiroko.repository.dto.RegisterDTO;
 import com.shiroko.repository.dto.ResponseDTO;
@@ -150,15 +151,32 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public ResponseDTO<LoginVO> loginByToken(LoginDTO dto) {
+        String token = dto.getToken();
+        Map<String, Object> userInfo = jwtUtils.getUserInfoFromToken(token);
+        if (userInfo == null) {
+            return ResponseDTO.fail("token无效");
+        }
+        Long userId = Long.parseLong(userInfo.get("userId").toString());
+        Long roleId = Long.parseLong(userInfo.get("roleId").toString());
+
+        UserVO<RoleBaseEntity> user = userService.getFullUserInfoByOpenid(dto.getOpenId(), permissionService.getById(roleId));
+
+        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(userId, roleId), dto.getOpenId(), user));
+    }
+
+    @Override
+    public ResponseDTO<String> logout(LoginDTO dto) {
+        UserContext.remove();
+        return ResponseDTO.success("登出成功");
+    }
+
+    @Override
     @Transactional
     public ResponseDTO<RegisterVO> register(RegisterDTO dto) {
-
-
-
         // 1. 账号唯一性检查
         Long userRole = dto.getRole();
         String openId = dto.getOpenId();
-
 
         // 2. 检查openid是否已注册，未注册则注册
         Long userId = userService.saveOrUpdateUser(openId);
@@ -200,8 +218,6 @@ public class AuthServiceImpl implements AuthService {
         userAuth.setRoleId(userRole);
 
         userAuthService.save(userAuth);
-
-
 
         // 6. 关联身份表 (如 Teacher/Parent)
         saveIdentityRecord(userId, dto.getRole());

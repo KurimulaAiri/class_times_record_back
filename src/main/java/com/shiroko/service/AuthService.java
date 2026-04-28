@@ -21,5 +21,9 @@ public interface AuthService {
 
     ResponseDTO<LoginVO> getOpenId(String code);
 
+    ResponseDTO<LoginVO> loginByToken(LoginDTO dto);
+
+    ResponseDTO<String> logout(LoginDTO dto);
+
     ResponseDTO<RegisterVO> register(RegisterDTO dto);
 }
