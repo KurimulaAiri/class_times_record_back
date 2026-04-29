@@ -1,7 +1,7 @@
 package com.shiroko.mapper;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.shiroko.repository.dto.QueryMenuDTO;
+import com.shiroko.repository.dto.menu.QueryMenuDTO;
 import com.shiroko.repository.entity.Menu;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 

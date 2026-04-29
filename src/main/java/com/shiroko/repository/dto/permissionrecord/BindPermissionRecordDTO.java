@@ -1,5 +1,6 @@
-package com.shiroko.repository.dto;
+package com.shiroko.repository.dto.permissionrecord;
 
+import com.shiroko.repository.dto.BaseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class BindPermissionRecordDTO extends BaseDTO{
+public class BindPermissionRecordDTO extends BaseDTO {
     private Long courseRecordId;
     private Long permissionType;
 }

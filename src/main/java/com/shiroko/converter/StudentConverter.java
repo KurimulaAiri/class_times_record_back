@@ -1,7 +1,8 @@
 package com.shiroko.converter;
 
+import com.shiroko.repository.dto.student.UpdateStudentDTO;
 import com.shiroko.repository.entity.Student;
-import com.shiroko.repository.vo.StudentVO;
+import com.shiroko.repository.vo.student.StudentVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -20,5 +21,7 @@ public interface StudentConverter extends BaseConverter<Student, StudentVO> {
     @Mapping(target = "birthStr", source = "birth", qualifiedByName = "dateToString")
     @Override
     StudentVO pojoToVO(Student pojo);
+
+    Student updateStudentDTOToPojo(UpdateStudentDTO dto);
 
 }

@@ -1,9 +1,9 @@
 package com.shiroko.converter;
 
-import com.shiroko.repository.dto.InsertCourseRecordDTO;
-import com.shiroko.repository.dto.UpdateCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
-import com.shiroko.repository.vo.CourseRecordVO;
+import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

@@ -2,7 +2,7 @@ package com.shiroko.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.entity.Permission;
-import com.shiroko.repository.entity.RoleBaseEntity;
+import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.entity.User;
 import com.shiroko.repository.vo.UserVO;
 

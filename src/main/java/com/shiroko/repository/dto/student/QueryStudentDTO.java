@@ -1,4 +1,4 @@
-package com.shiroko.repository.dto;
+package com.shiroko.repository.dto.student;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

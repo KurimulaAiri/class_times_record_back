@@ -1,4 +1,4 @@
-package com.shiroko.repository.vo;
+package com.shiroko.repository.vo.courserecord;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

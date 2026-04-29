@@ -1,7 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.dto.UserDTO;
-import com.shiroko.repository.entity.RoleBaseEntity;
+import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.entity.User;
 import com.shiroko.repository.vo.UserVO;
 import org.mapstruct.Mapper;

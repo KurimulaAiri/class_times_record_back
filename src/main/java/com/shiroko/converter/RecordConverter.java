@@ -1,7 +1,7 @@
 package com.shiroko.converter;
 
-import com.shiroko.repository.dto.InsertRecordDTO;
-import com.shiroko.repository.vo.RecordVO;
+import com.shiroko.repository.dto.record.InsertRecordDTO;
+import com.shiroko.repository.vo.record.RecordVO;
 import com.shiroko.repository.entity.Record;
 import org.mapstruct.Mapper;
 

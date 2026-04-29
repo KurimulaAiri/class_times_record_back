@@ -4,14 +4,16 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.StudentConverter;
-import com.shiroko.repository.dto.QueryStudentDTO;
+import com.shiroko.repository.dto.student.QueryStudentDTO;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.student.UpdateStudentDTO;
 import com.shiroko.repository.entity.Student;
-import com.shiroko.repository.vo.QueryStudentVO;
+import com.shiroko.repository.vo.student.QueryStudentVO;
 import com.shiroko.service.StudentService;
 import com.shiroko.mapper.StudentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,6 +25,7 @@ import java.util.List;
  * @since 2026/4/23 上午14:32
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
 public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> implements StudentService {
 
@@ -43,6 +46,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         List<Student> list = page.getRecords();
 
         return ResponseDTO.success(new QueryStudentVO(studentConverter.pojoListToVOList(list), page.getTotal()));
+    }
+
+    @Override
+    public ResponseDTO<Void> updateStudent(UpdateStudentDTO updateStudentDTO) {
+        studentMapper.updateById(studentConverter.updateStudentDTOToPojo(updateStudentDTO));
+        return ResponseDTO.success("更新成功", null);
     }
 }
 

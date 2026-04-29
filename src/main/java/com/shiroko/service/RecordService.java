@@ -1,12 +1,12 @@
 package com.shiroko.service;
 
-import com.shiroko.repository.dto.InsertRecordDTO;
-import com.shiroko.repository.dto.InsertRecordsDTO;
-import com.shiroko.repository.dto.QueryRecordDTO;
+import com.shiroko.repository.dto.record.InsertRecordDTO;
+import com.shiroko.repository.dto.record.InsertRecordsDTO;
+import com.shiroko.repository.dto.record.QueryRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.Record;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.shiroko.repository.vo.QueryRecordVO;
+import com.shiroko.repository.vo.record.QueryRecordVO;
 
 /**
  * Description: 记录服务接口

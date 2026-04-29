@@ -1,8 +1,8 @@
 package com.shiroko.controller;
 
-import com.shiroko.repository.dto.QueryMenuDTO;
+import com.shiroko.repository.dto.menu.QueryMenuDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.vo.QueryMenuVO;
+import com.shiroko.repository.vo.menu.QueryMenuVO;
 import com.shiroko.service.MenuService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

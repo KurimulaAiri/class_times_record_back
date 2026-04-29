@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.UserConverter;
 import com.shiroko.mapper.UserMapper;
 import com.shiroko.repository.entity.Permission;
-import com.shiroko.repository.entity.RoleBaseEntity;
+import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.entity.User;
 import com.shiroko.repository.vo.UserVO;
 import com.shiroko.service.UserService;

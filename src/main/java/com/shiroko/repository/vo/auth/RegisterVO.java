@@ -1,4 +1,4 @@
-package com.shiroko.repository.vo;
+package com.shiroko.repository.vo.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

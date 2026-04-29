@@ -1,10 +1,10 @@
 package com.shiroko.controller;
 
-import com.shiroko.repository.dto.InsertRecordDTO;
-import com.shiroko.repository.dto.InsertRecordsDTO;
-import com.shiroko.repository.dto.QueryRecordDTO;
+import com.shiroko.repository.dto.record.InsertRecordDTO;
+import com.shiroko.repository.dto.record.InsertRecordsDTO;
+import com.shiroko.repository.dto.record.QueryRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.vo.QueryRecordVO;
+import com.shiroko.repository.vo.record.QueryRecordVO;
 import com.shiroko.service.RecordService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

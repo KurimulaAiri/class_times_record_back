@@ -1,7 +1,11 @@
 package com.shiroko.controller;
 
 import com.shiroko.repository.dto.*;
-import com.shiroko.repository.vo.QueryCourseRecordVO;
+import com.shiroko.repository.dto.courserecord.DeleteCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
+import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;

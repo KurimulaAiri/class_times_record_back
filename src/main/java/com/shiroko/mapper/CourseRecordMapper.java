@@ -2,13 +2,10 @@ package com.shiroko.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.shiroko.repository.dto.QueryCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
-import com.shiroko.repository.vo.CourseRecordVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
  * Description: TODO

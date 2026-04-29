@@ -1,5 +1,6 @@
-package com.shiroko.repository.vo;
+package com.shiroko.repository.vo.permissionrecord;
 
+import com.shiroko.repository.vo.BaseVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

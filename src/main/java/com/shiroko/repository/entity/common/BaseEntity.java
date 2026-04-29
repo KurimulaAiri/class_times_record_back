@@ -1,4 +1,4 @@
-package com.shiroko.repository.entity;
+package com.shiroko.repository.entity.common;
 
 import lombok.Data;
 

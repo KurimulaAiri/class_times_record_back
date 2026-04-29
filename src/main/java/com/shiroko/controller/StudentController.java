@@ -1,8 +1,9 @@
 package com.shiroko.controller;
 
-import com.shiroko.repository.dto.QueryStudentDTO;
+import com.shiroko.repository.dto.student.QueryStudentDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.vo.QueryStudentVO;
+import com.shiroko.repository.dto.student.UpdateStudentDTO;
+import com.shiroko.repository.vo.student.QueryStudentVO;
 import com.shiroko.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,11 @@ public class StudentController {
     @PostMapping("/get_by_parent_id")
     public ResponseDTO<QueryStudentVO> getStudentByParentId(@RequestBody QueryStudentDTO queryStudentDTO) {
         return studentService.getStudentByParentId(queryStudentDTO);
+    }
+
+    @PostMapping("/update")
+    public ResponseDTO<Void> update(@RequestBody UpdateStudentDTO updateStudentDTO) {
+        return studentService.updateStudent(updateStudentDTO);
     }
 
 }

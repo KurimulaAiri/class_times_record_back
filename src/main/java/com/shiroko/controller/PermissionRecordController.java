@@ -1,9 +1,9 @@
 package com.shiroko.controller;
 
-import com.shiroko.repository.dto.BindPermissionRecordDTO;
-import com.shiroko.repository.dto.QueryPermissionRecordDTO;
+import com.shiroko.repository.dto.permissionrecord.BindPermissionRecordDTO;
+import com.shiroko.repository.dto.permissionrecord.QueryPermissionRecordDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.vo.QueryPermissionRecordVO;
+import com.shiroko.repository.vo.permissionrecord.QueryPermissionRecordVO;
 import com.shiroko.service.PermissionRecordService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -1,4 +1,4 @@
-package com.shiroko.repository.vo;
+package com.shiroko.repository.vo.menu;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

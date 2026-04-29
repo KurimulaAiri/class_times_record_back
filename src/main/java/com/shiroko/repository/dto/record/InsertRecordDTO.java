@@ -1,6 +1,7 @@
-package com.shiroko.repository.dto;
+package com.shiroko.repository.dto.record;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.shiroko.repository.dto.BaseDTO;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;

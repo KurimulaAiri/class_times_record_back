@@ -1,10 +1,10 @@
 package com.shiroko.service;
 
-import com.shiroko.repository.dto.LoginDTO;
-import com.shiroko.repository.dto.RegisterDTO;
+import com.shiroko.repository.dto.auth.LoginDTO;
+import com.shiroko.repository.dto.auth.RegisterDTO;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.vo.LoginVO;
-import com.shiroko.repository.vo.RegisterVO;
+import com.shiroko.repository.vo.auth.LoginVO;
+import com.shiroko.repository.vo.auth.RegisterVO;
 
 /**
  * Description: TODO

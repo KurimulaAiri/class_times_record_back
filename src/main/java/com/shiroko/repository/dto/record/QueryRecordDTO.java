@@ -1,5 +1,6 @@
-package com.shiroko.repository.dto;
+package com.shiroko.repository.dto.record;
 
+import com.shiroko.repository.dto.BaseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

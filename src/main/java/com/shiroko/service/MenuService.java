@@ -1,9 +1,9 @@
 package com.shiroko.service;
 
-import com.shiroko.repository.dto.QueryMenuDTO;
+import com.shiroko.repository.dto.menu.QueryMenuDTO;
 import com.shiroko.repository.entity.Menu;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.shiroko.repository.vo.QueryMenuVO;
+import com.shiroko.repository.vo.menu.QueryMenuVO;
 
 /**
  * Description: 菜单服务接口

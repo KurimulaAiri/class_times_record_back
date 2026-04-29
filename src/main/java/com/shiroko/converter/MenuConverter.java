@@ -1,7 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.entity.Menu;
-import com.shiroko.repository.vo.MenuVO;
+import com.shiroko.repository.vo.menu.MenuVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

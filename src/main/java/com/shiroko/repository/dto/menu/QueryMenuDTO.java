@@ -1,4 +1,4 @@
-package com.shiroko.repository.dto;
+package com.shiroko.repository.dto.menu;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

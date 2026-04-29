@@ -1,6 +1,7 @@
-package com.shiroko.repository.vo;
+package com.shiroko.repository.vo.auth;
 
-import com.shiroko.repository.entity.RoleBaseEntity;
+import com.shiroko.repository.entity.common.RoleBaseEntity;
+import com.shiroko.repository.vo.UserVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,7 +1,7 @@
 package com.shiroko.mapper;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.shiroko.repository.dto.QueryStudentDTO;
+import com.shiroko.repository.dto.student.QueryStudentDTO;
 import com.shiroko.repository.entity.Student;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;

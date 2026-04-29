@@ -1,7 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.entity.PermissionRecord;
-import com.shiroko.repository.vo.PermissionRecordVO;
+import com.shiroko.repository.vo.permissionrecord.PermissionRecordVO;
 import org.mapstruct.Mapper;
 
 /**
