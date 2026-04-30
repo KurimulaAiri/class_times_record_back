@@ -18,7 +18,11 @@ public class StudentVO{
 
     private Long id;
 
+    private String avatar;
+
     private String studentName;
+
+    private String relation;
 
     private String birthStr;
 

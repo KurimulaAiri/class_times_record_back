@@ -1,8 +1,9 @@
 package com.shiroko.repository.dto.student;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * Description: 更新学生信息DTO
@@ -16,7 +17,8 @@ public class UpdateStudentDTO {
 
     private Long id;
 
-    private LocalDateTime birth;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    private LocalDate birth;
 
     private String school;
 

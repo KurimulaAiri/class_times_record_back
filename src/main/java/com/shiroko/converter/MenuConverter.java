@@ -15,8 +15,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface MenuConverter extends BaseConverter<Menu, MenuVO> {
 
-    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateToString") // 自定义转换规则
-    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateToString") // 自定义转换规则
+    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
+    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
     @Override
     MenuVO pojoToVO(Menu pojo);
 

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -44,7 +45,7 @@ public class Student extends BaseEntity {
      * 学生出生日期
      */
     @TableField(value = "birth")
-    private LocalDateTime birth;
+    private LocalDate birth;
 
     /**
      * 学生学校

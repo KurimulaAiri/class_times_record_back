@@ -19,9 +19,9 @@ import org.mapstruct.Mapping;
 public interface CourseRecordConverter extends BaseConverter<CourseRecord, CourseRecordVO> {
 
 
-    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateToString") // 自定义转换规则
-    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateToString") // 自定义转换规则
-    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateToString") // 自定义转换规则
+    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
+    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
+    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
     @Override
     CourseRecordVO pojoToVO(CourseRecord pojo);
 

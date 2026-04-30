@@ -2,6 +2,7 @@ package com.shiroko.converter;
 
 import org.mapstruct.Named;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -20,16 +21,29 @@ public interface BaseConverter<T, V> {
     // 集合对象转换（MapStruct会自动生成实现）
     List<V> pojoListToVOList(List<T> pojoList);
 
-    // 自定义日期转换方法
-    @Named("dateToString")
-    default String dateToString(LocalDateTime date) {
-        if (date == null) {
+    // 自定义日期转换方法(LocalDateTime)
+    @Named("dateTimeToString")
+    default String dateTimeToString(LocalDateTime dateTime) {
+        if (dateTime == null) {
             return "暂无记录";
         }
         // 1. 定义格式化器
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         // 2. 直接对 LocalDateTime 进行格式化
+        return dateTime.format(formatter);
+    }
+
+    // 自定义日期转换方法(LocalDate)
+    @Named("dateToString")
+    default String dateToString(LocalDate date) {
+        if (date == null) {
+            return "暂无记录";
+        }
+        // 1. 定义格式化器
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        // 2. 直接对 LocalDate 进行格式化
         return date.format(formatter);
     }
 }

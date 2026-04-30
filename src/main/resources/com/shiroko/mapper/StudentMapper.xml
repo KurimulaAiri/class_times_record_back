@@ -3,8 +3,31 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.StudentMapper">
-    <select id="selectStudentByParentId" resultType="com.shiroko.repository.entity.Student">
-        select s.*
+    <resultMap id="studentMap" type="com.shiroko.repository.entity.Student">
+        <id property="id" column="id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="studentName" column="student_name"/>
+        <result property="birth" column="birth"/>
+        <result property="school" column="school"/>
+        <result property="address" column="address"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="studentDTOMap" type="com.shiroko.repository.dto.student.StudentDTO" extends="studentMap">
+        <result property="relation" column="relation"/>
+    </resultMap>
+
+    <select id="selectStudentByParentId" resultMap="studentDTOMap">
+        select s.id,
+               s.avatar,
+               s.student_name,
+               ps.relation,
+               s.birth,
+               s.school,
+               s.address,
+               s.create_time,
+               s.update_time
         from parent_student ps
         left join student s on s.id = ps.student_id
         where ps.parent_id = #{dto.parentId}
