@@ -1,8 +1,8 @@
 package com.shiroko.controller;
 
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
-import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.auth.validategroup.LoginGroup;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
@@ -45,7 +45,7 @@ public class AuthController {
      */
     @PostMapping("/login_no_pwd")
     public ResponseDTO<LoginVO> login(@Validated(LoginGroup.LoginNoPwd.class) @RequestBody LoginDTO dto) {
-        return authService.wxLogin(dto.getCode());
+        return authService.wxLogin(dto);
     }
 
     @PostMapping("/login_by_pwd")

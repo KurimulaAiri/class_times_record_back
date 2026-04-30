@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.CourseRecordMapper">
 
-    <select id="selectCourseCustomPage" resultType="com.shiroko.repository.entity.CourseRecord">
+    <select id="selectCourseCustomPage" resultType="com.shiroko.repository.vo.courserecord.CourseRecordVO">
         SELECT
         cr.*,
         s.student_name AS stuName

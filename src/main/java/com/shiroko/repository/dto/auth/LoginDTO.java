@@ -23,7 +23,7 @@ public class LoginDTO {
     @NotNull(message = "openId不能为空", groups = {LoginGroup.LoginByPwd.class, LoginGroup.LoginByToken.class})
     private String openId;
 
-    @NotNull(message = "role不能为空", groups = LoginGroup.LoginByPwd.class)
+    @NotNull(message = "role不能为空", groups = {LoginGroup.LoginByPwd.class, LoginGroup.LoginNoPwd.class})
     private Long role;
 
     @NotNull(message = "account不能为空", groups = LoginGroup.LoginByPwd.class)

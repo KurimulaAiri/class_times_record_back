@@ -6,15 +6,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.context.UserContext;
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
-import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.Permission;
-import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.entity.UserAuth;
+import com.shiroko.repository.entity.common.RoleBaseEntity;
+import com.shiroko.repository.vo.UserVO;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
-import com.shiroko.repository.vo.UserVO;
 import com.shiroko.service.AuthService;
 import com.shiroko.service.PermissionService;
 import com.shiroko.service.UserAuthService;
@@ -70,9 +70,9 @@ public class AuthServiceImpl implements AuthService {
     private final Map<String, IService<? extends RoleBaseEntity>> identityServiceMap;
 
     @Override
-    public ResponseDTO<LoginVO> wxLogin(String code) {
+    public ResponseDTO<LoginVO> wxLogin(LoginDTO dto) {
         // 1. 调用 getOpenId 方法获取 openid
-        ResponseDTO<LoginVO> openidResponse = getOpenId(code);
+        ResponseDTO<LoginVO> openidResponse = getOpenId(dto.getCode());
         if (openidResponse.getCode() != 200) {
             return openidResponse;
         }
@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
         Long userId = userService.saveOrUpdateUser(openId);
 
         // 5. 生成自定义 Token (推荐 JWT)
-        String token = jwtUtils.createToken(userId, 0L);
+        String token = jwtUtils.createToken(userId, dto.getRole());
 
         return ResponseDTO.success(new LoginVO(token, openId, null));
 

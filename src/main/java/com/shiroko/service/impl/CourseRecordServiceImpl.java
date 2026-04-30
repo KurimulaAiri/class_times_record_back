@@ -7,7 +7,7 @@ import com.shiroko.context.UserContext;
 import com.shiroko.converter.CourseRecordConverter;
 import com.shiroko.mapper.CourseRecordMapper;
 import com.shiroko.mapper.PermissionRecordMapper;
-import com.shiroko.repository.dto.*;
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.courserecord.DeleteCourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
@@ -50,7 +50,7 @@ public class CourseRecordServiceImpl implements CourseRecordService {
 
         // 2. 构造分页对象 (如果没有传分页参数，可以给个默认值或者不分页)
         // 注意：即便不分页，也可以传一个 Page(1, -1) 或者通过条件判断
-        IPage<CourseRecord> pageParam = new Page<>(
+        IPage<CourseRecordVO> pageParam = new Page<>(
                 dto.getCurrentPage() == null ? 1 : dto.getCurrentPage(),
                 dto.getPageSize() == null ? 10 : dto.getPageSize()
         );
@@ -59,14 +59,12 @@ public class CourseRecordServiceImpl implements CourseRecordService {
         courseRecordMapper.selectCourseCustomPage(pageParam, dto);
 
         // 4. 处理 VO 注入逻辑
-        List<CourseRecord> list = pageParam.getRecords();
+        List<CourseRecordVO> list = pageParam.getRecords();
 
-        List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(list);
-
-        injectPermissionType(voList);
+        injectPermissionType(list);
 
         // 5. 返回封装结果
-        return ResponseDTO.success(new QueryCourseRecordVO(voList, pageParam.getTotal()));
+        return ResponseDTO.success(new QueryCourseRecordVO(list, pageParam.getTotal()));
     }
 
     @Override

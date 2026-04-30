@@ -1,8 +1,8 @@
 package com.shiroko.service;
 
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
-import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
 
@@ -15,7 +15,7 @@ import com.shiroko.repository.vo.auth.RegisterVO;
  */
 public interface AuthService {
 
-    ResponseDTO<LoginVO> wxLogin(String code);
+    ResponseDTO<LoginVO> wxLogin(LoginDTO dto);
 
     ResponseDTO<LoginVO> loginByPwd(LoginDTO dto);
 
