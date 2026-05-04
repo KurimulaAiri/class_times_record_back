@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shiroko.mapper.InstitutionMapper">
+
+    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.Institution">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="institutionName" column="institution_name" jdbcType="VARCHAR"/>
+            <result property="institutionAddress" column="institution_address" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectListByStudentId" resultType="com.shiroko.repository.entity.Institution">
+        SELECT DISTINCT
+            i.*
+        FROM
+            course_record cr
+                INNER JOIN
+            institution i ON cr.course_institution_id = i.id
+        WHERE
+            cr.student_id = #{studentId};
+    </select>
+
+
+</mapper>

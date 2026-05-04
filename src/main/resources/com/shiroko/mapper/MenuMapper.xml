@@ -17,13 +17,6 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,menu_name,icon,
-        icon_type,bg_color,path,
-        sort_order,is_visible,create_time,
-        update_time
-    </sql>
-
     <select id="getMenuByRole" resultMap="BaseResultMap">
         SELECT
             m.id,

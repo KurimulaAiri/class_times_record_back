@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.StudentConverter;
+import com.shiroko.mapper.InstitutionMapper;
 import com.shiroko.mapper.StudentMapper;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.student.QueryStudentDTO;
@@ -32,6 +33,7 @@ import java.util.List;
 public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> implements StudentService {
 
     private final StudentMapper studentMapper;
+    private final InstitutionMapper institutionMapper;
 
     private final StudentConverter studentConverter;
 
@@ -48,6 +50,10 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         List<StudentDTO> list = page.getRecords();
 
         List<StudentVO> voList = studentConverter.dtoListToVOList(list);
+
+        for (StudentVO vo : voList) {
+            vo.setInstitutions(institutionMapper.selectListByStudentId(vo.getId()));
+        }
 
         return ResponseDTO.success(new QueryStudentVO(voList, page.getTotal()));
     }

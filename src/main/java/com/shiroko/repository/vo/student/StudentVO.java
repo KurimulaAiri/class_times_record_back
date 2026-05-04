@@ -1,8 +1,11 @@
 package com.shiroko.repository.vo.student;
 
+import com.shiroko.repository.entity.Institution;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * Description: 学生VO类
@@ -29,6 +32,8 @@ public class StudentVO{
     private String school;
 
     private String address;
+
+    private List<Institution> institutions;
 
     private String createTimeStr;
 
