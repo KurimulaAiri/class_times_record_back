@@ -1,5 +1,7 @@
 package com.shiroko.repository.dto.courserecord;
 
+import com.shiroko.repository.dto.courserecord.validategroup.QueryGroup;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +23,9 @@ public class QueryCourseRecordDTO {
     private Long id;
 
     private Long userId;
+
+    @NotNull(message = "学生ID不能为空", groups = {QueryGroup.NewQueryGroup.class})
+    private Long studentId;
 
     private String stuName;
 

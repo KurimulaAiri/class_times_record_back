@@ -10,52 +10,55 @@
         s.student_name AS stuName
         FROM course_record cr
         LEFT JOIN student s ON cr.student_id = s.id
-
-        # 分享查询时，不关联权限记录
+        <!-- 分享查询时，不关联权限记录 -->
         <if test="!dto.isShare">
             INNER JOIN permission_record pr ON cr.id = pr.course_record_id
         </if>
 
         <where>
             cr.is_delete = 0
-
             <if test="!dto.isShare">
                 AND pr.user_id = #{dto.userId}
             </if>
-
             <if test="dto.id != null">
                 AND cr.id = #{dto.id}
             </if>
-
             <if test="dto.courseStatus != null">
                 AND cr.course_status = #{dto.courseStatus}
             </if>
 
-            # 搜索条件
-            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName)
-                  or @org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseName)
-                  or @org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseRemark)">
+            <!-- 简化后的搜索条件 -->
+            <if test="dto.stuName != null or dto.courseName != null or dto.courseRemark != null">
                 AND (
-                <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName)">
-                    s.student_name LIKE CONCAT('%', #{dto.stuName}, '%')
-                </if>
-                <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseName)">
-                    <choose>
-                        <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName)">OR</when>
-                    </choose>
-                    cr.course_name LIKE CONCAT('%', #{dto.courseName}, '%')
-                </if>
-                <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseRemark)">
-                    <choose>
-                        <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(dto.stuName) or @org.apache.commons.lang3.StringUtils@isNotBlank(dto.courseName)">OR</when>
-                    </choose>
-                    cr.course_remark LIKE CONCAT('%', #{dto.courseRemark}, '%')
-                </if>
+                <trim prefixOverrides="OR">
+                    <if test="dto.stuName != null and dto.stuName != ''">
+                        OR s.student_name LIKE CONCAT('%', #{dto.stuName}, '%')
+                    </if>
+                    <if test="dto.courseName != null and dto.courseName != ''">
+                        OR cr.course_name LIKE CONCAT('%', #{dto.courseName}, '%')
+                    </if>
+                    <if test="dto.courseRemark != null and dto.courseRemark != ''">
+                        OR cr.course_remark LIKE CONCAT('%', #{dto.courseRemark}, '%')
+                    </if>
+                </trim>
                 )
             </if>
         </where>
-
         ORDER BY cr.update_time DESC, cr.id DESC
+    </select>
+
+    <select id="selectCourseRecords" resultType="com.shiroko.repository.entity.CourseRecord">
+        SELECT
+        cr.*,
+        c.course_name
+        FROM
+        course_record cr
+        LEFT JOIN
+        course c ON cr.course_id = c.id
+        <where>
+            <!-- 这里可以继续加你的条件，比如：-->
+            cr.student_id = #{dto.studentId} AND cr.is_delete = 0
+        </where>
     </select>
 
 </mapper>

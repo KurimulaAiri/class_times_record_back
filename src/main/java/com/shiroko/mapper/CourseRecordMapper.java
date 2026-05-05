@@ -24,4 +24,6 @@ public interface CourseRecordMapper extends BaseMapper<CourseRecord> {
             IPage<CourseRecordVO> page,
             @Param("dto") QueryCourseRecordDTO dto
     );
+
+    IPage<CourseRecord> selectCourseRecords(IPage<CourseRecord> pageParam, QueryCourseRecordDTO dto);
 }

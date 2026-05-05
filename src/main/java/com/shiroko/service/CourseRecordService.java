@@ -1,6 +1,6 @@
 package com.shiroko.service;
 
-import com.shiroko.repository.dto.*;
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.courserecord.DeleteCourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
@@ -26,4 +26,6 @@ public interface CourseRecordService {
     ResponseDTO<Object> deleteCourseRecord(DeleteCourseRecordDTO dto);
 
     ResponseDTO<Object> updateCourseRecord(UpdateCourseRecordDTO dto);
+
+    ResponseDTO<QueryCourseRecordVO> newGetCourseRecords(QueryCourseRecordDTO dto);
 }

@@ -102,6 +102,28 @@ public class CourseRecordServiceImpl implements CourseRecordService {
         return ResponseDTO.success("更新成功，影响记录数：" + rowsUpdated);
     }
 
+    @Override
+    public ResponseDTO<QueryCourseRecordVO> newGetCourseRecords(QueryCourseRecordDTO dto) {
+
+        IPage<CourseRecord> pageParam = new Page<>(
+                dto.getCurrentPage() == null ? 1 : dto.getCurrentPage(),
+                dto.getPageSize() == null ? 10 : dto.getPageSize()
+        );
+        courseRecordMapper.selectCourseRecords(pageParam, dto);
+        List<CourseRecord> list = pageParam.getRecords();
+
+        List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(list);
+
+        injectPermissionType(voList);
+
+        return ResponseDTO.success(new QueryCourseRecordVO(voList, pageParam.getTotal()));
+    }
+
+    /**
+     * Description: 注入权限类型
+     *
+     * @param voList 课程记录 VO 列表
+     */
     private void injectPermissionType(List<CourseRecordVO> voList) {
         // 2. 批量处理关联字段 (核心增强)
         if (!voList.isEmpty()) {

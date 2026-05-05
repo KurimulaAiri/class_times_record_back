@@ -18,10 +18,11 @@
         FROM
             course_record cr
                 INNER JOIN
-            institution i ON cr.course_institution_id = i.id
-        WHERE
-            cr.student_id = #{studentId};
+            course c ON cr.course_id = c.id
+                INNER JOIN
+            institution i ON c.institution_id = i.id
+        WHERE cr.student_id = #{studentId}
+          AND cr.is_delete = 0
     </select>
-
 
 </mapper>

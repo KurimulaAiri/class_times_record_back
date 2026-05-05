@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
@@ -23,11 +23,10 @@ import java.util.stream.Collectors;
  * @version 1.0
  * @since 2026/2/8 上午1:05
  */
-@RestControllerAdvice // 该注解已包含@ResponseBody，确保返回JSON
+@RestControllerAdvice // 该注解已包含@ResponseBody，确保返回 JSON
 public class GlobalExceptionHandler {
 
     private final Logger logger;
-
 
     public GlobalExceptionHandler() {
         this.logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);

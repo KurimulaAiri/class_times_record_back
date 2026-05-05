@@ -37,6 +37,12 @@ public class CourseRecord extends BaseEntity {
     private Long studentId;
 
     /**
+     * 课程id
+     */
+    @TableField(value = "course_id")
+    private Long courseId;
+
+    /**
      * 课程名
      */
     @TableField(value = "course_name")
