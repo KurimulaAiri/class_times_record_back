@@ -70,8 +70,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="Institution" />
-                  <option name="tableName" value="institution" />
+                  <option name="className" value="ParentStudent" />
+                  <option name="tableName" value="parent_student" />
                 </TableUIInfo>
               </list>
             </option>

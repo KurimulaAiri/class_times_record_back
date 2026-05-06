@@ -1,5 +1,7 @@
 package com.shiroko.repository.dto.student;
 
+import com.shiroko.repository.dto.student.validategroup.QueryGroup;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,10 +20,18 @@ public class QueryStudentDTO {
 
     private Long id;
 
+    @NotNull(message = "家长ID不能为空", groups = QueryGroup.ByParentId.class)
     private Long parentId;
 
+    @NotNull(message = "教师ID不能为空", groups = QueryGroup.ByTeacherId.class)
+    private Long teacherId;
+
+    private String keyword;
+
+    @NotNull(message = "每页数量不能为空", groups = {QueryGroup.ByParentId.class, QueryGroup.ByTeacherId.class})
     private Long pageSize;
 
+    @NotNull(message = "当前页不能为空", groups = {QueryGroup.ByParentId.class, QueryGroup.ByTeacherId.class})
     private Long currentPage;
 
 }

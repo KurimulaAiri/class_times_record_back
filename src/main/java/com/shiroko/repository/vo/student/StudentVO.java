@@ -1,6 +1,7 @@
 package com.shiroko.repository.vo.student;
 
 import com.shiroko.repository.entity.Institution;
+import com.shiroko.repository.vo.parent.ParentVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,8 @@ public class StudentVO{
 
     private String studentName;
 
+    private Long sex;
+
     private String relation;
 
     private String birthStr;
@@ -34,6 +37,10 @@ public class StudentVO{
     private String address;
 
     private List<Institution> institutions;
+
+    private ParentVO primaryParent;
+
+    private ParentVO secondaryParent;
 
     private String createTimeStr;
 

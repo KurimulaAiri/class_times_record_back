@@ -27,6 +27,12 @@ public class Parent extends RoleBaseEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Long parentId;
 
+    /**
+     * 家长手机号
+     */
+    @TableField(value = "phone")
+    private String phone;
+
     @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

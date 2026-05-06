@@ -32,4 +32,28 @@
         left join student s on s.id = ps.student_id
         where ps.parent_id = #{dto.parentId}
     </select>
+
+    <select id="selectStudentByTeacherId" resultType="com.shiroko.repository.entity.Student">
+        SELECT s.* FROM student s
+        JOIN (
+        SELECT DISTINCT s.id
+        FROM student s
+        JOIN course_record cr ON s.id = cr.student_id
+        JOIN teacher_course tc ON cr.course_id = tc.course_id
+        LEFT JOIN parent_student ps ON s.id = ps.student_id
+        LEFT JOIN parent p ON ps.parent_id = p.id
+        <where>
+            tc.teacher_id = #{dto.teacherId}
+            <if test="dto.keyword != null and dto.keyword != ''">
+                AND (
+                s.student_name LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR s.id LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
+                )
+            </if>
+        </where>
+        ) AS temp ON s.id = temp.id
+        <!-- 关键点：双重排序保证分页唯一性 -->
+        ORDER BY s.create_time DESC, s.id DESC
+    </select>
 </mapper>
