@@ -28,6 +28,12 @@ public class Teacher extends RoleBaseEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Long teacherId;
 
+    /**
+     * 机构id
+     */
+    @TableField(value = "institution_id")
+    private Long institutionId;
+
     @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

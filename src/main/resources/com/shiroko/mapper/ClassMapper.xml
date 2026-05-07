@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shiroko.mapper.ClassMapper">
+
+    <select id="getClassesByStudentId" resultType="com.shiroko.repository.dto.clazz.ClassDTO">
+        select
+            cl.id,
+            cl.student_count,
+            cs.class_id,
+            cl.class_name,
+            co.course_name,
+            co.course_type,
+            cl.create_time,
+            cl.update_time
+        from class_student as cs
+        left join class as cl on cs.class_id = cl.id
+        left join course as co on cl.course_id = co.id
+        where cs.student_id = #{studentId}
+    </select>
+
+    <select id="getClassesByTeacherId" resultType="com.shiroko.repository.dto.clazz.ClassDTO">
+        select
+            cl.*,
+            t.username,
+            co.course_name,
+            co.course_type
+        from class as cl
+        left join course as co on cl.course_id = co.id
+        left join teacher as t on cl.teacher_id = t.id
+        where cl.teacher_id = #{teacherId}
+        <if test="keyword != null and keyword != ''">
+            and (cl.class_name like concat('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+</mapper>

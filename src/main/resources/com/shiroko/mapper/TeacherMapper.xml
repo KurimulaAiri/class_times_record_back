@@ -4,12 +4,23 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.TeacherMapper">
 
-    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.Teacher">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="userId" column="user_id" jdbcType="INTEGER"/>
+    <resultMap id="TeacherVOMap" type="com.shiroko.repository.vo.teacher.TeacherVO">
+        <id property="teacherId" column="id"/>
+        <result property="username" column="username"/>
+        <association property="institution" javaType="com.shiroko.repository.entity.Institution">
+            <id property="id" column="inst_id"/>
+            <result property="institutionAddress" column="institution_address"/>
+            <result property="institutionName" column="institution_name"/>
+        </association>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,user_id
-    </sql>
+    <select id="getTeacherById" resultMap="TeacherVOMap">
+        select t.*,
+               i.institution_address,
+               i.institution_name
+        from teacher as t
+        left join institution as i on t.institution_id = i.id
+        where t.id = #{teacherId}
+    </select>
+
 </mapper>

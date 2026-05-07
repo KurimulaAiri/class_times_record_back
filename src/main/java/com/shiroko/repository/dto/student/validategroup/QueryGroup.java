@@ -16,4 +16,8 @@ public interface QueryGroup {
     interface ByTeacherId {
 
     }
+
+    interface ByClassId {
+
+    }
 }

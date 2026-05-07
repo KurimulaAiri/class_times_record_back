@@ -35,6 +35,11 @@ public class StudentController {
         return studentService.getStudentByTeacherId(queryStudentDTO);
     }
 
+    @PostMapping("/get_by_class_id")
+    public ResponseDTO<QueryStudentVO> getStudentByClassId(@RequestBody QueryStudentDTO queryStudentDTO) {
+        return studentService.getStudentByClassId(queryStudentDTO);
+    }
+
     @PostMapping("/update")
     public ResponseDTO<Void> update(@RequestBody UpdateStudentDTO updateStudentDTO) {
         return studentService.updateStudent(updateStudentDTO);

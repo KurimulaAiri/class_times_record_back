@@ -20,6 +20,9 @@ public class QueryStudentDTO {
 
     private Long id;
 
+    @NotNull(message = "班级ID不能为空", groups = QueryGroup.ByClassId.class)
+    private Long classId;
+
     @NotNull(message = "家长ID不能为空", groups = QueryGroup.ByParentId.class)
     private Long parentId;
 

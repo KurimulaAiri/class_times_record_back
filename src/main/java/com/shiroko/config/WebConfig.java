@@ -1,7 +1,9 @@
 package com.shiroko.config;
 
 import com.shiroko.interceptor.JwtInterceptor;
+import com.shiroko.interceptor.SignInterceptor;
 import com.shiroko.interceptor.UserInterceptor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,19 +16,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @since 2026/3/19 下午11:15
  */
 @Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
     private final JwtInterceptor jwtInterceptor;
     private final UserInterceptor userInterceptor;
-
-    // 注入你刚才写的 JWT 拦截器
-    public WebConfig(JwtInterceptor jwtInterceptor, UserInterceptor userInterceptor) {
-        this.jwtInterceptor = jwtInterceptor;
-        this.userInterceptor = userInterceptor;
-    }
+    private final SignInterceptor signInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // 用户拦截器
         registry.addInterceptor(userInterceptor)
                 .addPathPatterns("/**");
         // 注册用户拦截器
@@ -45,5 +44,11 @@ public class WebConfig implements WebMvcConfigurer {
                         "/swagger-ui/**",           //  文档页面（如果用了 Swagger）
                         "/v3/api-docs/**"
                 );
+
+        // 注册签名拦截器
+        registry.addInterceptor(signInterceptor)
+                .addPathPatterns("/**") // 拦截所有 API
+                .excludePathPatterns("/auth/**") // 排除登录等接口
+                .excludePathPatterns("/error"); // 排除错误页
     }
 }

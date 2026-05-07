@@ -8,7 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Description: TODO
+ * Description: 课程记录转换器
  *
  * @author Guguguy
  * @version 1.0

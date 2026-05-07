@@ -2,6 +2,7 @@ package com.shiroko.mapper;
 
 import com.shiroko.repository.entity.Teacher;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.shiroko.repository.vo.teacher.TeacherVO;
 
 /**
  * Description: 教师Mapper接口
@@ -12,6 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface TeacherMapper extends BaseMapper<Teacher> {
 
+    TeacherVO getTeacherById(Long teacherId);
 }
 
 

@@ -21,4 +21,6 @@ public interface StudentService extends IService<Student> {
     ResponseDTO<Void> updateStudent(UpdateStudentDTO updateStudentDTO);
 
     ResponseDTO<QueryStudentVO> getStudentByTeacherId(QueryStudentDTO queryStudentDTO);
+
+    ResponseDTO<QueryStudentVO> getStudentByClassId(QueryStudentDTO queryStudentDTO);
 }
