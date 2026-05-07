@@ -56,4 +56,15 @@
         <!-- 关键点：双重排序保证分页唯一性 -->
         ORDER BY s.create_time DESC, s.id DESC
     </select>
+
+    <select id="selectStudentByClassId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        select s.*,
+               cr.course_total_time,
+               cr.course_rest_time
+        from class_student as cs
+                 left join student s on s.id = cs.student_id
+                 left join course_record as cr on cr.student_id = s.id
+        where cs.class_id = #{dto.classId}
+    </select>
+
 </mapper>

@@ -17,4 +17,7 @@ public class StudentDTO extends Student {
 
     private String relation;
 
+    private Long courseTotalTime;
+
+    private Long courseRestTime;
 }

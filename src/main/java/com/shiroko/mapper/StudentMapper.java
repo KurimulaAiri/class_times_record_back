@@ -8,6 +8,8 @@ import com.shiroko.repository.entity.Student;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * Description: 学生数据库操作接口
  *
@@ -34,6 +36,8 @@ public interface StudentMapper extends BaseMapper<Student> {
      * @return 学生列表
      */
     IPage<Student> selectStudentByTeacherId(IPage<Student> page, @Param("dto") QueryStudentDTO queryStudentDTO);
+
+    List<StudentDTO> selectStudentByClassId(@Param("dto") QueryStudentDTO queryStudentDTO);
 }
 
 

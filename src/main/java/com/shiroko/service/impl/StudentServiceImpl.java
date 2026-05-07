@@ -108,7 +108,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     @Override
     public ResponseDTO<QueryStudentVO> getStudentByClassId(QueryStudentDTO queryStudentDTO) {
-        return null;
+
+        List<StudentDTO> list = studentMapper.selectStudentByClassId(queryStudentDTO);
+
+        List<StudentVO> voList = studentConverter.dtoListToVOList(list);
+
+        return ResponseDTO.success(new QueryStudentVO(voList, (long) list.size()));
     }
 }
 

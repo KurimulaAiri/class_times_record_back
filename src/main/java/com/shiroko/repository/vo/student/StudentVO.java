@@ -42,6 +42,10 @@ public class StudentVO{
 
     private ParentVO secondaryParent;
 
+    private Long courseTotalTime;
+
+    private Long courseRestTime;
+
     private String createTimeStr;
 
     private String updateTimeStr;
