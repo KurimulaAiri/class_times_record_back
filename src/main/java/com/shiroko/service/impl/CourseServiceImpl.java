@@ -1,10 +1,19 @@
 package com.shiroko.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.mapper.CourseMapper;
+import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.course.QueryCourseDTO;
 import com.shiroko.repository.entity.Course;
+import com.shiroko.repository.vo.course.CourseVO;
+import com.shiroko.repository.vo.course.QueryCourseVO;
 import com.shiroko.service.CourseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Description: 课程服务接口实现
@@ -14,9 +23,27 @@ import org.springframework.stereotype.Service;
  * @since 2026/5/7 上午0:07
  */
 @Service
-public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course>
-        implements CourseService {
+@RequiredArgsConstructor
+public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements CourseService {
 
+    private final CourseMapper courseMapper;
+
+    @Override
+    public ResponseDTO<QueryCourseVO> getCourseByInstitutionId(QueryCourseDTO queryCourseDTO) {
+
+        IPage<Course> pageParam = new Page<>(queryCourseDTO.getCurrentPage(), queryCourseDTO.getPageSize());
+
+        IPage<CourseVO> iPage = courseMapper.selectCourseByInstitutionId(pageParam, queryCourseDTO.getInstitutionId());
+
+        List<CourseVO> courseVOList = iPage.getRecords();
+
+        QueryCourseVO queryCourseVO = new QueryCourseVO();
+
+        queryCourseVO.setCourses(courseVOList);
+        queryCourseVO.setTotal(iPage.getTotal());
+
+        return ResponseDTO.success(queryCourseVO);
+    }
 }
 
 

@@ -40,6 +40,17 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
         return ResponseDTO.success(queryTeacherVO);
     }
+
+    @Override
+    public ResponseDTO<QueryTeacherVO> getTeacherByInstitutionId(QueryTeacherDTO queryTeacherDTO) {
+        List<TeacherVO> teachers = teacherMapper.getTeacherByInstitutionId(queryTeacherDTO.getInstitutionId());
+
+        QueryTeacherVO queryTeacherVO = new QueryTeacherVO();
+        queryTeacherVO.setTeachers(teachers);
+        queryTeacherVO.setTotal((long) teachers.size());
+
+        return ResponseDTO.success(queryTeacherVO);
+    }
 }
 
 

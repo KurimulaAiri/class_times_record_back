@@ -1,9 +1,9 @@
 package com.shiroko.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.teacher.QueryTeacherDTO;
 import com.shiroko.repository.entity.Teacher;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.vo.teacher.QueryTeacherVO;
 
 /**
@@ -16,4 +16,6 @@ import com.shiroko.repository.vo.teacher.QueryTeacherVO;
 public interface TeacherService extends IService<Teacher> {
 
     ResponseDTO<QueryTeacherVO> getTeacherById(QueryTeacherDTO queryTeacherDTO);
+
+    ResponseDTO<QueryTeacherVO> getTeacherByInstitutionId(QueryTeacherDTO queryTeacherDTO);
 }

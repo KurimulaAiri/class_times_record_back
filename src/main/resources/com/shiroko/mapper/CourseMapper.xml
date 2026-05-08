@@ -4,5 +4,26 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.CourseMapper">
 
+    <resultMap id="courseResultMap" type="com.shiroko.repository.vo.course.CourseVO">
+        <id property="id" column="id"/>
+        <result property="courseName" column="course_name"/>
+        <result property="available" column="is_available"/>
+        <association property="institution" javaType="com.shiroko.repository.entity.Institution">
+            <result property="id" column="institution_id"/>
+            <result property="institutionName" column="institution_name"/>
+            <result property="institutionAddress" column="institution_address"/>
+            <result property="status" column="status"/>
+        </association>
+    </resultMap>
 
+    <select id="selectCourseByInstitutionId" resultMap="courseResultMap">
+        select c.*,
+               i.id as institution_id,
+               i.institution_name,
+               i.institution_address,
+               i.status
+        from course as c
+                 left join institution as i on c.institution_id = i.id
+        where c.institution_id = #{institutionId}
+    </select>
 </mapper>

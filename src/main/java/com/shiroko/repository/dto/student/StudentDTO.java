@@ -1,6 +1,7 @@
 package com.shiroko.repository.dto.student;
 
 import com.shiroko.repository.entity.Student;
+import com.shiroko.repository.vo.parent.ParentVO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,6 +17,8 @@ import lombok.EqualsAndHashCode;
 public class StudentDTO extends Student {
 
     private String relation;
+
+    private ParentVO primaryParent;
 
     private Long courseTotalTime;
 

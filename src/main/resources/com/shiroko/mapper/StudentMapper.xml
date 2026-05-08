@@ -3,6 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.StudentMapper">
+
     <resultMap id="studentMap" type="com.shiroko.repository.entity.Student">
         <id property="id" column="id"/>
         <result property="avatar" column="avatar"/>
@@ -16,6 +17,23 @@
 
     <resultMap id="studentDTOMap" type="com.shiroko.repository.dto.student.StudentDTO" extends="studentMap">
         <result property="relation" column="relation"/>
+    </resultMap>
+
+    <resultMap id="studentDTOMapByClassId" type="com.shiroko.repository.dto.student.StudentDTO">
+        <id property="id" column="id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="studentName" column="student_name"/>
+        <result property="birth" column="birth"/>
+        <result property="courseRestTime" column="course_rest_time"/>
+        <result property="courseTotalTime" column="course_total_time"/>
+        <result property="school" column="school"/>
+        <result property="address" column="address"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="primaryParent" javaType="com.shiroko.repository.vo.parent.ParentVO">
+            <result property="phone" column="phone"/>
+            <result property="relation" column="relation"/>
+        </association>
     </resultMap>
 
     <select id="selectStudentByParentId" resultMap="studentDTOMap">
@@ -57,13 +75,17 @@
         ORDER BY s.create_time DESC, s.id DESC
     </select>
 
-    <select id="selectStudentByClassId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+    <select id="selectStudentByClassId" resultMap="studentDTOMapByClassId">
         select s.*,
+               ps.relation,
                cr.course_total_time,
-               cr.course_rest_time
+               cr.course_rest_time,
+               p.phone
         from class_student as cs
                  left join student s on s.id = cs.student_id
                  left join course_record as cr on cr.student_id = s.id
+                 left join parent_student as ps on ps.student_id = s.id and ps.is_primary = true
+                 left join parent p on ps.parent_id = p.id
         where cs.class_id = #{dto.classId}
     </select>
 

@@ -2,6 +2,7 @@ package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.ClassConverter;
+import com.shiroko.mapper.ClassMapper;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.clazz.ClassDTO;
 import com.shiroko.repository.dto.clazz.QueryClassDTO;
@@ -9,7 +10,6 @@ import com.shiroko.repository.entity.Class;
 import com.shiroko.repository.vo.clazz.ClassVO;
 import com.shiroko.repository.vo.clazz.QueryClassVO;
 import com.shiroko.service.ClassService;
-import com.shiroko.mapper.ClassMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -47,11 +47,11 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     public ResponseDTO<QueryClassVO> getClassesByTeacherId(QueryClassDTO queryClassDTO) {
         List<ClassDTO> classList = classMapper.getClassesByTeacherId(queryClassDTO);
 
-        System.out.println("classList: " + classList);
+        // System.out.println("classList: " + classList);
 
         List<ClassVO> classVOList = classConverter.dtoListToVOList(classList);
 
-        System.out.println("classVOList: " + classVOList);
+        // System.out.println("classVOList: " + classVOList);
 
         QueryClassVO queryClassVO = new QueryClassVO();
         queryClassVO.setClassList(classVOList);

@@ -1,7 +1,10 @@
 package com.shiroko.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.course.QueryCourseDTO;
 import com.shiroko.repository.entity.Course;
+import com.shiroko.repository.vo.course.QueryCourseVO;
 
 /**
  * Description: 课程服务接口
@@ -12,4 +15,5 @@ import com.shiroko.repository.entity.Course;
  */
 public interface CourseService extends IService<Course> {
 
+    ResponseDTO<QueryCourseVO> getCourseByInstitutionId(QueryCourseDTO queryCourseDTO);
 }

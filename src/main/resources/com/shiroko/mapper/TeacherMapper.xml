@@ -16,11 +16,21 @@
 
     <select id="getTeacherById" resultMap="TeacherVOMap">
         select t.*,
+               i.id as inst_id,
                i.institution_address,
                i.institution_name
         from teacher as t
         left join institution as i on t.institution_id = i.id
         where t.id = #{teacherId}
+    </select>
+
+    <select id="getTeacherByInstitutionId" resultMap="TeacherVOMap">
+        select t.*,
+               i.institution_address,
+               i.institution_name
+        from teacher as t
+                 left join institution as i on t.institution_id = i.id
+        where t.institution_id = #{institutionId}
     </select>
 
 </mapper>
