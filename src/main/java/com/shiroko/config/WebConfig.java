@@ -28,7 +28,8 @@ public class WebConfig implements WebMvcConfigurer {
         // 用户拦截器
         registry.addInterceptor(userInterceptor)
                 .addPathPatterns("/**");
-        // 注册用户拦截器
+
+        // jwt拦截器
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")             // 默认拦截所有路径
                 .excludePathPatterns(               // 以下路径不拦截：
@@ -42,7 +43,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/v3/api-docs.yaml",             //  OpenAPI 文档
                         "/swagger-ui.html",           //  文档页面（如果用了 Swagger）
                         "/swagger-ui/**",           //  文档页面（如果用了 Swagger）
-                        "/v3/api-docs/**"
+                        "/v3/api-docs/**",             //  OpenAPI 文档
+                        "/test/**"                      //  测试接口
                 );
 
         // 注册签名拦截器
@@ -56,7 +58,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/v3/api-docs.yaml",             //  OpenAPI 文档
                         "/swagger-ui.html",           //  文档页面（如果用了 Swagger）
                         "/swagger-ui/**",           //  文档页面（如果用了 Swagger）
-                        "/v3/api-docs/**" //  OpenAPI 文档
+                        "/v3/api-docs/**",             //  OpenAPI 文档
+                        "/test/**"                      //  测试接口
                 );
 
     }

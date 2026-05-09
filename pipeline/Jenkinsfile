@@ -16,13 +16,13 @@ pipeline {
         HOST_USER           = 'root'
         HOST_IP             = '172.21.0.1'
         HOST_SSH_PORT       = 25184
-        HOST_JAVA_CMD       = '/www/server/java/jdk-17.0.8/bin/java'
+        HOST_JAVA_CMD       = '/www/server/java/jdk-21.0.2/bin/java'
         HOST_DEPLOY_DIR     = '/opt/java-deploy/class_times_record_back'
         HOST_PID_FILE       = "${HOST_DEPLOY_DIR}/${PROJECT_NAME}.pid"
     }
 
     tools {
-        jdk 'Java17'
+        jdk 'Java'
         maven '3.9.13'
     }
 
