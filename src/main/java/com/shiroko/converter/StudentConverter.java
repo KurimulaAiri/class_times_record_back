@@ -1,5 +1,6 @@
 package com.shiroko.converter;
 
+import com.shiroko.repository.dto.student.InsertStudentDTO;
 import com.shiroko.repository.dto.student.StudentDTO;
 import com.shiroko.repository.dto.student.UpdateStudentDTO;
 import com.shiroko.repository.entity.Student;
@@ -36,4 +37,5 @@ public interface StudentConverter extends BaseConverter<Student, StudentVO> {
 
     Student updateStudentDTOToPojo(UpdateStudentDTO dto);
 
+    Student insertStudentDTOToPojo(InsertStudentDTO dto);
 }

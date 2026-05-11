@@ -2,9 +2,11 @@ package com.shiroko.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.student.InsertStudentDTO;
 import com.shiroko.repository.dto.student.QueryStudentDTO;
 import com.shiroko.repository.dto.student.UpdateStudentDTO;
 import com.shiroko.repository.entity.Student;
+import com.shiroko.repository.vo.student.InsertStudentVO;
 import com.shiroko.repository.vo.student.QueryStudentVO;
 
 /**
@@ -23,4 +25,10 @@ public interface StudentService extends IService<Student> {
     ResponseDTO<QueryStudentVO> getStudentByTeacherId(QueryStudentDTO queryStudentDTO);
 
     ResponseDTO<QueryStudentVO> getStudentByClassId(QueryStudentDTO queryStudentDTO);
+
+    ResponseDTO<InsertStudentVO> insertStudent(InsertStudentDTO insertStudentDTO);
+
+    ResponseDTO<QueryStudentVO> getStudent(QueryStudentDTO queryStudentDTO);
+
+    ResponseDTO<QueryStudentVO> getStudentByInstitutionId(QueryStudentDTO queryStudentDTO);
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serial;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
  */
 @TableName(value = "parent_student")
 @Data
+@AllArgsConstructor
 public class ParentStudent implements Serializable {
     @Serial
     @TableField(exist = false)

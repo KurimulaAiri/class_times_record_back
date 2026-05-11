@@ -11,10 +11,10 @@ import com.shiroko.util.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -30,6 +30,7 @@ import java.util.Map;
  * @since 2026/3/19 下午5:07
  */
 @Component
+@NullMarked
 public class JwtInterceptor implements HandlerInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtInterceptor.class);
@@ -53,8 +54,8 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(
             HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull Object handler) {
+            HttpServletResponse response,
+            Object handler) {
         // 从 Header 中获取 token（对应你 request.js 里的 'token' 字段）
         String token = request.getHeader("token");
 
@@ -117,10 +118,10 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull Object handler,
-            @NonNull Exception ex) {
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Object handler,
+            Exception ex) {
         // 请求结束，务必清理 ThreadLocal 防止内存泄漏
         UserContext.remove();
     }

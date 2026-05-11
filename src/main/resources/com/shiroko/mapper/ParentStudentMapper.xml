@@ -4,10 +4,11 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.ParentStudentMapper">
 
-    <select id="selectBatchPrimaryParents" resultType="com.shiroko.repository.vo.parent.ParentVO">
+    <select id="selectAllBatchParents" resultType="com.shiroko.repository.vo.parent.ParentVO">
         SELECT
         ps.student_id as studentId,
         ps.relation,
+        ps.is_primary as isPrimary,  <!-- 从中间表取值 -->
         p.phone
         FROM
         parent_student ps
@@ -18,7 +19,6 @@
         <foreach collection="studentIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
-        <!-- 核心过滤：只取标记为主要的记录 -->
-        AND ps.is_primary = 1
     </select>
+
 </mapper>

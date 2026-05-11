@@ -1,3 +1,6 @@
 database-address: localhost
 server:
   port: 9999
+logging:
+  level:
+    com.shiroko: INFO

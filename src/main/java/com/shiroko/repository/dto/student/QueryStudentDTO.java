@@ -26,15 +26,30 @@ public class QueryStudentDTO {
     @NotNull(message = "家长ID不能为空", groups = QueryGroup.ByParentId.class)
     private Long parentId;
 
+    @NotNull(message = "机构ID不能为空", groups = QueryGroup.ByInstitutionId.class)
+    private Long institutionId;
+
     @NotNull(message = "教师ID不能为空", groups = QueryGroup.ByTeacherId.class)
     private Long teacherId;
 
+    private Long sex;
+
     private String keyword;
 
-    @NotNull(message = "每页数量不能为空", groups = {QueryGroup.ByParentId.class, QueryGroup.ByTeacherId.class})
+    @NotNull(message = "每页数量不能为空", groups = {
+            QueryGroup.ByParentId.class,
+            QueryGroup.ByTeacherId.class,
+            QueryGroup.ByClassId.class,
+            QueryGroup.ByInstitutionId.class
+    })
     private Long pageSize;
 
-    @NotNull(message = "当前页不能为空", groups = {QueryGroup.ByParentId.class, QueryGroup.ByTeacherId.class})
+    @NotNull(message = "当前页不能为空", groups = {
+            QueryGroup.ByParentId.class,
+            QueryGroup.ByTeacherId.class,
+            QueryGroup.ByClassId.class,
+            QueryGroup.ByInstitutionId.class
+    })
     private Long currentPage;
 
 }

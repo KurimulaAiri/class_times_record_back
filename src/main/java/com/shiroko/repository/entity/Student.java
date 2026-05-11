@@ -42,6 +42,12 @@ public class Student extends BaseEntity {
     private String studentName;
 
     /**
+     * 学生机构id
+     */
+    @TableField(value = "institution_id")
+    private Long institutionId;
+
+    /**
      * 学生性别
      */
     @TableField(value = "sex")

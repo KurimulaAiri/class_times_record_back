@@ -8,14 +8,14 @@ import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.lang.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j // 自动注入名为 log 的静态属性
+@NullMarked
 public class SignInterceptor implements HandlerInterceptor {
 
     // 必须与前端定义的盐值完全一致
@@ -38,7 +40,7 @@ public class SignInterceptor implements HandlerInterceptor {
     // Spring 自带的 Jackson 实例
 
     @Override
-    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull Object handler) throws IOException {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
         if (request.getDispatcherType() == DispatcherType.ERROR) {
             return true;
@@ -74,7 +76,8 @@ public class SignInterceptor implements HandlerInterceptor {
         if (request instanceof RepeatedlyRequestWrapper wrapper) {
             String body = wrapper.getBodyString();
             // 调试必备：确认拦截器到底拿到了什么
-            // System.out.println("【SignInterceptor】Body内容: [" + body + "]");
+            log.info("【SignInterceptor】Body内容: {}", body);
+
 
             if (StrUtil.isNotBlank(body)) {
                 try {
@@ -85,12 +88,12 @@ public class SignInterceptor implements HandlerInterceptor {
                         allParams.putAll(bodyMap);
                     }
                 } catch (Exception e) {
-                    System.err.println("【SignInterceptor】JSON解析失败: " + e.getMessage());
+                    log.error("【SignInterceptor】JSON解析失败: {}", e.getMessage(), e);
                 }
             }
         } else {
             // 【关键排查点】
-            System.err.println("【SignInterceptor】错误：Request 不是 RepeatedlyRequestWrapper！当前类型: " + request.getClass().getName());
+            log.error("【SignInterceptor】错误：Request 不是 RepeatedlyRequestWrapper！当前类型: {}", request.getClass().getName());
         }
 
         // C. 放入系统级参数
@@ -99,12 +102,14 @@ public class SignInterceptor implements HandlerInterceptor {
 
         // 4. 字典序排序并拼接字符串
         String stringA = allParams.entrySet().stream()
+                // 1. 先过滤掉 Entry 为空，或者 Value 真正为 null 的情况
+                .filter(Objects::nonNull)
                 .filter(e -> e.getValue() != null && StrUtil.isNotBlank(e.getValue().toString()))
                 .sorted(Map.Entry.comparingByKey())
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.joining("&"));
 
-        // System.out.println("stringA: " + stringA);
+        log.info("stringA: {}", stringA);
 
         // 5. 调用你的 SM3Util 进行验签
         // 逻辑：stringA + APP_SECRET (对应前端拼接逻辑)

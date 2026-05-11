@@ -1,8 +1,10 @@
 package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.student.InsertStudentDTO;
 import com.shiroko.repository.dto.student.QueryStudentDTO;
 import com.shiroko.repository.dto.student.UpdateStudentDTO;
+import com.shiroko.repository.vo.student.InsertStudentVO;
 import com.shiroko.repository.vo.student.QueryStudentVO;
 import com.shiroko.service.StudentService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,16 @@ public class StudentController {
     @PostMapping("/get_by_class_id")
     public ResponseDTO<QueryStudentVO> getStudentByClassId(@RequestBody QueryStudentDTO queryStudentDTO) {
         return studentService.getStudentByClassId(queryStudentDTO);
+    }
+
+    @PostMapping("/get_by_institution_id")
+    public ResponseDTO<QueryStudentVO> getStudentByInstitutionId(@RequestBody QueryStudentDTO queryStudentDTO) {
+        return studentService.getStudentByInstitutionId(queryStudentDTO);
+    }
+
+    @PostMapping("/insert")
+    public ResponseDTO<InsertStudentVO> insert(@RequestBody InsertStudentDTO insertStudentDTO) {
+        return studentService.insertStudent(insertStudentDTO);
     }
 
     @PostMapping("/update")

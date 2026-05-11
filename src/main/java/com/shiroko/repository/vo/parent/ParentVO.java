@@ -14,4 +14,5 @@ public class ParentVO {
     private Long studentId;  // 必须包含此字段，用于 Service 层匹配
     private String relation;
     private String phone;
+    private Integer isPrimary;
 }
