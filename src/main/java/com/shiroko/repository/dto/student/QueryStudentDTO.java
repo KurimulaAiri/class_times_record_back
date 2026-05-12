@@ -17,8 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QueryStudentDTO {
-
-    private Long id;
+    @NotNull(message = "学生ID不能为空", groups = QueryGroup.ByStudentId.class)
+    private Long studentId;
 
     @NotNull(message = "班级ID不能为空", groups = QueryGroup.ByClassId.class)
     private Long classId;

@@ -23,9 +23,11 @@
         <id property="id" column="id"/>
         <result property="avatar" column="avatar"/>
         <result property="studentName" column="student_name"/>
+        <result property="institutionId" column="institution_id"/>
         <result property="birth" column="birth"/>
         <result property="courseRestTime" column="course_rest_time"/>
         <result property="courseTotalTime" column="course_total_time"/>
+        <result property="sex" column="sex"/>
         <result property="school" column="school"/>
         <result property="address" column="address"/>
         <result property="createTime" column="create_time"/>
@@ -40,10 +42,12 @@
         select s.id,
                s.avatar,
                s.student_name,
+               s.institution_id,
                ps.relation,
                s.birth,
                s.school,
                s.address,
+               s.sex,
                s.create_time,
                s.update_time
         from parent_student ps
@@ -110,6 +114,12 @@
                  left join parent_student as ps on ps.student_id = s.id and ps.is_primary = true
                  left join parent p on ps.parent_id = p.id
         where cs.class_id = #{dto.classId}
+    </select>
+
+    <select id="selectByStudentId" resultType="com.shiroko.repository.entity.Student">
+        SELECT s.*
+        FROM student s
+        WHERE s.id = #{dto.studentId}
     </select>
 
 

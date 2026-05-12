@@ -1,5 +1,6 @@
 package com.shiroko.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +11,7 @@ import com.shiroko.mapper.ParentMapper;
 import com.shiroko.mapper.ParentStudentMapper;
 import com.shiroko.mapper.StudentMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.parent.UpdateParentDTO;
 import com.shiroko.repository.dto.student.InsertStudentDTO;
 import com.shiroko.repository.dto.student.QueryStudentDTO;
 import com.shiroko.repository.dto.student.StudentDTO;
@@ -21,6 +23,7 @@ import com.shiroko.repository.vo.parent.ParentVO;
 import com.shiroko.repository.vo.student.InsertStudentVO;
 import com.shiroko.repository.vo.student.QueryStudentVO;
 import com.shiroko.repository.vo.student.StudentVO;
+import com.shiroko.repository.vo.student.UpdateStudentVO;
 import com.shiroko.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -74,9 +77,16 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     }
 
     @Override
-    public ResponseDTO<Void> updateStudent(UpdateStudentDTO updateStudentDTO) {
+    public ResponseDTO<UpdateStudentVO> updateStudent(UpdateStudentDTO updateStudentDTO) {
+
+        UpdateParentDTO primaryParent = updateStudentDTO.getPrimaryParent();
+        updateParentAndParentStudent(primaryParent, updateStudentDTO.getId());
+        UpdateParentDTO secondaryParent = updateStudentDTO.getSecondaryParent();
+        updateParentAndParentStudent(secondaryParent, updateStudentDTO.getId());
+
         studentMapper.updateById(studentConverter.updateStudentDTOToPojo(updateStudentDTO));
-        return ResponseDTO.success("更新成功", null);
+
+        return ResponseDTO.success("更新成功", new UpdateStudentVO(updateStudentDTO.getId()));
     }
 
     @Override
@@ -148,8 +158,39 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     }
 
     @Override
+    public ResponseDTO<QueryStudentVO> getStudentByStudentId(QueryStudentDTO queryStudentDTO) {
+        Student student = studentMapper.selectByStudentId(queryStudentDTO);
+        return injectParentInfo(student);
+    }
+
+    @Override
     public ResponseDTO<QueryStudentVO> getStudent(QueryStudentDTO queryStudentDTO) {
         return null;
+    }
+
+    private ResponseDTO<QueryStudentVO> injectParentInfo(Student student) {
+        if (student == null) {
+            return ResponseDTO.fail("学生不存在");
+        }
+        // 1. 转换基础信息 POJO -> VO
+        StudentVO vo = studentConverter.pojoToVO(student);
+
+        // 2. 调用 Mapper 查询该学生关联的所有家长（复用批量查询接口，传入单个 ID 即可）
+        List<ParentVO> parents = parentStudentMapper.selectAllBatchParents(List.of(student.getId()));
+
+        // 3. 遍历家长列表，根据 isPrimary 标识位归类
+        if (parents != null && !parents.isEmpty()) {
+            for (ParentVO p : parents) {
+                // 注意：这里建议使用 .equals(p.getIsPrimary()) 避免空指针
+                if (Integer.valueOf(1).equals(p.getIsPrimary())) {
+                    vo.setPrimaryParent(p);
+                } else if (Integer.valueOf(0).equals(p.getIsPrimary())) {
+                    vo.setSecondaryParent(p);
+                }
+            }
+        }
+
+        return ResponseDTO.success(new QueryStudentVO(Collections.singletonList(vo), 1L));
     }
 
     private ResponseDTO<QueryStudentVO> injectParentInfo(IPage<Student> page) {
@@ -194,6 +235,44 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
                 queryStudentDTO.getCurrentPage() == null ? 1 : queryStudentDTO.getCurrentPage(),
                 queryStudentDTO.getPageSize() == null ? 10 : queryStudentDTO.getPageSize()
         );
+    }
+
+    private void updateParentAndParentStudent(UpdateParentDTO parent, Long studentId) {
+        if (parent != null) {
+            // 更新家长
+            Parent parentEntity = parentConverter.updateDTOToPojo(parent);
+
+            // 处理 parentId 为 0 的情况
+            // 没有家长 id ，说明是新增家长，设置 userId 为 0
+            if (parentEntity.getParentId() == 0) {
+                parentEntity.setUserId(0L);
+            }
+            parentMapper.insertOrUpdate(parentEntity);
+
+            // 更新家长-学生表
+            ParentStudent parentStudent = parentStudentMapper.selectOne(new LambdaQueryWrapper<ParentStudent>()
+                    .eq(ParentStudent::getParentId, parentEntity.getParentId())
+                    .eq(ParentStudent::getStudentId, studentId)
+                    .eq(ParentStudent::getIsPrimary, parent.getIsPrimary()));
+
+            if (parentStudent != null) {
+                parentStudent.setIsPrimary(parent.getIsPrimary());
+                parentStudent.setRelation(parent.getRelation());
+                parentStudentMapper.updateById(parentStudent);
+            } else {
+                // 新增家长-学生表记录
+                parentStudentMapper.insert(
+                        new ParentStudent(
+                                null,
+                                parentEntity.getParentId(),
+                                parent.getRelation(),
+                                studentId,
+                                parent.getIsPrimary(),
+                                null
+                        )
+                );
+            }
+        }
     }
 }
 

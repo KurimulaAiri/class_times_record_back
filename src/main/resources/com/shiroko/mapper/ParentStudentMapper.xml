@@ -6,6 +6,8 @@
 
     <select id="selectAllBatchParents" resultType="com.shiroko.repository.vo.parent.ParentVO">
         SELECT
+        p.username,
+        p.id as parentId,
         ps.student_id as studentId,
         ps.relation,
         ps.is_primary as isPrimary,  <!-- 从中间表取值 -->

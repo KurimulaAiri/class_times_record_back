@@ -9,6 +9,10 @@ package com.shiroko.repository.dto.student.validategroup;
  */
 public interface QueryGroup {
 
+    interface ByStudentId {
+
+    }
+
     interface ByParentId {
 
     }

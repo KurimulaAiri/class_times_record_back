@@ -8,6 +8,7 @@ import com.shiroko.repository.dto.student.UpdateStudentDTO;
 import com.shiroko.repository.entity.Student;
 import com.shiroko.repository.vo.student.InsertStudentVO;
 import com.shiroko.repository.vo.student.QueryStudentVO;
+import com.shiroko.repository.vo.student.UpdateStudentVO;
 
 /**
  * Description: 学生数据库实体类
@@ -20,7 +21,7 @@ public interface StudentService extends IService<Student> {
 
     ResponseDTO<QueryStudentVO> getStudentByParentId(QueryStudentDTO queryStudentDTO);
 
-    ResponseDTO<Void> updateStudent(UpdateStudentDTO updateStudentDTO);
+    ResponseDTO<UpdateStudentVO> updateStudent(UpdateStudentDTO updateStudentDTO);
 
     ResponseDTO<QueryStudentVO> getStudentByTeacherId(QueryStudentDTO queryStudentDTO);
 
@@ -31,4 +32,6 @@ public interface StudentService extends IService<Student> {
     ResponseDTO<QueryStudentVO> getStudent(QueryStudentDTO queryStudentDTO);
 
     ResponseDTO<QueryStudentVO> getStudentByInstitutionId(QueryStudentDTO queryStudentDTO);
+
+    ResponseDTO<QueryStudentVO> getStudentByStudentId(QueryStudentDTO queryStudentDTO);
 }

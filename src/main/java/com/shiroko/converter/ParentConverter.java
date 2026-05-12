@@ -1,6 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.dto.parent.InsertParentDTO;
+import com.shiroko.repository.dto.parent.UpdateParentDTO;
 import com.shiroko.repository.entity.Parent;
 import com.shiroko.repository.vo.parent.ParentVO;
 import org.mapstruct.Mapper;
@@ -20,4 +21,5 @@ public interface ParentConverter extends BaseConverter<Parent, ParentVO> {
 
     Parent insertDTOToPojo(InsertParentDTO insertParentDTO);
 
+    Parent updateDTOToPojo(UpdateParentDTO updateParentDTO);
 }

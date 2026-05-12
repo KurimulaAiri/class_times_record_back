@@ -11,6 +11,8 @@ import lombok.Data;
  */
 @Data
 public class ParentVO {
+    private String username;
+    private Long parentId;
     private Long studentId;  // 必须包含此字段，用于 Service 层匹配
     private String relation;
     private String phone;
