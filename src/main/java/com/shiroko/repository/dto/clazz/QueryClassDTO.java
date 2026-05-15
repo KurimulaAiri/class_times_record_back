@@ -11,6 +11,7 @@ import lombok.Data;
  */
 @Data
 public class QueryClassDTO {
+    private Long classId;
     private Long studentId;
     private Long teacherId;
     private String keyword;

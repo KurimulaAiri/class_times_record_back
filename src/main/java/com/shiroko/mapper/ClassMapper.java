@@ -1,10 +1,9 @@
 package com.shiroko.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shiroko.repository.dto.clazz.ClassDTO;
 import com.shiroko.repository.dto.clazz.QueryClassDTO;
 import com.shiroko.repository.entity.Class;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.shiroko.repository.vo.clazz.ClassVO;
 
 import java.util.List;
 
@@ -26,6 +25,8 @@ public interface ClassMapper extends BaseMapper<Class> {
     List<ClassDTO> getClassesByStudentId(QueryClassDTO queryClassDTO);
 
     List<ClassDTO> getClassesByTeacherId(QueryClassDTO queryClassDTO);
+
+    ClassDTO selectByClassId(QueryClassDTO queryClassDTO);
 }
 
 

@@ -4,6 +4,22 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.CourseRecordMapper">
 
+    <update id="updateRestTime">
+        <!-- 1. 执行更新，同时利用 LAST_INSERT_ID() 记录下被更新行的 ID -->
+        UPDATE course_record
+        SET
+        course_rest_time = course_rest_time - #{totalCount},
+        id = LAST_INSERT_ID(id)
+        WHERE
+        course_id = #{cr.courseId}
+        AND student_id = #{cr.studentId}
+        AND course_rest_time >= #{totalCount}
+
+        <!-- 2. 更新完成后，将刚刚记录的 ID 提取出来赋给参数对象中的字段 -->
+        <selectKey keyProperty="cr.id" resultType="long" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </update>
     <select id="selectCourseCustomPage" resultType="com.shiroko.repository.vo.courserecord.CourseRecordVO">
         SELECT
         cr.*,

@@ -3,26 +3,33 @@ package com.shiroko.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shiroko.common.enums.ResultCode;
 import com.shiroko.context.UserContext;
 import com.shiroko.converter.CourseRecordConverter;
+import com.shiroko.exception.BusinessException;
+import com.shiroko.mapper.CourseMapper;
 import com.shiroko.mapper.CourseRecordMapper;
 import com.shiroko.mapper.PermissionRecordMapper;
+import com.shiroko.mapper.RecordMapper;
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.dto.courserecord.DeleteCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
+import com.shiroko.repository.dto.clazz.DeductClassDTO;
+import com.shiroko.repository.dto.courserecord.*;
+import com.shiroko.repository.entity.Course;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.entity.PermissionRecord;
+import com.shiroko.repository.entity.Record;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
+import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +49,8 @@ public class CourseRecordServiceImpl implements CourseRecordService {
     private final CourseRecordConverter courseRecordConverter;
 
     private final PermissionRecordMapper permissionRecordMapper;
+    private final CourseMapper courseMapper;
+    private final RecordMapper recordMapper;
 
     // Service 逻辑简化
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
@@ -117,6 +126,45 @@ public class CourseRecordServiceImpl implements CourseRecordService {
         injectPermissionType(voList);
 
         return ResponseDTO.success(new QueryCourseRecordVO(voList, pageParam.getTotal()));
+    }
+
+    @Override
+    public ResponseDTO<DeductCourseRecordVO> deductByStudentId(DeductCourseRecordDTO dto) {
+
+        AtomicReference<Integer> res = new AtomicReference<>(0);
+
+        // 1. 数据聚合：将相同 courseId 的扣除数量相加
+        // Map<courseId, totalDeductCount>
+        Map<Long, Integer> combinedMap = dto.getClasses().stream()
+                .collect(Collectors.groupingBy(
+                        DeductClassDTO::getCourseId,
+                        Collectors.summingInt(DeductClassDTO::getDeductCount)
+                ));
+
+        // 2. 批量更新数据库
+        combinedMap.forEach((courseId, totalCount) -> {
+            // SQL: UPDATE course_record SET course_rest_time = course_rest_time - #{totalCount}
+            // WHERE id = #{courseId} AND student_id = #{studentId}
+            CourseRecord cr = new CourseRecord()
+                    .setCourseId(courseId)
+                    .setStudentId(dto.getStudentId());
+            Integer rows = courseRecordMapper.updateRestTime(cr, totalCount);
+            res.updateAndGet(v -> v + rows);
+            if (rows == 0) {
+                Course course = courseMapper.selectById(courseId);
+                throw new BusinessException(ResultCode.COURSE_BALANCE_NOT_ENOUGH, "课程 [ " + course.getCourseName() + " ] 余额不足");
+            } else {
+                // 课程余额充足，更新成功，添加记录
+                recordMapper.insert(new Record()
+                        .setCourseRecordId(cr.getId())
+                        .setRecordTime(LocalDateTime.now())
+                        .setRecordRemark(dto.getRemark())
+                        .setRecordType(2L) // 2 为减少
+                        .setRecordChange(Long.valueOf(totalCount))
+                );
+            }
+        });
+        return ResponseDTO.success(new DeductCourseRecordVO(res.get()));
     }
 
     /**

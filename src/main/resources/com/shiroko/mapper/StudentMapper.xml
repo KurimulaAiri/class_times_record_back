@@ -19,25 +19,6 @@
         <result property="relation" column="relation"/>
     </resultMap>
 
-    <resultMap id="studentDTOMapByClassId" type="com.shiroko.repository.dto.student.StudentDTO">
-        <id property="id" column="id"/>
-        <result property="avatar" column="avatar"/>
-        <result property="studentName" column="student_name"/>
-        <result property="institutionId" column="institution_id"/>
-        <result property="birth" column="birth"/>
-        <result property="courseRestTime" column="course_rest_time"/>
-        <result property="courseTotalTime" column="course_total_time"/>
-        <result property="sex" column="sex"/>
-        <result property="school" column="school"/>
-        <result property="address" column="address"/>
-        <result property="createTime" column="create_time"/>
-        <result property="updateTime" column="update_time"/>
-        <association property="primaryParent" javaType="com.shiroko.repository.vo.parent.ParentVO">
-            <result property="phone" column="phone"/>
-            <result property="relation" column="relation"/>
-        </association>
-    </resultMap>
-
     <select id="selectStudentByParentId" resultMap="studentDTOMap">
         select s.id,
                s.avatar,
@@ -55,7 +36,7 @@
         where ps.parent_id = #{dto.parentId}
     </select>
 
-    <select id="selectStudentByTeacherId" resultType="com.shiroko.repository.entity.Student">
+    <select id="selectStudentByTeacherId" resultType="com.shiroko.repository.dto.student.StudentDTO">
         SELECT s.* FROM student s
         JOIN (
         SELECT DISTINCT s.id
@@ -66,7 +47,7 @@
         LEFT JOIN parent p ON ps.parent_id = p.id
         <where>
             tc.teacher_id = #{dto.teacherId}
-            <if test="dto.sex != null and dto.sex != ''">
+            <if test="dto.sex != null">
                 AND s.sex = #{dto.sex}
             </if>
             <if test="dto.keyword != null and dto.keyword != ''">
@@ -81,11 +62,12 @@
         <!-- 关键点：双重排序保证分页唯一性 -->
         ORDER BY s.update_time DESC, s.id
     </select>
-    <select id="selectStudentByInstitutionId" resultType="com.shiroko.repository.entity.Student">
+    <select id="selectStudentByInstitutionId" resultType="com.shiroko.repository.dto.student.StudentDTO">
         SELECT s.*
         FROM student s
         WHERE s.institution_id = #{dto.institutionId}
-        <if test="dto.sex != null and dto.sex != ''">
+        <!-- 性别查询，这里需要注意的是，当数字类型为 0 时，不能进行判空字符（''）否则 0 会被视为空字符从而跳过 if 语句 -->
+        <if test="dto.sex != null">
             AND s.sex = #{dto.sex}
         </if>
         <if test="dto.keyword != null and dto.keyword != ''">
@@ -102,7 +84,8 @@
         </if>
         ORDER BY s.update_time DESC, s.id
     </select>
-    <select id="selectStudentByClassId" resultMap="studentDTOMapByClassId">
+
+    <select id="selectStudentByClassId" resultType="com.shiroko.repository.dto.student.StudentDTO">
         select s.*,
                ps.relation,
                cr.course_total_time,
@@ -116,7 +99,7 @@
         where cs.class_id = #{dto.classId}
     </select>
 
-    <select id="selectByStudentId" resultType="com.shiroko.repository.entity.Student">
+    <select id="selectByStudentId" resultType="com.shiroko.repository.dto.student.StudentDTO">
         SELECT s.*
         FROM student s
         WHERE s.id = #{dto.studentId}

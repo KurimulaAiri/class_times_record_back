@@ -35,6 +35,8 @@ public class QueryCourseRecordDTO {
 
     private Long courseStatus;
 
+    private Boolean isShare;
+
     private Long currentPage;
 
     private Long pageSize;

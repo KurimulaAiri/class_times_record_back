@@ -1,10 +1,8 @@
 package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.dto.courserecord.DeleteCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.*;
+import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import jakarta.validation.Valid;
@@ -55,6 +53,11 @@ public class CourseRecordController {
     @PostMapping("/delete")
     public ResponseDTO<Object> deleteCourseRecord(@Valid @RequestBody DeleteCourseRecordDTO deleteCourseRecordDTO) {
         return courseRecordService.deleteCourseRecord(deleteCourseRecordDTO);
+    }
+
+    @PostMapping("/deduct_by_student_id")
+    public ResponseDTO<DeductCourseRecordVO> deductByStudentId(@Valid @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
+        return courseRecordService.deductByStudentId(deductCourseRecordDTO);
     }
 
     @PostMapping("/update")

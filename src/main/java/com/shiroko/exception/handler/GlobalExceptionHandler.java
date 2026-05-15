@@ -1,5 +1,6 @@
 package com.shiroko.exception.handler;
 
+import com.shiroko.exception.BusinessException;
 import com.shiroko.repository.dto.ResponseDTO;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -42,6 +43,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ResponseDTO.fail("参数校验失败：" + errorMsg), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ResponseDTO<Void>> handleBusinessException(BusinessException e) {
+        // 1. 构造响应体，包含你自定义的业务码（如 1001）和错误消息
+        ResponseDTO<Void> body = ResponseDTO.fail(Long.valueOf(e.getCode()), e.getMessage());
+
+        // 2. 固定返回 HTTP 状态码 200 (OK) 或者 500 (Internal Server Error)
+        // 这样前端就能正常解析到 JSON 内容，而不是被浏览器/框架的 500 拦截
+        return new ResponseEntity<>(body, HttpStatus.OK);
+    }
+
     // 处理SQL错误/运行时异常（核心修复）
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResponseDTO<Void>> handleRuntimeException(RuntimeException e) {
@@ -71,4 +82,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDTO<Void>> handleMediaTypeError(HttpMediaTypeNotSupportedException e) {
         return new ResponseEntity<>(ResponseDTO.fail("请求格式错误：仅支持application/json" + e.getSupportedMediaTypes()), HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
+
+
 }

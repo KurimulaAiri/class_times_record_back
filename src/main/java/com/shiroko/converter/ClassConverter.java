@@ -1,8 +1,11 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.dto.clazz.ClassDTO;
+import com.shiroko.repository.dto.clazz.QueryClassDTO;
 import com.shiroko.repository.entity.Class;
+import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.clazz.ClassVO;
+import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -24,4 +27,8 @@ public interface ClassConverter extends BaseConverter<Class, ClassVO> {
 
     List<ClassVO> dtoListToVOList(List<ClassDTO> dtoList);
 
+    @Mapping(target = "id", source = "classId")
+    Class queryDtoToPojo(QueryClassDTO queryClassDTO);
+
+    CourseRecordVO pojoToVo(CourseRecord courseRecord);
 }

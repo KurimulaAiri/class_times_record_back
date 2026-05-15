@@ -1,14 +1,12 @@
 package com.shiroko.service;
 
 import com.shiroko.repository.dto.ResponseDTO;
-import com.shiroko.repository.dto.courserecord.DeleteCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
-import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
+import com.shiroko.repository.dto.courserecord.*;
+import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 
 /**
- * Description: TODO
+ * Description: 课程记录服务接口
  *
  * @author Guguguy
  * @version 1.0
@@ -28,4 +26,6 @@ public interface CourseRecordService {
     ResponseDTO<Object> updateCourseRecord(UpdateCourseRecordDTO dto);
 
     ResponseDTO<QueryCourseRecordVO> newGetCourseRecords(QueryCourseRecordDTO dto);
+
+    ResponseDTO<DeductCourseRecordVO> deductByStudentId(DeductCourseRecordDTO deductCourseRecordDTO);
 }

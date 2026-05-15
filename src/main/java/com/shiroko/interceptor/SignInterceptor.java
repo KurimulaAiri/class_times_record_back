@@ -2,6 +2,7 @@ package com.shiroko.interceptor;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import com.shiroko.support.RepeatedlyRequestWrapper;
 import com.shiroko.util.SM3Util;
 import jakarta.servlet.DispatcherType;
@@ -15,7 +16,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -101,12 +101,22 @@ public class SignInterceptor implements HandlerInterceptor {
         allParams.put("nonce", nonce);
 
         // 4. 字典序排序并拼接字符串
+// 4. 字典序排序并拼接字符串
         String stringA = allParams.entrySet().stream()
-                // 1. 先过滤掉 Entry 为空，或者 Value 真正为 null 的情况
-                .filter(Objects::nonNull)
                 .filter(e -> e.getValue() != null && StrUtil.isNotBlank(e.getValue().toString()))
                 .sorted(Map.Entry.comparingByKey())
-                .map(e -> e.getKey() + "=" + e.getValue())
+                .map(e -> {
+                    Object value = e.getValue();
+                    String valueStr;
+                    if (value instanceof Map || value instanceof Iterable) {
+                        // 关键点：将复杂对象转为 JSON 字符串，且必须强制字段排序
+                        // 使用 FastJSON2 的 JSONWriter.Feature.SortMapEntriesByKey
+                        valueStr = JSON.toJSONString(value, JSONWriter.Feature.SortMapEntriesByKeys);
+                    } else {
+                        valueStr = value.toString();
+                    }
+                    return e.getKey() + "=" + valueStr;
+                })
                 .collect(Collectors.joining("&"));
 
         log.info("stringA: {}", stringA);

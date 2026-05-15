@@ -1,5 +1,6 @@
 package com.shiroko.repository.dto.clazz;
 
+import com.shiroko.repository.entity.CourseRecord;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,9 +23,13 @@ public class ClassDTO {
 
     private Long studentMaxCount;
 
+    private Long courseId;
+
     private String courseName;
 
     private String username;
+
+    private CourseRecord courseRecord;
 
     private Long courseType;
 

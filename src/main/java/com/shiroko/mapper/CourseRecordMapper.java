@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * Description: TODO
+ * Description: 课程记录映射接口
  *
  * @author Guguguy
  * @version 1.0
@@ -26,4 +26,6 @@ public interface CourseRecordMapper extends BaseMapper<CourseRecord> {
     );
 
     IPage<CourseRecord> selectCourseRecords(IPage<CourseRecord> pageParam, QueryCourseRecordDTO dto);
+
+    Integer updateRestTime(@Param("cr") CourseRecord cr, @Param("totalCount") Integer totalCount);
 }

@@ -1,5 +1,6 @@
 package com.shiroko.repository.vo.clazz;
 
+import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import lombok.Data;
 
 /**
@@ -22,7 +23,11 @@ public class ClassVO {
 
     private String username;
 
+    private Long courseId;
+
     private String courseName;
+
+    private CourseRecordVO courseRecord;
 
     private Long courseType;
 

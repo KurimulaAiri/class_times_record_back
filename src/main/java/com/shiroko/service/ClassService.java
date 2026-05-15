@@ -1,10 +1,12 @@
 package com.shiroko.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.clazz.QueryClassDTO;
+import com.shiroko.repository.dto.clazz.UpdateClassDTO;
 import com.shiroko.repository.entity.Class;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.vo.clazz.QueryClassVO;
+import com.shiroko.repository.vo.clazz.UpdateClassVO;
 
 /**
  * Description: 班级服务接口
@@ -18,4 +20,8 @@ public interface ClassService extends IService<Class> {
     ResponseDTO<QueryClassVO> getClassesByStudentId(QueryClassDTO queryClassDTO);
 
     ResponseDTO<QueryClassVO> getClassesByTeacherId(QueryClassDTO queryClassDTO);
+
+    ResponseDTO<UpdateClassVO> addStudentToClass(UpdateClassDTO updateClassDTO);
+
+    ResponseDTO<QueryClassVO> getClassById(QueryClassDTO queryClassDTO);
 }

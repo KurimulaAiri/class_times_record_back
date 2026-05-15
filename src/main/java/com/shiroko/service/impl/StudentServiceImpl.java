@@ -26,6 +26,7 @@ import com.shiroko.repository.vo.student.StudentVO;
 import com.shiroko.repository.vo.student.UpdateStudentVO;
 import com.shiroko.service.StudentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
+@Slf4j
 @RequiredArgsConstructor
 public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> implements StudentService {
 
@@ -92,7 +94,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     @Override
     public ResponseDTO<QueryStudentVO> getStudentByTeacherId(QueryStudentDTO queryStudentDTO) {
         // 1. 分页查询学生
-        IPage<Student> page = getPage(queryStudentDTO);
+        IPage<StudentDTO> page = getPage(queryStudentDTO);
         queryStudentDTO.setSex(queryStudentDTO.getSex() == -1 ? null : queryStudentDTO.getSex());
         studentMapper.selectStudentByTeacherId(page, queryStudentDTO);
         return injectParentInfo(page);
@@ -101,11 +103,9 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     @Override
     public ResponseDTO<QueryStudentVO> getStudentByClassId(QueryStudentDTO queryStudentDTO) {
 
-        List<StudentDTO> list = studentMapper.selectStudentByClassId(queryStudentDTO);
-
-        List<StudentVO> voList = studentConverter.dtoListToVOList(list);
-
-        return ResponseDTO.success(new QueryStudentVO(voList, (long) list.size()));
+        IPage<StudentDTO> page = getPage(queryStudentDTO);
+        studentMapper.selectStudentByClassId(page, queryStudentDTO);
+        return injectParentInfo(page);
     }
 
     @Override
@@ -151,15 +151,16 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     @Override
     public ResponseDTO<QueryStudentVO> getStudentByInstitutionId(QueryStudentDTO queryStudentDTO) {
         // 1. 分页查询学生
-        IPage<Student> page = getPage(queryStudentDTO);
+        IPage<StudentDTO> page = getPage(queryStudentDTO);
         queryStudentDTO.setSex(queryStudentDTO.getSex() == -1 ? null : queryStudentDTO.getSex());
+        log.debug("根据机构id查询学生列表，机构id：{}，查询参数：{}", queryStudentDTO.getInstitutionId(), queryStudentDTO);
         studentMapper.selectStudentByInstitutionId(page, queryStudentDTO);
         return injectParentInfo(page);
     }
 
     @Override
     public ResponseDTO<QueryStudentVO> getStudentByStudentId(QueryStudentDTO queryStudentDTO) {
-        Student student = studentMapper.selectByStudentId(queryStudentDTO);
+        StudentDTO student = studentMapper.selectByStudentId(queryStudentDTO);
         return injectParentInfo(student);
     }
 
@@ -168,12 +169,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return null;
     }
 
-    private ResponseDTO<QueryStudentVO> injectParentInfo(Student student) {
+    private ResponseDTO<QueryStudentVO> injectParentInfo(StudentDTO student) {
         if (student == null) {
             return ResponseDTO.fail("学生不存在");
         }
         // 1. 转换基础信息 POJO -> VO
-        StudentVO vo = studentConverter.pojoToVO(student);
+        StudentVO vo = studentConverter.dtoToVO(student);
 
         // 2. 调用 Mapper 查询该学生关联的所有家长（复用批量查询接口，传入单个 ID 即可）
         List<ParentVO> parents = parentStudentMapper.selectAllBatchParents(List.of(student.getId()));
@@ -193,14 +194,14 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return ResponseDTO.success(new QueryStudentVO(Collections.singletonList(vo), 1L));
     }
 
-    private ResponseDTO<QueryStudentVO> injectParentInfo(IPage<Student> page) {
-        List<Student> students = page.getRecords();
+    private ResponseDTO<QueryStudentVO> injectParentInfo(IPage<StudentDTO> page) {
+        List<StudentDTO> students = page.getRecords();
         if (students.isEmpty()) {
             return ResponseDTO.success(new QueryStudentVO(new ArrayList<>(), 0L));
         }
 
         // 1. 获取本页所有学生 ID
-        List<Long> studentIds = students.stream().map(Student::getId).toList();
+        List<Long> studentIds = students.stream().map(StudentDTO::getId).toList();
 
         // 2. 一次性查出所有相关的家长记录（包含主次）
         List<ParentVO> allParents = parentStudentMapper.selectAllBatchParents(studentIds);
@@ -211,7 +212,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
         // 4. 组装 VO 列表
         List<StudentVO> voList = students.stream().map(student -> {
-            StudentVO vo = studentConverter.pojoToVO(student);
+            StudentVO vo = studentConverter.dtoToVO(student);
 
             // 获取该学生关联的所有家长
             List<ParentVO> associatedParents = parentGroupMap.getOrDefault(student.getId(), Collections.emptyList());
@@ -230,7 +231,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return ResponseDTO.success(new QueryStudentVO(voList, page.getTotal()));
     }
 
-    private IPage<Student> getPage(QueryStudentDTO queryStudentDTO) {
+    private IPage<StudentDTO> getPage(QueryStudentDTO queryStudentDTO) {
         return new Page<>(
                 queryStudentDTO.getCurrentPage() == null ? 1 : queryStudentDTO.getCurrentPage(),
                 queryStudentDTO.getPageSize() == null ? 10 : queryStudentDTO.getPageSize()

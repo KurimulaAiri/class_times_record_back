@@ -4,19 +4,44 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.ClassMapper">
 
-    <select id="getClassesByStudentId" resultType="com.shiroko.repository.dto.clazz.ClassDTO">
+    <resultMap id="classResultMap" type="com.shiroko.repository.dto.clazz.ClassDTO">
+        <id column="id" property="id"/>
+        <result column="student_count" property="studentCount"/>
+        <result column="class_id" property="id"/>
+        <result column="class_name" property="className"/>
+        <result column="course_id" property="courseId"/>
+        <result column="course_name" property="courseName"/>
+        <result column="course_type" property="courseType"/>
+        <result column="username" property="username"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <association property="courseRecord" javaType="com.shiroko.repository.entity.CourseRecord">
+            <id column="id" property="id"/>
+            <result column="course_rest_time" property="courseRestTime"/>
+        </association>
+    </resultMap>
+
+    <select id="getClassesByStudentId" resultMap="classResultMap">
         select
-            cl.id,
-            cl.student_count,
-            cs.class_id,
-            cl.class_name,
-            co.course_name,
-            co.course_type,
-            cl.create_time,
-            cl.update_time
+        cl.id,
+        cl.student_count,
+        cs.class_id,
+        cl.class_name,
+        cl.course_id,
+        co.course_name,
+        co.course_type,
+        t.username,
+        cl.create_time,
+        cl.update_time,
+        <!-- 新增：从 course_record 表获取余额 -->
+        cr.course_rest_time
         from class_student as cs
         left join class as cl on cs.class_id = cl.id
         left join course as co on cl.course_id = co.id
+        left join teacher as t on cl.teacher_id = t.id
+        <!-- 关键：通过学生ID和课程ID联合关联 -->
+        left join course_record as cr on cr.student_id = cs.student_id
+        and cr.course_id = cl.course_id
         where cs.student_id = #{studentId}
     </select>
 
@@ -33,6 +58,17 @@
         <if test="keyword != null and keyword != ''">
             and (cl.class_name like concat('%', #{keyword}, '%'))
         </if>
+    </select>
+
+    <select id="selectByClassId" resultType="com.shiroko.repository.dto.clazz.ClassDTO">
+        select cl.*,
+               t.username,
+               co.course_name,
+               co.course_type
+        from class as cl
+                 left join course as co on cl.course_id = co.id
+                 left join teacher as t on cl.teacher_id = t.id
+        where cl.id = #{classId}
     </select>
 
 </mapper>
