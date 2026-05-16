@@ -70,8 +70,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="Class" />
-                  <option name="tableName" value="class" />
+                  <option name="className" value="ClassSchedule" />
+                  <option name="tableName" value="class_schedule" />
                 </TableUIInfo>
               </list>
             </option>

@@ -4,6 +4,7 @@ import org.mapstruct.Named;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -32,6 +33,18 @@ public interface BaseConverter<T, V> {
 
         // 2. 直接对 LocalDateTime 进行格式化
         return dateTime.format(formatter);
+    }
+
+    // 自定义时间转换方法(LocalTime)
+    @Named("timeToString")
+    default String timeToString(LocalTime time) {
+        if (time == null) {
+            return "暂无记录";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        // 2. 直接对 LocalTime 进行格式化
+        return time.format(formatter);
     }
 
     // 自定义日期转换方法(LocalDate)

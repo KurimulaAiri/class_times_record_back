@@ -1,7 +1,10 @@
 package com.shiroko.repository.vo.clazz;
 
+import com.shiroko.repository.entity.Teacher;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * Description: 班级VO类
@@ -21,7 +24,7 @@ public class ClassVO {
 
     private Long studentMaxCount;
 
-    private String username;
+    private List<Teacher> teachers;
 
     private Long courseId;
 

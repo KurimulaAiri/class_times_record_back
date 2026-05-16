@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Description: TODO
+ * Description: 课程记录控制器
  *
  * @author Guguguy
  * @version 1.0

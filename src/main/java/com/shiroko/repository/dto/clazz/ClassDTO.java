@@ -1,9 +1,11 @@
 package com.shiroko.repository.dto.clazz;
 
 import com.shiroko.repository.entity.CourseRecord;
+import com.shiroko.repository.entity.Teacher;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Description: 班级DTO类
@@ -27,7 +29,7 @@ public class ClassDTO {
 
     private String courseName;
 
-    private String username;
+    private List<Teacher> teachers;
 
     private CourseRecord courseRecord;
 
