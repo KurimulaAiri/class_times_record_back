@@ -4,12 +4,14 @@ import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.clazz.InsertClassDTO;
 import com.shiroko.repository.dto.clazz.QueryClassDTO;
 import com.shiroko.repository.dto.clazz.UpdateClassDTO;
+import com.shiroko.repository.dto.clazz.validategroup.UpdateGroup;
 import com.shiroko.repository.vo.clazz.InsertClassVO;
 import com.shiroko.repository.vo.clazz.QueryClassVO;
 import com.shiroko.repository.vo.clazz.UpdateClassVO;
 import com.shiroko.service.ClassService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,8 +52,18 @@ public class ClassController {
         return classService.addStudentToClass(updateClassDTO);
     }
 
+    @PostMapping("/remove_student_from_class")
+    public ResponseDTO<UpdateClassVO> removeStudentFromClass(@Validated(UpdateGroup.RemoveStudent.class) @RequestBody UpdateClassDTO updateClassDTO) {
+        return classService.removeStudentFromClass(updateClassDTO);
+    }
+
     @PostMapping("/insert")
     public ResponseDTO<InsertClassVO> insertClass(@RequestBody InsertClassDTO insertClassDTO) {
         return classService.insertClass(insertClassDTO);
+    }
+
+    @PostMapping("/update_by_id")
+    public ResponseDTO<UpdateClassVO> updateClassByClassId(@Validated(UpdateGroup.UpdateClass.class) @RequestBody UpdateClassDTO updateClassDTO) {
+        return classService.updateClassByClassId(updateClassDTO);
     }
 }

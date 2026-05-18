@@ -22,6 +22,7 @@ import com.shiroko.repository.vo.clazz.QueryClassVO;
 import com.shiroko.repository.vo.clazz.UpdateClassVO;
 import com.shiroko.service.ClassService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
+@Slf4j
 public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements ClassService{
 
     private final ClassMapper classMapper;
@@ -150,6 +152,54 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         vo.setClassName(newClazz.getClassName());
 
         return ResponseDTO.success(vo);
+    }
+
+    @Override
+    @UpdateStudentCount
+    public ResponseDTO<UpdateClassVO> removeStudentFromClass(UpdateClassDTO updateClassDTO) {
+        Long result = classStudentMapper.deleteBatch(updateClassDTO);
+        return ResponseDTO.success(new UpdateClassVO(result));
+    }
+
+    @Override
+    public ResponseDTO<UpdateClassVO> updateClassByClassId(UpdateClassDTO updateClassDTO) {
+        Long insertSResult = 0L;
+        Long insertCTResult = 0L;
+
+        Class clazz = classConverter.updateDtoToPojo(updateClassDTO);
+        int result = classMapper.updateById(clazz);
+        if (result == 0) {
+            return ResponseDTO.fail("更新失败");
+        } else {
+            // 2. 处理【任课老师】的“有加有减” -> 先删后增
+            // 2.1 根据班级ID清空旧的老师关联
+            classTeacherMapper.deleteByClassId(clazz.getId());
+            log.debug("删除班级{}的所有老师关联记录", clazz.getId());
+            // 2.2 如果前端传了新的老师列表，则批量插入
+            if (updateClassDTO.getTeachers() != null && !updateClassDTO.getTeachers().isEmpty()) {
+                log.debug("插入班级{}的新老师关联记录", clazz.getId());
+                // 提取并组装成带 classId 的关联表对象列表
+                List<ClassTeacher> classTeachers = updateClassDTO.getTeachers().stream().map(teacher -> {
+                    ClassTeacher ct = new ClassTeacher();
+                    ct.setClassId(updateClassDTO.getClassId()); // 注入当前班级ID
+                    ct.setTeacherId(teacher.getTeacherId());   // 提取老师ID
+                    return ct;
+                }).collect(Collectors.toList());
+                insertCTResult = classTeacherMapper.insertBatch(classTeachers);
+            }
+
+            // 3. 处理【上课日程】的“有加有减” -> 先删后增
+            // 3.1 根据班级ID清空旧的日程安排
+            classScheduleMapper.deleteByClassId(clazz.getId());
+            log.debug("删除班级{}的所有日程记录", clazz.getId());
+            // 3.2 如果前端传了新的日程列表，则批量插入
+            log.debug("更新班级的日程记录:{}", updateClassDTO.getSchedules());
+            if (updateClassDTO.getSchedules() != null && !updateClassDTO.getSchedules().isEmpty()) {
+                log.debug("插入班级{}的新日程记录", clazz.getId());
+                insertSResult = classScheduleMapper.insertBatch(updateClassDTO.getSchedules());
+            }
+        }
+        return ResponseDTO.success("更新成功，更新了" + insertCTResult + "条老师关联记录，更新了" + insertSResult + "条日程记录", new UpdateClassVO(clazz.getId()));
     }
 }
 

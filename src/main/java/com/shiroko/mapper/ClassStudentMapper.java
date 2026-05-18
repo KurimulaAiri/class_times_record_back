@@ -14,4 +14,6 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface ClassStudentMapper extends BaseMapper<ClassStudent> {
     Long insertBatch(@Param("dto") UpdateClassDTO dto);
+
+    Long deleteBatch(@Param("dto") UpdateClassDTO dto);
 }

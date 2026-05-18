@@ -16,6 +16,8 @@ public interface ClassTeacherMapper extends BaseMapper<ClassTeacher> {
 
     Long insertBatch(List<ClassTeacher> classTeacherList);
 
+    Long deleteByClassId(Long classId);
+
 }
 
 

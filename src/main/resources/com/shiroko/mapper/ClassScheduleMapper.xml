@@ -20,4 +20,10 @@
         </foreach>
     </insert>
 
+    <delete id="deleteByClassId">
+        DELETE
+        FROM class_schedule
+        WHERE class_id = #{classId}
+    </delete>
+
 </mapper>

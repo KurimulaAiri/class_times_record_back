@@ -13,4 +13,13 @@
         </foreach>
     </insert>
 
+    <delete id="deleteBatch">
+        DELETE FROM class_student
+        WHERE class_id = #{dto.classId}
+        AND student_id IN
+        <foreach collection="dto.students" item="student" open="(" separator="," close=")">
+            #{student.id}
+        </foreach>
+    </delete>
+
 </mapper>

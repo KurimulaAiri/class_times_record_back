@@ -28,4 +28,8 @@ public interface ClassService extends IService<Class> {
     ResponseDTO<QueryClassVO> getClassById(QueryClassDTO queryClassDTO);
 
     ResponseDTO<InsertClassVO> insertClass(InsertClassDTO insertClassDTO);
+
+    ResponseDTO<UpdateClassVO> removeStudentFromClass(UpdateClassDTO updateClassDTO);
+
+    ResponseDTO<UpdateClassVO> updateClassByClassId(UpdateClassDTO updateClassDTO);
 }

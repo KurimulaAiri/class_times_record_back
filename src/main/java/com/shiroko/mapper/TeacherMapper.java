@@ -3,6 +3,7 @@ package com.shiroko.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shiroko.repository.entity.Teacher;
 import com.shiroko.repository.vo.teacher.TeacherVO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ public interface TeacherMapper extends BaseMapper<Teacher> {
     TeacherVO getTeacherById(Long teacherId);
 
     List<TeacherVO> getTeacherByInstitutionId(Long institutionId);
+
+    Long updateBatchById(@Param("list") List<Teacher> list);
 }
 
 

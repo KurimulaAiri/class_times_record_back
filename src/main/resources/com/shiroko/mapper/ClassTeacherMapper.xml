@@ -11,4 +11,11 @@
             (#{item.classId}, #{item.teacherId})
         </foreach>
     </insert>
+
+    <delete id="deleteByClassId">
+        DELETE
+        FROM class_teacher
+        WHERE class_id = #{classId}
+    </delete>
+
 </mapper>

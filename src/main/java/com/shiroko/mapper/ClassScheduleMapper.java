@@ -16,6 +16,7 @@ public interface ClassScheduleMapper extends BaseMapper<ClassSchedule> {
 
     Long insertBatch(List<ClassSchedule> classScheduleList);
 
+    Long deleteByClassId(Long classId);
 }
 
 
