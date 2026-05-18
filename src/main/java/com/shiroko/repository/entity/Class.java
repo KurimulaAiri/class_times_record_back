@@ -4,12 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
-import lombok.Data;
 
 /**
  * Description: 班级实体类
@@ -33,14 +32,20 @@ public class Class implements Serializable {
     private Long courseId;
 
     /**
+     * 班级名称
+     */
+    private String className;
+
+
+    /**
      * 班级学生人数
      */
-    private String studentCount;
+    private Long studentCount;
 
     /**
      * 班级最大人数
      */
-    private String studentMaxCount;
+    private Long studentMaxCount;
 
     /**
      * 创建时间

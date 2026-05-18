@@ -33,7 +33,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         IPage<Course> pageParam = new Page<>(queryCourseDTO.getCurrentPage(), queryCourseDTO.getPageSize());
 
-        IPage<CourseVO> iPage = courseMapper.selectCourseByInstitutionId(pageParam, queryCourseDTO.getInstitutionId());
+        IPage<CourseVO> iPage = courseMapper.selectCourseByInstitutionId(pageParam, queryCourseDTO);
 
         List<CourseVO> courseVOList = iPage.getRecords();
 

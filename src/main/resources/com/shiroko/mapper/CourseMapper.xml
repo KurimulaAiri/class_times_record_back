@@ -24,6 +24,9 @@
                i.status
         from course as c
                  left join institution as i on c.institution_id = i.id
-        where c.institution_id = #{institutionId}
+        where c.institution_id = #{dto.institutionId}
+        <if test="dto.keyword != null and dto.keyword != ''">
+            and (c.course_name like concat('%', #{dto.keyword}, '%'))
+        </if>
     </select>
 </mapper>

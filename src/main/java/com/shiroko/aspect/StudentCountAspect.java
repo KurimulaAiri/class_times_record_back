@@ -17,7 +17,10 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
 
 /**
- * Description: TODO
+ * Description: 班级人数更新 AOP
+ * 1. 监听 UpdateStudentCount 注解
+ * 2. 从中间表（class_student）统计人数
+ * 3. 更新到 Class 表（实体类名建议改为 Clazz 避免关键字冲突）
  *
  * @author Guguguy
  * @version 1.0
@@ -50,7 +53,7 @@ public class StudentCountAspect {
 
             // 3. 更新到 Class 表（实体类名建议改为 Clazz 避免关键字冲突）
             classMapper.update(null, new LambdaUpdateWrapper<Class>()
-                    .set(Class::getStudentCount, currentCount.intValue())
+                    .set(Class::getStudentCount, currentCount)
                     .eq(Class::getId, classId));
 
             log.info("班级ID: {} 人数已更新为: {}", classId, currentCount);

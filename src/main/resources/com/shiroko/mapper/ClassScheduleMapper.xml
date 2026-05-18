@@ -4,4 +4,20 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.ClassScheduleMapper">
 
+    <insert id="insertBatch">
+        INSERT INTO class_schedule (class_id, day_of_week, start_date, end_date, start_time, end_time, remark)
+        VALUES
+        <foreach collection="classScheduleList" item="item" separator=",">
+            (
+            #{item.classId},
+            #{item.dayOfWeek},
+            #{item.startDate},
+            #{item.endDate},
+            #{item.startTime},
+            #{item.endTime},
+            #{item.remark}
+            )
+        </foreach>
+    </insert>
+
 </mapper>

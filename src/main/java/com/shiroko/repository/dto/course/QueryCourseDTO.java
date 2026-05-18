@@ -14,6 +14,9 @@ import lombok.Data;
 public class QueryCourseDTO {
     @NotNull(message = "机构ID不能为空")
     private Long institutionId;
+
+    private String keyword;
+
     @NotNull(message = "当前页不能为空")
     private Long currentPage;
     @NotNull(message = "每页数量不能为空")
