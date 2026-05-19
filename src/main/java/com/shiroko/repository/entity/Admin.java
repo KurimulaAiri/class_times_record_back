@@ -4,55 +4,40 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.shiroko.repository.entity.common.BaseEntity;
+import com.shiroko.repository.entity.common.RoleBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * Description: 用户实体类
+ * Description: 管理员实体类
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/3/19 上午23:34
+ * @since 2026/5/20 上午0:21
  */
 @EqualsAndHashCode(callSuper = true)
-@TableName(value ="user")
+@TableName(value = "admin")
 @Data
-public class User extends BaseEntity {
-    /**
-     * 用户id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
-
-    /**
-     * 微信当前小程序唯一标识
-     */
-    @TableField(value = "open_id")
-    private String openid;
-
-    /**
-     * 微信开放平台唯一标识
-     */
-    @TableField(value = "union_id")
-    private String unionId;
-
-    /**
-     * 创建时间
-     */
-    @TableField(value = "create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField(value = "update_time")
-    private LocalDateTime updateTime;
-
+public class Admin extends RoleBaseEntity implements Serializable {
     @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+    /**
+     * 管理员id
+     */
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long adminId;
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
+
 }

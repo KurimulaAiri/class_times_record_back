@@ -34,4 +34,7 @@ public class LoginDTO {
 
     @NotNull(message = "token不能为空", groups = {LoginGroup.LoginByToken.class, LoginGroup.LoginOut.class})
     private String token;
+
+    @NotNull(message = "needValidateAdmin不能为空", groups = {LoginGroup.LoginByPwd.class, LoginGroup.LoginByToken.class})
+    private Boolean needValidateAdmin;
 }

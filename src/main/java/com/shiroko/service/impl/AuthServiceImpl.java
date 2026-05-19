@@ -143,9 +143,14 @@ public class AuthServiceImpl implements AuthService {
         JSONObject jsonObject = JSON.parseObject(response);
 
         // 3. 检查微信返回结果
-        String openid = jsonObject.getString("openid");
+        String openid = null;
+        if (jsonObject != null) {
+            openid = jsonObject.getString("openid");
+        }
         if (openid == null) {
-            return ResponseDTO.fail("微信登录失败：" + jsonObject.getString("errmsg"));
+            if (jsonObject != null) {
+                return ResponseDTO.fail("微信登录失败：" + jsonObject.getString("errmsg"));
+            }
         }
         return ResponseDTO.success(new LoginVO(null, openid, null));
     }
@@ -268,6 +273,8 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 通用身份记录创建（使用 Spring ReflectionUtils）
      * 逻辑：根据角色名获取 Service -> 获取实体类 -> 实例化 -> 注入 userId -> 保存
+     * @param userId 用户ID
+     * @param role   角色ID (例如: 1L)
      */
     private void saveIdentityRecord(Long userId, Long role) {
         // 1. 拼装 Bean 名称，例如 "teacherService"
@@ -280,6 +287,16 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    /**
+     * Description: 通用身份记录创建（使用 Spring ReflectionUtils）
+     *
+     * @param service  角色服务实例
+     * @param userId   用户ID
+     * @param role     角色ID (例如: 1L)
+     * @param beanName 角色服务 Bean 名称
+     * @author Guguguy
+     * @since 2026/5/20 上午12:35
+     */
     private <T> void handleSave(IService<T> service, Long userId, Long role, String beanName) {
         try {
             // 此时我们有了具体的 T，可以安全地通过 T 获取 Class
