@@ -156,6 +156,20 @@
             <version>5.8.40</version>
         </dependency>
 
+        <!-- 测试依赖（Spring Boot 4 模块化） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- H2 内存数据库（测试用） -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <!-- 确保 pom.xml 中有以下配置（放在 <build><plugins> 标签内） -->
@@ -187,6 +201,17 @@
                 <configuration>
                     <source>21</source> <!-- 和你用的 JDK 版本一致（21） -->
                     <target>21</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version> <!-- 建议使用较新版本的插件 -->
+                <configuration>
+                    <argLine>
+                        -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/1.17.8/byte-buddy-agent-1.17.8.jar
+                    </argLine>
                 </configuration>
             </plugin>
 

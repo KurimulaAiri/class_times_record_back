@@ -2,7 +2,7 @@ package com.shiroko.repository.dto.record;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.shiroko.repository.dto.BaseDTO;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,14 +22,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InsertRecordDTO extends BaseDTO {
-    @NotBlank(message = "课程记录ID不能为空")
+    @NotNull(message = "课程记录ID不能为空")
     private Long courseRecordId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @NotBlank(message = "记录时间不能为空")
+    @NotNull(message = "记录时间不能为空")
     private LocalDateTime recordTime;
-    @NotBlank(message = "记录类型不能为空")
+    @NotNull(message = "记录类型不能为空")
     private Long recordType;
     private String recordRemark;
-    @NotBlank(message = "记录变更不能为空")
+    @NotNull(message = "记录变更不能为空")
     private Long recordChange;
 }
