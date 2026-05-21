@@ -42,6 +42,11 @@ public class ClassController {
         return classService.getClassesByTeacherId(queryClassDTO);
     }
 
+    @PostMapping("/get_classes_by_institution_id")
+    public ResponseDTO<QueryClassVO> getClassesByInstitutionId(@RequestBody QueryClassDTO queryClassDTO) {
+        return classService.getClassesByInstitutionId(queryClassDTO);
+    }
+
     @PostMapping("/get_class_by_id")
     public ResponseDTO<QueryClassVO> getClassById(@RequestBody QueryClassDTO queryClassDTO) {
         return classService.getClassById(queryClassDTO);

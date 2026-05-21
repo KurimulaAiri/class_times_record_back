@@ -27,6 +27,8 @@ public interface ClassMapper extends BaseMapper<Class> {
     List<ClassDTO> getClassesByTeacherId(QueryClassDTO queryClassDTO);
 
     ClassDTO selectByClassId(QueryClassDTO queryClassDTO);
+
+    List<ClassDTO> getClassesByInstitutionId(QueryClassDTO queryClassDTO);
 }
 
 

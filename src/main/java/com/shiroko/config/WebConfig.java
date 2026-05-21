@@ -31,20 +31,21 @@ public class WebConfig implements WebMvcConfigurer {
 
         // jwt拦截器
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/**")             // 默认拦截所有路径
-                .excludePathPatterns(               // 以下路径不拦截：
-                        "/auth/login_no_pwd",         //  登录接口（无需密码）
-                        "/auth/login_by_pwd",         //  登录接口（需要密码）
-                        "/auth/get_open_id",          //  获取openid接口
-                        "/auth/register",           //  注册接口（如果有）
-                        "/error",                   //  SpringBoot 默认错误页
-                        "/static/**",               //  静态资源
-                        "/v3/api-docs/**",             //  OpenAPI 文档
-                        "/v3/api-docs.yaml",             //  OpenAPI 文档
-                        "/swagger-ui.html",           //  文档页面（如果用了 Swagger）
-                        "/swagger-ui/**",           //  文档页面（如果用了 Swagger）
-                        "/v3/api-docs/**",             //  OpenAPI 文档
-                        "/test/**"                      //  测试接口
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                        "/auth/login_no_pwd",
+                        "/auth/login_by_pwd",
+                        "/auth/login_by_token",
+                        "/auth/get_open_id",
+                        "/auth/register",
+                        "/auth/refresh",
+                        "/error",
+                        "/static/**",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/test/**"
                 );
 
         // 注册签名拦截器

@@ -14,5 +14,6 @@ public class QueryClassDTO {
     private Long classId;
     private Long studentId;
     private Long teacherId;
+    private Long institutionId;
     private String keyword;
 }

@@ -81,6 +81,19 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     }
 
     @Override
+    public ResponseDTO<QueryClassVO> getClassesByInstitutionId(QueryClassDTO queryClassDTO) {
+        List<ClassDTO> classList = classMapper.getClassesByInstitutionId(queryClassDTO);
+
+        List<ClassVO> classVOList = classConverter.dtoListToVOList(classList);
+
+        QueryClassVO queryClassVO = new QueryClassVO();
+        queryClassVO.setClassList(classVOList);
+        queryClassVO.setTotal((long) classList.size());
+
+        return ResponseDTO.success(queryClassVO);
+    }
+
+    @Override
     @UpdateStudentCount
     public ResponseDTO<UpdateClassVO> addStudentToClass(UpdateClassDTO updateClassDTO) {
         Long result;
@@ -201,6 +214,8 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         }
         return ResponseDTO.success("更新成功，更新了" + insertCTResult + "条老师关联记录，更新了" + insertSResult + "条日程记录", new UpdateClassVO(clazz.getId()));
     }
+
+
 }
 
 

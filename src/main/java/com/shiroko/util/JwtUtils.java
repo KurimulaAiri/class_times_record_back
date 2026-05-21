@@ -12,43 +12,68 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * Description: TODO
+ * Description: JWT 工具类 - 支持双 Token 机制（Access Token + Refresh Token）
  *
  * @author Guguguy
- * @version 1.0
+ * @version 2.0
  * @since 2026/3/19 下午4:59
  */
 @Component
 public class JwtUtils {
 
-    // 签名密钥（生产环境建议从配置文件读取，长度至少32位）
     private static final String SECRET_KEY = "shiroko_project_secret_key_at_least_32_chars_long";
-    private static final long EXPIRATION_TIME = 1000 * 60 * 10; // 有效期 10 分钟
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+    private static final long ACCESS_EXPIRATION = 1000 * 60 * 5;
+    private static final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
 
     private static final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
-    /**
-     * 生成 Token
-     * @param userId 数据库中的用户自增ID
-     */
-    public String createToken(Long userId, Long roleId) {
+    public String createAccessToken(Long userId, Long roleId) {
         return Jwts.builder()
                 .setSubject("user_auth")
-                .claim("userId", userId) // 将用户ID存入载荷(Payload)
-                .claim("roleId", roleId) // 将角色ID存入载荷(Payload)
+                .claim("userId", userId)
+                .claim("roleId", roleId)
+                .claim("tokenType", TOKEN_TYPE_ACCESS)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRATION))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    public String createRefreshToken(Long userId, Long roleId) {
+        return Jwts.builder()
+                .setSubject("user_auth")
+                .claim("userId", userId)
+                .claim("roleId", roleId)
+                .claim("tokenType", TOKEN_TYPE_REFRESH)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean validateAccessToken(String token) {
         try {
-            Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(token);
-            return true;
+                    .parseClaimsJws(token)
+                    .getBody();
+            return TOKEN_TYPE_ACCESS.equals(claims.get("tokenType"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return TOKEN_TYPE_REFRESH.equals(claims.get("tokenType"));
         } catch (Exception e) {
             return false;
         }
@@ -62,22 +87,30 @@ public class JwtUtils {
                 .getBody();
     }
 
-    /**
-     * 解析 Token 并获取用户 ID 和角色 ID
-     * @param token 要解析的 Token
-     * @return 包含用户 ID (userId) 和角色 ID (roleId) 的 Map, 如果 Token 无效则返回 null
-     */
     public Map<String, Object> getUserInfoFromToken(String token) {
-        Map<String, Object> claims;
         try {
-             claims = Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Map<String, Object> getUserInfoFromRefreshToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            if (!TOKEN_TYPE_REFRESH.equals(claims.get("tokenType"))) {
+                return null;
+            }
             return claims;
         } catch (Exception e) {
-            // Token 过期或非法
             return null;
         }
     }

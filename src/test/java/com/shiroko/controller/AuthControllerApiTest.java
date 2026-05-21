@@ -48,7 +48,8 @@ class AuthControllerApiTest {
         dto.setRole(2L);
 
         LoginVO loginVO = new LoginVO();
-        loginVO.setToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.payload");
+        loginVO.setAccessToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.payload");
+        loginVO.setRefreshToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh.payload");
 
         when(authService.wxLogin(any(LoginDTO.class)))
                 .thenReturn(ResponseDTO.success(loginVO));
@@ -58,7 +59,8 @@ class AuthControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.token").exists());
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists());
 
         verify(authService).wxLogin(any(LoginDTO.class));
     }
@@ -87,7 +89,8 @@ class AuthControllerApiTest {
         dto.setNeedValidateAdmin(true);
 
         LoginVO loginVO = new LoginVO();
-        loginVO.setToken("eyJhbGciOiJIUzI1NiJ9.test_pwd.payload");
+        loginVO.setAccessToken("eyJhbGciOiJIUzI1NiJ9.test_pwd.payload");
+        loginVO.setRefreshToken("eyJhbGciOiJIUzI1NiJ9.refresh_pwd.payload");
 
         when(authService.loginByPwd(any(LoginDTO.class)))
                 .thenReturn(ResponseDTO.success(loginVO));
@@ -97,7 +100,8 @@ class AuthControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.token").exists());
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.refreshToken").exists());
 
         verify(authService).loginByPwd(any(LoginDTO.class));
     }
@@ -122,7 +126,8 @@ class AuthControllerApiTest {
         dto.setNeedValidateAdmin(false);
 
         LoginVO loginVO = new LoginVO();
-        loginVO.setToken("refreshed_token");
+        loginVO.setAccessToken("refreshed_access_token");
+        loginVO.setRefreshToken("refreshed_refresh_token");
 
         when(authService.loginByToken(any(LoginDTO.class)))
                 .thenReturn(ResponseDTO.success(loginVO));
@@ -132,7 +137,8 @@ class AuthControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.token").value("refreshed_token"));
+                .andExpect(jsonPath("$.data.accessToken").value("refreshed_access_token"))
+                .andExpect(jsonPath("$.data.refreshToken").value("refreshed_refresh_token"));
 
         verify(authService).loginByToken(any(LoginDTO.class));
     }
@@ -213,5 +219,27 @@ class AuthControllerApiTest {
                 .andExpect(jsonPath("$.data.openId").value("wx_open_id_from_server"));
 
         verify(authService).getOpenId(anyString());
+    }
+
+    @Test
+    @DisplayName("POST /auth/refresh - 刷新AccessToken成功")
+    void refreshAccessToken_shouldReturnNewAccessToken() throws Exception {
+        LoginDTO dto = new LoginDTO();
+        dto.setToken("valid_refresh_token");
+
+        LoginVO loginVO = new LoginVO();
+        loginVO.setAccessToken("new_access_token_value");
+
+        when(authService.refreshAccessToken(anyString()))
+                .thenReturn(ResponseDTO.success(loginVO));
+
+        mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.accessToken").value("new_access_token_value"));
+
+        verify(authService).refreshAccessToken(anyString());
     }
 }

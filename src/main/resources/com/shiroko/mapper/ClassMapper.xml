@@ -91,5 +91,25 @@
         where cl.id = #{classId}
     </select>
 
+    <select id="getClassesByInstitutionId" resultMap="classResultMap">
+        select
+        cl.id as class_id,
+        cl.*,
+        co.course_name,
+        co.course_type,
+        t.id as teacher_id,
+        t.username as teacher_username
+        from class as cl
+        left join course as co on cl.course_id = co.id
+        <!-- ✅ 改为通过 class_teacher 中间表关联 -->
+        left join class_teacher as ct on ct.class_id = cl.id
+        left join teacher as t on ct.teacher_id = t.id
+        where co.institution_id = #{institutionId}
+        <if test="keyword != null and keyword != ''">
+            and cl.class_name like concat('%', #{keyword}, '%')
+        </if>
+        order by cl.update_time desc
+    </select>
+
 </mapper>
 

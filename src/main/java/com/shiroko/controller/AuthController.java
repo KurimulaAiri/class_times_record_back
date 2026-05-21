@@ -63,6 +63,11 @@ public class AuthController {
         return authService.logout(dto);
     }
 
+    @PostMapping("/refresh")
+    public ResponseDTO<LoginVO> refresh(@RequestBody LoginDTO dto) {
+        return authService.refreshAccessToken(dto.getToken());
+    }
+
     @PostMapping("/register")
     public ResponseDTO<RegisterVO> register(@Valid @RequestBody RegisterDTO dto) {
         return authService.register(dto);

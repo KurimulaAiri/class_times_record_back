@@ -71,20 +71,18 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseDTO<LoginVO> wxLogin(LoginDTO dto) {
-        // 1. 调用 getOpenId 方法获取 openid
         ResponseDTO<LoginVO> openidResponse = getOpenId(dto.getCode());
         if (openidResponse.getCode() != 200) {
             return openidResponse;
         }
         String openId = openidResponse.getData().getOpenId();
 
-        // 4. 业务逻辑：根据 openid 去数据库查用户，没有则注册，有则更新
         Long userId = userService.saveOrUpdateUser(openId);
 
-        // 5. 生成自定义 Token (推荐 JWT)
-        String token = jwtUtils.createToken(userId, dto.getRole());
+        String accessToken = jwtUtils.createAccessToken(userId, dto.getRole());
+        String refreshToken = jwtUtils.createRefreshToken(userId, dto.getRole());
 
-        return ResponseDTO.success(new LoginVO(token, openId, null));
+        return ResponseDTO.success(new LoginVO(accessToken, refreshToken, openId, null));
 
     }
 
@@ -117,7 +115,9 @@ public class AuthServiceImpl implements AuthService {
                     String encryptedPassword = SM3Util.digestWithSalt(password, salt);
 
                     if (encryptedPassword.equals(userAuth.getPassword()) && userAuth.getAccount().equals(account)) {
-                        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(user.getUserId(), role), openId, user));
+                        String accessToken = jwtUtils.createAccessToken(user.getUserId(), role);
+                        String refreshToken = jwtUtils.createRefreshToken(user.getUserId(), role);
+                        return ResponseDTO.success(new LoginVO(accessToken, refreshToken, openId, user));
                     } else {
                         return ResponseDTO.fail("账号或密码错误");
                     }
@@ -152,7 +152,7 @@ public class AuthServiceImpl implements AuthService {
                 return ResponseDTO.fail("微信登录失败：" + jsonObject.getString("errmsg"));
             }
         }
-        return ResponseDTO.success(new LoginVO(null, openid, null));
+        return ResponseDTO.success(new LoginVO(null, null, openid, null));
     }
 
     @Override
@@ -167,7 +167,24 @@ public class AuthServiceImpl implements AuthService {
 
         UserVO<RoleBaseEntity> user = userService.getFullUserInfoByOpenid(dto.getOpenId(), permissionService.getById(roleId));
 
-        return ResponseDTO.success(new LoginVO(jwtUtils.createToken(userId, roleId), dto.getOpenId(), user));
+        String accessToken = jwtUtils.createAccessToken(userId, roleId);
+        String refreshToken = jwtUtils.createRefreshToken(userId, roleId);
+
+        return ResponseDTO.success(new LoginVO(accessToken, refreshToken, dto.getOpenId(), user));
+    }
+
+    @Override
+    public ResponseDTO<LoginVO> refreshAccessToken(String refreshToken) {
+        Map<String, Object> userInfo = jwtUtils.getUserInfoFromRefreshToken(refreshToken);
+        if (userInfo == null) {
+            return ResponseDTO.fail("refresh token无效或已过期，请重新登录");
+        }
+        Long userId = Long.parseLong(userInfo.get("userId").toString());
+        Long roleId = Long.parseLong(userInfo.get("roleId").toString());
+
+        String newAccessToken = jwtUtils.createAccessToken(userId, roleId);
+
+        return ResponseDTO.success(new LoginVO(newAccessToken, null, null, null));
     }
 
     @Override

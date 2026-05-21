@@ -7,10 +7,10 @@ import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
 
 /**
- * Description: TODO
+ * Description: 认证服务接口
  *
  * @author Guguguy
- * @version 1.0
+ * @version 2.0
  * @since 2026/3/19 下午4:07
  */
 public interface AuthService {
@@ -22,6 +22,8 @@ public interface AuthService {
     ResponseDTO<LoginVO> getOpenId(String code);
 
     ResponseDTO<LoginVO> loginByToken(LoginDTO dto);
+
+    ResponseDTO<LoginVO> refreshAccessToken(String refreshToken);
 
     ResponseDTO<String> logout(LoginDTO dto);
 
