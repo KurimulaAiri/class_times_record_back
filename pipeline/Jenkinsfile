@@ -7,7 +7,7 @@ pipeline {
         GIT_BRANCH          = 'master'
         PROJECT_NAME        = 'class-times-record'
         APP_PORT            = 9999
-        MAVEN_BUILD_CMD     = 'clean package -DskipTests'
+        MAVEN_BUILD_CMD     = 'clean package -Dmaven.test.skip=true'
 
         // 容器内共享目录（已挂载到宿主机 /opt/java-deploy/...）
         CONTAINER_DEPLOY_DIR = '/opt/deploy/class_times_record_back'
