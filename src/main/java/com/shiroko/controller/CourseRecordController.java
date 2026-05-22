@@ -6,6 +6,7 @@ import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,10 +57,14 @@ public class CourseRecordController {
     }
 
     @PostMapping("/deduct_by_student_id")
-    public ResponseDTO<DeductCourseRecordVO> deductByStudentId(@Valid @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
+    public ResponseDTO<DeductCourseRecordVO> deductByStudentId(@Validated @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
         return courseRecordService.deductByStudentId(deductCourseRecordDTO);
     }
 
+    @PostMapping("/deduct_by_course_id")
+    public ResponseDTO<DeductCourseRecordVO> deductByCourseId(@Validated @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
+        return courseRecordService.deductByCourseId(deductCourseRecordDTO);
+    }
     @PostMapping("/update")
     public ResponseDTO<Object> updateCourseRecord(@Valid @RequestBody UpdateCourseRecordDTO updateCourseRecordDTO) {
         // System.out.println(updateCourseRecordDTO);

@@ -36,6 +36,11 @@ public class Class implements Serializable {
      */
     private String className;
 
+    /**
+     * 班级状态
+     */
+    private Long status;
+
 
     /**
      * 班级学生人数

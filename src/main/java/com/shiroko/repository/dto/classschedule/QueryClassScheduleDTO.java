@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QueryClassScheduleDTO {
+    private Long institutionId;
+
     private Long classId;
 
     private Long currentPage;

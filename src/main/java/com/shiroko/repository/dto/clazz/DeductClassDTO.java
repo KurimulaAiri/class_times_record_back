@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * Description: 扣课班级DTO类
+ * Description: 通过班级扣课DTO类
  *
  * @author Guguguy
  * @version 1.0

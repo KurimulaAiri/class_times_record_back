@@ -4,6 +4,22 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.ClassScheduleMapper">
 
+    <resultMap id="classScheduleResultMap" type="com.shiroko.repository.dto.classschedule.ClassScheduleDTO">
+        <id property="id" column="id"/>
+        <result property="classId" column="class_id"/>
+        <result property="dayOfWeek" column="day_of_week"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="remark" column="remark"/>
+        <collection property="teachers" ofType="com.shiroko.repository.entity.Teacher">
+            <id property="teacherId" column="tid"/>
+            <result property="username" column="teacher_name"/>
+        </collection>
+    </resultMap>
+
+
     <insert id="insertBatch">
         INSERT INTO class_schedule (class_id, day_of_week, start_date, end_date, start_time, end_time, remark)
         VALUES
@@ -25,5 +41,20 @@
         FROM class_schedule
         WHERE class_id = #{classId}
     </delete>
+
+    <select id="selectClassScheduleByInstitutionId" resultMap="classScheduleResultMap">
+        SELECT cs.*,
+               cl.class_name,
+               t.username    as teacher_name,
+               ct.teacher_id as tid
+        FROM class_schedule cs
+                 LEFT JOIN class cl ON cs.class_id = cl.id
+                 LEFT JOIN class_teacher ct ON cl.id = ct.class_id
+                 LEFT JOIN teacher t ON ct.teacher_id = t.id
+                 LEFT JOIN course co ON cl.course_id = co.id
+        WHERE co.institution_id = #{dto.institutionId}
+        ORDER BY cs.id DESC
+    </select>
+
 
 </mapper>

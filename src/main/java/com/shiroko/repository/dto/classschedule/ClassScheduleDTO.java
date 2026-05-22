@@ -1,27 +1,28 @@
-package com.shiroko.repository.vo.classschedule;
+package com.shiroko.repository.dto.classschedule;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.shiroko.repository.entity.Teacher;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
- * Description: 班级排课VO类
+ * Description: 班级排课DTO类
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/5/16 下午10:33
+ * @since 2026/5/22 下午10:01
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ClassScheduleVO {
-
+public class ClassScheduleDTO {
     /**
      * 时刻表id
      */
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -30,24 +31,19 @@ public class ClassScheduleVO {
     private Long classId;
 
     /**
-     * 关联的班级名称
+     * 班级名称
      */
     private String className;
 
     /**
-     * 关联的老师数组
-     */
-    private List<Teacher> teachers;
-
-    /**
      * 时间段开始日期
      */
-    private String startDateStr;
+    private LocalDate startDate;
 
     /**
      * 时间段结束日期
      */
-    private String endDateStr;
+    private LocalDate endDate;
 
     /**
      * 上课时间（1-7代表星期一到星期日）
@@ -57,12 +53,12 @@ public class ClassScheduleVO {
     /**
      * 开始上课时间
      */
-    private String startTimeStr;
+    private LocalTime startTime;
 
     /**
      * 结束上课时间
      */
-    private String endTimeStr;
+    private LocalTime endTime;
 
     /**
      * 备注
@@ -70,13 +66,18 @@ public class ClassScheduleVO {
     private String remark;
 
     /**
+     * 教师列表
+     */
+    private List<Teacher> teachers;
+
+    /**
      * 记录创建时间
      */
-    private String createTimeStr;
+    private LocalDateTime createTime;
 
     /**
      * 记录更新时间
      */
-    private String updateTimeStr;
+    private LocalDateTime updateTime;
 
 }

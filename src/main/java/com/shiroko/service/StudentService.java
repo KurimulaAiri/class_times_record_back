@@ -34,4 +34,6 @@ public interface StudentService extends IService<Student> {
     ResponseDTO<QueryStudentVO> getStudentByInstitutionId(QueryStudentDTO queryStudentDTO);
 
     ResponseDTO<QueryStudentVO> getStudentByStudentId(QueryStudentDTO queryStudentDTO);
+
+    ResponseDTO<QueryStudentVO> getStudentByCourseId(QueryStudentDTO queryStudentDTO);
 }

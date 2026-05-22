@@ -29,6 +29,8 @@ public class ClassDTO {
 
     private String courseName;
 
+    private Long status;
+
     private List<Teacher> teachers;
 
     private CourseRecord courseRecord;

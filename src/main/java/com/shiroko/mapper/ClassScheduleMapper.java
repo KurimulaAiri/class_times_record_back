@@ -1,7 +1,11 @@
 package com.shiroko.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.shiroko.repository.dto.classschedule.ClassScheduleDTO;
+import com.shiroko.repository.dto.classschedule.QueryClassScheduleDTO;
 import com.shiroko.repository.entity.ClassSchedule;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -17,6 +21,8 @@ public interface ClassScheduleMapper extends BaseMapper<ClassSchedule> {
     Long insertBatch(List<ClassSchedule> classScheduleList);
 
     Long deleteByClassId(Long classId);
+
+    IPage<ClassScheduleDTO> selectClassScheduleByInstitutionId(IPage<ClassScheduleDTO> page, @Param("dto") QueryClassScheduleDTO dto);
 }
 
 

@@ -24,8 +24,8 @@ public class JwtUtils {
     private static final String SECRET_KEY = "shiroko_project_secret_key_at_least_32_chars_long";
     public static final String TOKEN_TYPE_ACCESS = "access";
     public static final String TOKEN_TYPE_REFRESH = "refresh";
-    private static final long ACCESS_EXPIRATION = 1000 * 60 * 5;
-    private static final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
+    private static final long ACCESS_EXPIRATION = 1000 * 60 * 5; // 5分钟
+    private static final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7天
 
     private static final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 

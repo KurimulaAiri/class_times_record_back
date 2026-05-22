@@ -28,4 +28,8 @@ public interface QueryGroup {
     interface ByInstitutionId {
 
     }
+
+    interface ByCourseId {
+
+    }
 }

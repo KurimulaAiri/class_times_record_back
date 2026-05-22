@@ -3,21 +3,17 @@ package com.shiroko.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.common.enums.ResultCode;
 import com.shiroko.context.UserContext;
 import com.shiroko.converter.CourseRecordConverter;
 import com.shiroko.exception.BusinessException;
-import com.shiroko.mapper.CourseMapper;
-import com.shiroko.mapper.CourseRecordMapper;
-import com.shiroko.mapper.PermissionRecordMapper;
-import com.shiroko.mapper.RecordMapper;
+import com.shiroko.mapper.*;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.clazz.DeductClassDTO;
 import com.shiroko.repository.dto.courserecord.*;
-import com.shiroko.repository.entity.Course;
-import com.shiroko.repository.entity.CourseRecord;
-import com.shiroko.repository.entity.PermissionRecord;
 import com.shiroko.repository.entity.Record;
+import com.shiroko.repository.entity.*;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
@@ -42,15 +38,15 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
-public class CourseRecordServiceImpl implements CourseRecordService {
-
-    private final CourseRecordMapper courseRecordMapper;
-
-    private final CourseRecordConverter courseRecordConverter;
+public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, CourseRecord> implements CourseRecordService {
 
     private final PermissionRecordMapper permissionRecordMapper;
     private final CourseMapper courseMapper;
     private final RecordMapper recordMapper;
+    private final CourseRecordMapper courseRecordMapper;
+    private final StudentMapper studentMapper;
+
+    private final CourseRecordConverter courseRecordConverter;
 
     // Service 逻辑简化
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
@@ -164,6 +160,47 @@ public class CourseRecordServiceImpl implements CourseRecordService {
                 );
             }
         });
+        return ResponseDTO.success(new DeductCourseRecordVO(res.get()));
+    }
+
+    @Override
+    public ResponseDTO<DeductCourseRecordVO> deductByCourseId(DeductCourseRecordDTO dto) {
+
+        AtomicReference<Integer> res = new AtomicReference<>(0);
+
+        // 因为学生不会重复，直接遍历前端传来的学生列表即可
+        dto.getStudents().forEach(studentDto -> {
+            Long studentId = studentDto.getStudentId();
+            Integer deductCount = studentDto.getDeductCount();
+
+            // 1. 构建更新条件
+            // WHERE course_id = #{courseId} AND student_id = #{studentId}
+            CourseRecord cr = new CourseRecord()
+                    .setCourseId(dto.getCourseId())
+                    .setStudentId(studentId);
+
+            // 2. 扣减课时
+            Integer rows = courseRecordMapper.updateRestTime(cr, deductCount);
+            res.updateAndGet(v -> v + rows);
+
+            // 3. 校验扣减结果
+            if (rows == 0) {
+                // 扣除失败，抛出异常阻断事务，并提示哪个学生课时不够
+                Student student = studentMapper.selectById(studentId);
+                String studentName = student != null ? student.getStudentName() : "未知学员";
+                throw new BusinessException(ResultCode.COURSE_BALANCE_NOT_ENOUGH, "学员 [ " + studentName + " ] 课时余额不足");
+            } else {
+                // 4. 扣除成功，记录扣课流水
+                recordMapper.insert(new Record()
+                        .setCourseRecordId(cr.getId())
+                        .setRecordTime(LocalDateTime.now())
+                        .setRecordRemark(dto.getRemark())
+                        .setRecordType(2L) // 2 为减少
+                        .setRecordChange(Long.valueOf(deductCount))
+                );
+            }
+        });
+
         return ResponseDTO.success(new DeductCourseRecordVO(res.get()));
     }
 

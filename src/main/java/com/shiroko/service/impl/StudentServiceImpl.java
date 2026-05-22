@@ -165,6 +165,14 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     }
 
     @Override
+    public ResponseDTO<QueryStudentVO> getStudentByCourseId(QueryStudentDTO queryStudentDTO) {
+        // 1. 分页查询学生
+        IPage<StudentDTO> page = getPage(queryStudentDTO);
+        studentMapper.selectStudentByCourseId(page, queryStudentDTO);
+        return injectParentInfo(page);
+    }
+
+    @Override
     public ResponseDTO<QueryStudentVO> getStudent(QueryStudentDTO queryStudentDTO) {
         return null;
     }

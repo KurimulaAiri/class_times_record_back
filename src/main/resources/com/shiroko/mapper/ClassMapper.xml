@@ -11,6 +11,7 @@
         <result column="course_id" property="courseId"/>
         <result column="course_name" property="courseName"/>
         <result column="course_type" property="courseType"/>
+        <result column="status" property="status"/>
         <result column="student_count" property="studentCount"/>
         <result column="student_max_count" property="studentMaxCount"/>
         <result column="create_time" property="createTime"/>

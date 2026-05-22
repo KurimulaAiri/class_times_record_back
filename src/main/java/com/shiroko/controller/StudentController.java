@@ -55,6 +55,11 @@ public class StudentController {
         return studentService.getStudentByInstitutionId(queryStudentDTO);
     }
 
+    @PostMapping("/get_by_course_id")
+    public ResponseDTO<QueryStudentVO> getStudentByCourseId(@Validated(QueryGroup.ByCourseId.class) @RequestBody QueryStudentDTO queryStudentDTO) {
+        return studentService.getStudentByCourseId(queryStudentDTO);
+    }
+
     @PostMapping("/insert")
     public ResponseDTO<InsertStudentVO> insert(@RequestBody InsertStudentDTO insertStudentDTO) {
         return studentService.insertStudent(insertStudentDTO);

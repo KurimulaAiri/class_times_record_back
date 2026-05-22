@@ -20,6 +20,8 @@ public class ClassVO {
 
     private String className;
 
+    private Long status;
+
     private Long studentCount;
 
     private Long studentMaxCount;

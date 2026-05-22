@@ -32,6 +32,9 @@ public class QueryStudentDTO {
     @NotNull(message = "教师ID不能为空", groups = QueryGroup.ByTeacherId.class)
     private Long teacherId;
 
+    @NotNull(message = "课程ID不能为空", groups = QueryGroup.ByCourseId.class)
+    private Long courseId;
+
     private Long sex;
 
     private String keyword;
@@ -40,7 +43,8 @@ public class QueryStudentDTO {
             QueryGroup.ByParentId.class,
             QueryGroup.ByTeacherId.class,
             QueryGroup.ByClassId.class,
-            QueryGroup.ByInstitutionId.class
+            QueryGroup.ByInstitutionId.class,
+            QueryGroup.ByCourseId.class
     })
     private Long pageSize;
 
@@ -48,7 +52,8 @@ public class QueryStudentDTO {
             QueryGroup.ByParentId.class,
             QueryGroup.ByTeacherId.class,
             QueryGroup.ByClassId.class,
-            QueryGroup.ByInstitutionId.class
+            QueryGroup.ByInstitutionId.class,
+            QueryGroup.ByCourseId.class
     })
     private Long currentPage;
 

@@ -1,9 +1,12 @@
 package com.shiroko.converter;
 
+import com.shiroko.repository.dto.classschedule.ClassScheduleDTO;
 import com.shiroko.repository.entity.ClassSchedule;
 import com.shiroko.repository.vo.classschedule.ClassScheduleVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import java.util.List;
 
 /**
  * Description: 班级排课转换器
@@ -23,5 +26,15 @@ public interface ClassScheduleConverter extends BaseConverter<ClassSchedule, Cla
     @Mapping(target = "updateTimeStr", source = "updateTime", qualifiedByName = "dateTimeToString")
     @Override
     ClassScheduleVO pojoToVO(ClassSchedule pojo);
+
+    @Mapping(target = "startDateStr", source = "startDate", qualifiedByName = "dateToString")
+    @Mapping(target = "endDateStr", source = "endDate", qualifiedByName = "dateToString")
+    @Mapping(target = "startTimeStr", source = "startTime", qualifiedByName = "timeToString")
+    @Mapping(target = "endTimeStr", source = "endTime", qualifiedByName = "timeToString")
+    @Mapping(target = "createTimeStr", source = "createTime", qualifiedByName = "dateTimeToString")
+    @Mapping(target = "updateTimeStr", source = "updateTime", qualifiedByName = "dateTimeToString")
+    ClassScheduleVO dtoToVO(ClassScheduleDTO dto);
+
+    List<ClassScheduleVO> dtoListToVOList(List<ClassScheduleDTO> dtoList);
 
 }

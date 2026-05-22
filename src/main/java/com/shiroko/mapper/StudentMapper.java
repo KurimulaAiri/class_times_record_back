@@ -47,6 +47,8 @@ public interface StudentMapper extends BaseMapper<Student> {
     IPage<StudentDTO> selectStudentByInstitutionId(IPage<StudentDTO> page, @Param("dto") QueryStudentDTO queryStudentDTO);
 
     StudentDTO selectByStudentId(@Param("dto") QueryStudentDTO dto);
+
+    IPage<StudentDTO> selectStudentByCourseId(IPage<StudentDTO> page, @Param("dto") QueryStudentDTO queryStudentDTO);
 }
 
 

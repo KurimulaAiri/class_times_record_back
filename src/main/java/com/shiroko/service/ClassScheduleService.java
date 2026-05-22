@@ -16,4 +16,6 @@ import com.shiroko.repository.vo.classschedule.QueryClassScheduleVO;
 public interface ClassScheduleService extends IService<ClassSchedule> {
 
     ResponseDTO<QueryClassScheduleVO> getByClassId(QueryClassScheduleDTO dto);
+
+    ResponseDTO<QueryClassScheduleVO> getByInstitutionId(QueryClassScheduleDTO dto);
 }

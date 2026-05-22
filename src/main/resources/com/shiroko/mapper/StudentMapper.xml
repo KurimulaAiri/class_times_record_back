@@ -104,6 +104,13 @@
         FROM student s
         WHERE s.id = #{dto.studentId}
     </select>
-
-
+    <select id="selectStudentByCourseId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        SELECT s.*,
+               cr.course_total_time,
+               cr.course_rest_time
+        from student as s
+                 left join course_record as cr on s.id = cr.student_id
+        where cr.course_id = #{dto.courseId}
+        order by s.update_time desc, s.id
+    </select>
 </mapper>

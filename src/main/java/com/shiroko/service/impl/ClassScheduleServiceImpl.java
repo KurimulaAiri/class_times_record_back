@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.ClassScheduleConverter;
 import com.shiroko.mapper.ClassScheduleMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.classschedule.ClassScheduleDTO;
 import com.shiroko.repository.dto.classschedule.QueryClassScheduleDTO;
 import com.shiroko.repository.entity.ClassSchedule;
 import com.shiroko.repository.vo.classschedule.ClassScheduleVO;
@@ -40,6 +41,16 @@ public class ClassScheduleServiceImpl extends ServiceImpl<ClassScheduleMapper, C
         List<ClassScheduleVO> voList = classScheduleConverter.pojoListToVOList(page.getRecords());
         return ResponseDTO.success(new QueryClassScheduleVO(voList, page.getTotal()));
 
+    }
+
+    @Override
+    public ResponseDTO<QueryClassScheduleVO> getByInstitutionId(QueryClassScheduleDTO dto) {
+        IPage<ClassScheduleDTO> page = new Page<>(dto.getCurrentPage(), dto.getPageSize());
+
+        page = classScheduleMapper.selectClassScheduleByInstitutionId(page, dto);
+
+        List<ClassScheduleVO> voList = classScheduleConverter.dtoListToVOList(page.getRecords());
+        return ResponseDTO.success(new QueryClassScheduleVO(voList, page.getTotal()));
     }
 }
 

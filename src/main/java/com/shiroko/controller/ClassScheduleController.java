@@ -30,4 +30,8 @@ public class ClassScheduleController {
         return classScheduleService.getByClassId(dto);
     }
 
+    @PostMapping("/get_by_institution_id")
+    public ResponseDTO<QueryClassScheduleVO> getByInstitutionId(@Valid @RequestBody QueryClassScheduleDTO dto) {
+        return classScheduleService.getByInstitutionId(dto);
+    }
 }
