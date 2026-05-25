@@ -175,43 +175,48 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class) // 💡 涉及多表操作，强烈建议加上事务注解
     public ResponseDTO<UpdateClassVO> updateClassByClassId(UpdateClassDTO updateClassDTO) {
         Long insertSResult = 0L;
         Long insertCTResult = 0L;
 
+        // 1. 转换并更新班级基本信息
         Class clazz = classConverter.updateDtoToPojo(updateClassDTO);
+
+        // 针对 MyBatis-Plus 的优化：updateById 默认会自动忽略 null 字段，只更新传过来的字段
         int result = classMapper.updateById(clazz);
         if (result == 0) {
             return ResponseDTO.fail("更新失败");
-        } else {
-            // 2. 处理【任课老师】的“有加有减” -> 先删后增
-            // 2.1 根据班级ID清空旧的老师关联
-            classTeacherMapper.deleteByClassId(clazz.getId());
-            log.debug("删除班级{}的所有老师关联记录", clazz.getId());
-            // 2.2 如果前端传了新的老师列表，则批量插入
-            if (updateClassDTO.getTeachers() != null && !updateClassDTO.getTeachers().isEmpty()) {
-                log.debug("插入班级{}的新老师关联记录", clazz.getId());
-                // 提取并组装成带 classId 的关联表对象列表
-                List<ClassTeacher> classTeachers = updateClassDTO.getTeachers().stream().map(teacher -> {
-                    ClassTeacher ct = new ClassTeacher();
-                    ct.setClassId(updateClassDTO.getClassId()); // 注入当前班级ID
-                    ct.setTeacherId(teacher.getTeacherId());   // 提取老师ID
-                    return ct;
-                }).collect(Collectors.toList());
-                insertCTResult = classTeacherMapper.insertBatch(classTeachers);
-            }
-
-            // 3. 处理【上课日程】的“有加有减” -> 先删后增
-            // 3.1 根据班级ID清空旧的日程安排
-            classScheduleMapper.deleteByClassId(clazz.getId());
-            log.debug("删除班级{}的所有日程记录", clazz.getId());
-            // 3.2 如果前端传了新的日程列表，则批量插入
-            log.debug("更新班级的日程记录:{}", updateClassDTO.getSchedules());
-            if (updateClassDTO.getSchedules() != null && !updateClassDTO.getSchedules().isEmpty()) {
-                log.debug("插入班级{}的新日程记录", clazz.getId());
-                insertSResult = classScheduleMapper.insertBatch(updateClassDTO.getSchedules());
-            }
         }
+
+        // 2. 核心改动：如果前端指定了“只更新班级自身字段”，则直接返回，跳过老师和日程的“先删后增”
+        if (Boolean.TRUE.equals(updateClassDTO.getOnlyUpdateClassOwn())) {
+            return ResponseDTO.success("更新班级信息成功", new UpdateClassVO(clazz.getId()));
+        }
+
+        // ================= 以下是原有的老师和日程处理逻辑 =================
+        // 3. 处理【任课老师】的“有加有减” -> 先删后增
+        classTeacherMapper.deleteByClassId(clazz.getId());
+        log.debug("删除班级{}的所有老师关联记录", clazz.getId());
+        if (updateClassDTO.getTeachers() != null && !updateClassDTO.getTeachers().isEmpty()) {
+            log.debug("插入班级{}的新老师关联记录", clazz.getId());
+            List<ClassTeacher> classTeachers = updateClassDTO.getTeachers().stream().map(teacher -> {
+                ClassTeacher ct = new ClassTeacher();
+                ct.setClassId(updateClassDTO.getClassId());
+                ct.setTeacherId(teacher.getTeacherId());
+                return ct;
+            }).collect(Collectors.toList());
+            insertCTResult = classTeacherMapper.insertBatch(classTeachers);
+        }
+
+        // 4. 处理【上课日程】的“有加有减” -> 先删后增
+        classScheduleMapper.deleteByClassId(clazz.getId());
+        log.debug("删除班级{}的所有日程记录", clazz.getId());
+        if (updateClassDTO.getSchedules() != null && !updateClassDTO.getSchedules().isEmpty()) {
+            log.debug("插入班级{}的新日程记录", clazz.getId());
+            insertSResult = classScheduleMapper.insertBatch(updateClassDTO.getSchedules());
+        }
+
         return ResponseDTO.success("更新成功，更新了" + insertCTResult + "条老师关联记录，更新了" + insertSResult + "条日程记录", new UpdateClassVO(clazz.getId()));
     }
 

@@ -7,6 +7,7 @@
     <resultMap id="courseResultMap" type="com.shiroko.repository.vo.course.CourseVO">
         <id property="id" column="id"/>
         <result property="courseName" column="course_name"/>
+        <result property="courseType" column="course_type"/>
         <result property="available" column="is_available"/>
         <association property="institution" javaType="com.shiroko.repository.entity.Institution">
             <result property="id" column="institution_id"/>

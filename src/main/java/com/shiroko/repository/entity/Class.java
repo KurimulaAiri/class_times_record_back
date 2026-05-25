@@ -41,7 +41,6 @@ public class Class implements Serializable {
      */
     private Long status;
 
-
     /**
      * 班级学生人数
      */

@@ -9,7 +9,6 @@ import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * Description: 课程实体类
@@ -43,6 +42,12 @@ public class Course implements Serializable {
      * 课程所在的机构id
      */
     private Long institutionId;
+
+    /**
+     * 是否可用
+     */
+    private Boolean isAvailable;
+
     /**
      * 创建时间
      */

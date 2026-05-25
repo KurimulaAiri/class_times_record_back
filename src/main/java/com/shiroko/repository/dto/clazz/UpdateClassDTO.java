@@ -27,6 +27,10 @@ public class UpdateClassDTO {
 
     private Long courseId;
 
+    private Long status;
+
+    private Boolean onlyUpdateClassOwn;
+
     private List<Teacher> teachers;
 
     private List<ClassSchedule> schedules;

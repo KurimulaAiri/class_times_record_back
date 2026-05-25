@@ -3,11 +3,14 @@ package com.shiroko.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shiroko.converter.CourseConverter;
 import com.shiroko.mapper.CourseMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.course.InsertCourseDTO;
 import com.shiroko.repository.dto.course.QueryCourseDTO;
 import com.shiroko.repository.entity.Course;
 import com.shiroko.repository.vo.course.CourseVO;
+import com.shiroko.repository.vo.course.InsertCourseVO;
 import com.shiroko.repository.vo.course.QueryCourseVO;
 import com.shiroko.service.CourseService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     private final CourseMapper courseMapper;
 
+    private final CourseConverter courseConverter;
+
     @Override
     public ResponseDTO<QueryCourseVO> getCourseByInstitutionId(QueryCourseDTO queryCourseDTO) {
 
@@ -43,6 +48,13 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         queryCourseVO.setTotal(iPage.getTotal());
 
         return ResponseDTO.success(queryCourseVO);
+    }
+
+    @Override
+    public ResponseDTO<InsertCourseVO> addCourse(InsertCourseDTO insertCourseDTO) {
+        Course course = courseConverter.insertDtoToPojo(insertCourseDTO);
+        courseMapper.insert(course);
+        return ResponseDTO.success(new InsertCourseVO(course.getId()));
     }
 }
 
