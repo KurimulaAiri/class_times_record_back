@@ -24,5 +24,7 @@ public class RegisterDTO {
     @NotNull(message = "角色不能为空")
     private Long role;       // 角色 （teacher / parent）
     @NotBlank(message = "openid不能为空")
-    private String openId;     // 微信openid
+    private String openId;     // 平台openid
+    @NotBlank(message = "platform不能为空")
+    private String platform;   // 平台 （wechat / qq）
 }

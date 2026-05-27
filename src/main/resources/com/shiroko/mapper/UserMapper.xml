@@ -5,4 +5,25 @@
 <mapper namespace="com.shiroko.mapper.UserMapper">
 
 
+    <select id="selectUserByPlatformOpenid" resultType="com.shiroko.repository.entity.User">
+        SELECT u.id,
+               u.create_time,
+               u.update_time
+        FROM user_platform up
+                 INNER JOIN user u ON up.user_id = u.id
+        WHERE up.platform = #{platform}
+          AND up.open_id = #{openId}
+    </select>
+
+    <select id="selectUserByPlatformOpenidAndInstitution" resultType="com.shiroko.repository.entity.User">
+        SELECT u.id             AS userId,
+               u.institution_id AS institutionId,
+               up.open_id       AS openId
+        FROM user_platform up
+                 INNER JOIN `user` u ON up.user_id = u.id
+        WHERE up.platform = #{platform}
+          AND up.open_id = #{openId}
+          AND u.institution_id = #{institutionId}
+    </select>
+
 </mapper>

@@ -4,14 +4,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.InstitutionMapper">
 
-    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.Institution">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="institutionName" column="institution_name" jdbcType="VARCHAR"/>
-            <result property="institutionAddress" column="institution_address" jdbcType="VARCHAR"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-    </resultMap>
     <select id="selectListByStudentId" resultType="com.shiroko.repository.entity.Institution">
         SELECT DISTINCT
             i.*
@@ -23,6 +15,16 @@
             institution i ON c.institution_id = i.id
         WHERE cr.student_id = #{studentId}
           AND cr.is_delete = 0
+    </select>
+
+    <select id="selectListByOpenId" resultType="com.shiroko.repository.entity.Institution">
+        SELECT DISTINCT i.*
+        FROM user_platform up
+                 INNER JOIN `user` u ON up.user_id = u.id
+                 INNER JOIN institution i ON u.institution_id = i.id -- 联查机构主表获取机构详情
+        WHERE up.platform = #{platform}
+          AND up.open_id = #{openId}
+          AND up.is_available = 1 -- 过滤掉已经被禁用的微信绑定关系
     </select>
 
 </mapper>

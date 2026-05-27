@@ -170,6 +170,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- 哈希ID依赖：用于生成短链接 -->
+        <dependency>
+            <groupId>org.hashids</groupId>
+            <artifactId>hashids</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
     </dependencies>
 
     <!-- 确保 pom.xml 中有以下配置（放在 <build><plugins> 标签内） -->

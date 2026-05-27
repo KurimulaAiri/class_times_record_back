@@ -2,9 +2,11 @@ package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.institution.QueryInstitutionDTO;
+import com.shiroko.repository.dto.institution.validategroup.QueryGroup;
 import com.shiroko.repository.vo.institution.QueryInstitutionVO;
 import com.shiroko.service.InstitutionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +29,16 @@ public class InstitutionController {
     @PostMapping("/get_institution_by_student_id")
     public ResponseDTO<QueryInstitutionVO> getInstitutionByStudentId(@RequestBody QueryInstitutionDTO queryInstitutionDTO) {
         return institutionService.getInstitutionByStudentId(queryInstitutionDTO);
+    }
+
+    @PostMapping("/get_by_open_id")
+    public ResponseDTO<QueryInstitutionVO> getInstitutionByOpenId(@RequestBody @Validated(QueryGroup.ByOpenId.class) QueryInstitutionDTO queryInstitutionDTO) {
+        return institutionService.getInstitutionByOpenId(queryInstitutionDTO);
+    }
+
+    @PostMapping("/get_by_institution_code")
+    public ResponseDTO<QueryInstitutionVO> getInstitutionByCode(@RequestBody @Validated(QueryGroup.ByInstitutionCode.class) QueryInstitutionDTO queryInstitutionDTO) {
+        return institutionService.getInstitutionByCode(queryInstitutionDTO);
     }
 
 }

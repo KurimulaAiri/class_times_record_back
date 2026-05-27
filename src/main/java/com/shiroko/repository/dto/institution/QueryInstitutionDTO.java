@@ -1,5 +1,7 @@
 package com.shiroko.repository.dto.institution;
 
+import com.shiroko.repository.dto.institution.validategroup.QueryGroup;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -12,4 +14,13 @@ import lombok.Data;
 @Data
 public class QueryInstitutionDTO {
     private Long studentId;
+
+    @NotNull(message = "institutionCode不能为空", groups = QueryGroup.ByInstitutionCode.class)
+    private String institutionCode;
+
+    @NotNull(message = "openId不能为空", groups = QueryGroup.ByOpenId.class)
+    private String openId;
+
+    @NotNull(message = "platform不能为空", groups = QueryGroup.ByOpenId.class)
+    private String platform;
 }

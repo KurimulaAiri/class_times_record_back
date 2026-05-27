@@ -39,6 +39,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/auth/get_open_id",
                         "/auth/register",
                         "/auth/refresh",
+                        "/institution/get_by_open_id",
+                        "/institution/get_by_institution_code",
                         "/error",
                         "/static/**",
                         "/v3/api-docs/**",

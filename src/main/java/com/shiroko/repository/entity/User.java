@@ -29,18 +29,6 @@ public class User extends BaseEntity {
     private Long id;
 
     /**
-     * 微信当前小程序唯一标识
-     */
-    @TableField(value = "open_id")
-    private String openid;
-
-    /**
-     * 微信开放平台唯一标识
-     */
-    @TableField(value = "union_id")
-    private String unionId;
-
-    /**
      * 创建时间
      */
     @TableField(value = "create_time")

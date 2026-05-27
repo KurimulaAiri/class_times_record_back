@@ -70,8 +70,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="Admin" />
-                  <option name="tableName" value="admin" />
+                  <option name="className" value="UserPlatform" />
+                  <option name="tableName" value="user_platform" />
                 </TableUIInfo>
               </list>
             </option>

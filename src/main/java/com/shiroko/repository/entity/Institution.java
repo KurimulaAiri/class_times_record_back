@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * Description: 机构实体类
@@ -37,10 +37,16 @@ public class Institution implements Serializable {
     private String institutionAddress;
 
     /**
+     * 机构代码
+     */
+    private String institutionCode;
+
+
+    /**
      * 机构状态：
-0：待审核；
-1：启用；
-2：禁用；
+     * 0：待审核；
+     * 1：启用；
+     * 2：禁用；
      */
     private Integer status;
 

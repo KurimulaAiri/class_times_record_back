@@ -11,6 +11,7 @@
             <id property="id" column="inst_id"/>
             <result property="institutionAddress" column="institution_address"/>
             <result property="institutionName" column="institution_name"/>
+            <result property="institutionCode" column="institution_code"/>
         </association>
     </resultMap>
 
@@ -22,7 +23,8 @@
         select t.*,
                i.id as inst_id,
                i.institution_address,
-               i.institution_name
+               i.institution_name,
+               i.institution_code
         from teacher as t
         left join institution as i on t.institution_id = i.id
         where t.id = #{teacherId}
@@ -31,7 +33,8 @@
     <select id="getTeacherByInstitutionId" resultMap="TeacherVOMap">
         select t.*,
                i.institution_address,
-               i.institution_name
+               i.institution_name,
+               i.institution_code
         from teacher as t
                  left join institution as i on t.institution_id = i.id
         where t.institution_id = #{institutionId}

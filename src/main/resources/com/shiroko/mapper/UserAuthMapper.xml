@@ -4,4 +4,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.UserAuthMapper">
 
+    <select id="selectAuthByAccountAndInstitution" resultType="com.shiroko.repository.entity.UserAuth">
+        SELECT ua.*
+        FROM user_auth ua
+                 INNER JOIN `user` u ON ua.user_id = u.id
+        WHERE ua.account = #{account}
+          AND ua.role_id = #{roleId}
+          AND u.institution_id = #{institutionId}
+    </select>
 </mapper>

@@ -1,9 +1,9 @@
 package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shiroko.mapper.UserAuthMapper;
 import com.shiroko.repository.entity.UserAuth;
 import com.shiroko.service.UserAuthService;
-import com.shiroko.mapper.UserAuthMapper;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, UserAuth>
     implements UserAuthService{
-
 }
 
 

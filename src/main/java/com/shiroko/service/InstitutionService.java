@@ -1,9 +1,9 @@
 package com.shiroko.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.institution.QueryInstitutionDTO;
 import com.shiroko.repository.entity.Institution;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.vo.institution.QueryInstitutionVO;
 
 /**
@@ -16,4 +16,8 @@ import com.shiroko.repository.vo.institution.QueryInstitutionVO;
 public interface InstitutionService extends IService<Institution> {
 
     ResponseDTO<QueryInstitutionVO> getInstitutionByStudentId(QueryInstitutionDTO queryInstitutionDTO);
+
+    ResponseDTO<QueryInstitutionVO> getInstitutionByOpenId(QueryInstitutionDTO queryInstitutionDTO);
+
+    ResponseDTO<QueryInstitutionVO> getInstitutionByCode(QueryInstitutionDTO queryInstitutionDTO);
 }

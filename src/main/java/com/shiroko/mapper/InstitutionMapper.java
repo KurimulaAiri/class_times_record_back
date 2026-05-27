@@ -1,7 +1,7 @@
 package com.shiroko.mapper;
 
-import com.shiroko.repository.entity.Institution;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.shiroko.repository.entity.Institution;
 
 import java.util.List;
 
@@ -15,6 +15,8 @@ import java.util.List;
 public interface InstitutionMapper extends BaseMapper<Institution> {
 
     List<Institution> selectListByStudentId(Long studentId);
+
+    List<Institution> selectListByOpenId(String platform, String openId);
 }
 
 

@@ -1,7 +1,7 @@
 package com.shiroko.mapper;
 
-import com.shiroko.repository.entity.UserAuth;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.shiroko.repository.entity.UserAuth;
 
 /**
  * Description: 权限实体类
@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface UserAuthMapper extends BaseMapper<UserAuth> {
 
+    UserAuth selectAuthByAccountAndInstitution(String account, Long roleId, Long institutionId);
 }
 
 

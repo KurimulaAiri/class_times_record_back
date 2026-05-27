@@ -6,19 +6,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.context.UserContext;
+import com.shiroko.mapper.UserAuthMapper;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
 import com.shiroko.repository.entity.Permission;
 import com.shiroko.repository.entity.UserAuth;
+import com.shiroko.repository.entity.UserPlatform;
 import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.vo.UserVO;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
-import com.shiroko.service.AuthService;
-import com.shiroko.service.PermissionService;
-import com.shiroko.service.UserAuthService;
-import com.shiroko.service.UserService;
+import com.shiroko.service.*;
 import com.shiroko.util.JwtUtils;
 import com.shiroko.util.SM2Util;
 import com.shiroko.util.SM3Util;
@@ -27,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -48,6 +48,7 @@ import java.util.UUID;
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+    private final UserAuthMapper userAuthMapper;
     @Value("${uni-app.wx.app-id}")
     private String appid;
 
@@ -64,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
 
     private final UserService userService;
+    private final UserPlatformService userPlatformService;
     private final PermissionService permissionService;
     private final UserAuthService userAuthService;
 
@@ -77,57 +79,105 @@ public class AuthServiceImpl implements AuthService {
         }
         String openId = openidResponse.getData().getOpenId();
 
-        Long userId = userService.saveOrUpdateUser(openId);
+        UserPlatform platformRecord = userService.saveOrUpdateUser(openId, dto.getPlatform());
 
-        String accessToken = jwtUtils.createAccessToken(userId, dto.getRole());
-        String refreshToken = jwtUtils.createRefreshToken(userId, dto.getRole());
+        String accessToken = jwtUtils.createAccessToken(platformRecord.getUserId(), dto.getRole());
+        String refreshToken = jwtUtils.createRefreshToken(platformRecord.getUserId(), dto.getRole());
 
         return ResponseDTO.success(new LoginVO(accessToken, refreshToken, openId, null));
 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseDTO<LoginVO> loginByPwd(LoginDTO dto) {
-
         String openId = dto.getOpenId();
         Long role = dto.getRole();
         String account = dto.getAccount();
+        Long institutionId = dto.getInstitutionId();
+        String platform = dto.getPlatform();
+
+        // 0. 参数前置校验
+        if (institutionId == null || institutionId <= 0) {
+            return ResponseDTO.fail("请选择或添加登录机构");
+        }
+
+        // 1. 解密前端传输密码
         String password = SM2Util.decrypt(dto.getPassword(), privateKey);
 
+        // 2. 获取角色权限定义
         Permission permission = permissionService.getById(role);
+        if (permission == null) {
+            return ResponseDTO.fail("非法角色参数");
+        }
 
-        UserVO<RoleBaseEntity> user = userService.getFullUserInfoByOpenid(openId, permission);
+        // 3. 💡 精准定位认证信息（通过机构、账号、角色找人）
+        UserAuth userAuth = userAuthMapper.selectAuthByAccountAndInstitution(account, role, institutionId);
+        if (userAuth == null) {
+            return ResponseDTO.fail("该机构下不存在当前账号或身份不匹配");
+        }
 
-        // System.out.println(user);
+        // 4. 盐值密码哈希校验
+        String salt = userAuth.getSalt();
+        String encryptedPassword = SM3Util.digestWithSalt(password, salt);
+        if (!encryptedPassword.equals(userAuth.getPassword())) {
+            return ResponseDTO.fail("账号或密码错误");
+        }
 
+        // 5. 密码验证通过，获取正式的用户完整信息
+        UserVO<RoleBaseEntity> user = userService.getFullUserInfoByUserId(userAuth.getUserId(), permission);
         if (user == null) {
-            return ResponseDTO.fail("用户不存在");
-        } else {
-            if (permission != null) {
-                if (hasRolePermission(user.getUserId(), role)) {
+            return ResponseDTO.fail("用户账户异常");
+        }
 
-                    UserAuth userAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
-                            .eq(UserAuth::getUserId, user.getUserId())
-                            .eq(UserAuth::getRoleId, role)
-                    );
+        // 6. 校验该用户是否拥有特定角色权限（激活状态）
+        if (!hasRolePermission(user.getUserId(), role)) {
+            return ResponseDTO.fail("用户身份不可用（当前用户未注册该身份或该身份被禁用）");
+        }
 
-                    String salt = userAuth.getSalt();
-                    String encryptedPassword = SM3Util.digestWithSalt(password, salt);
+        // 7. 💡 核心修正：后置精准校验与绑定（带着 userId 去查，绝不会查出多条）
+        UserPlatform existRecord = userPlatformService.getOne(
+                new LambdaQueryWrapper<UserPlatform>()
+                        .eq(UserPlatform::getPlatform, platform)
+                        .eq(UserPlatform::getOpenId, openId)
+                        .eq(UserPlatform::getUserId, user.getUserId()) // 💡 加上 userId 组合查询，精准定位
+        );
 
-                    if (encryptedPassword.equals(userAuth.getPassword()) && userAuth.getAccount().equals(account)) {
-                        String accessToken = jwtUtils.createAccessToken(user.getUserId(), role);
-                        String refreshToken = jwtUtils.createRefreshToken(user.getUserId(), role);
-                        return ResponseDTO.success(new LoginVO(accessToken, refreshToken, openId, user));
-                    } else {
-                        return ResponseDTO.fail("账号或密码错误");
-                    }
-                } else {
-                    return ResponseDTO.fail("用户身份不可用（当前用户为注册该身份或该身份被禁用）");
+        if (existRecord == null) {
+            // 场景：此微信是合法的微信，但这是它第一次尝试登录这个【特定的老账号】，直接帮他追加绑定
+            UserPlatform newPlatform = new UserPlatform();
+            newPlatform.setUserId(user.getUserId());
+            newPlatform.setPlatform(platform);
+            newPlatform.setOpenId(openId);
+            newPlatform.setIsAvailable(true); // 默认可用
+
+            try {
+                userPlatformService.save(newPlatform);
+            } catch (DuplicateKeyException e) {
+                // 并发异常忽略，说明别的线程并发写入了
+                // 既然并发写入了，再安全复检一下状态
+                UserPlatform concurrentRecord = userPlatformService.getOne(
+                        new LambdaQueryWrapper<UserPlatform>()
+                                .eq(UserPlatform::getPlatform, platform)
+                                .eq(UserPlatform::getOpenId, openId)
+                                .eq(UserPlatform::getUserId, user.getUserId())
+                );
+                if (concurrentRecord != null && !concurrentRecord.getIsAvailable()) {
+                    return ResponseDTO.fail("当前微信登录权限已被禁用，请联系管理员");
                 }
-            } else {
-                return ResponseDTO.fail("非法角色参数");
+            }
+        } else {
+            // 场景：已经有绑定记录了，精准看当前微信对【当前这个账号】有没有被禁用
+            if (!existRecord.getIsAvailable()) {
+                return ResponseDTO.fail("当前微信登录权限已被禁用，请联系管理员");
             }
         }
+
+        // 8. 签发双 Token
+        String accessToken = jwtUtils.createAccessToken(user.getUserId(), role);
+        String refreshToken = jwtUtils.createRefreshToken(user.getUserId(), role);
+
+        return ResponseDTO.success(new LoginVO(accessToken, refreshToken, openId, user));
     }
 
     @Override
@@ -165,7 +215,7 @@ public class AuthServiceImpl implements AuthService {
         Long userId = Long.parseLong(userInfo.get("userId").toString());
         Long roleId = Long.parseLong(userInfo.get("roleId").toString());
 
-        UserVO<RoleBaseEntity> user = userService.getFullUserInfoByOpenid(dto.getOpenId(), permissionService.getById(roleId));
+        UserVO<RoleBaseEntity> user = userService.getFullUserInfoByUserId(userId, permissionService.getById(roleId));
 
         String accessToken = jwtUtils.createAccessToken(userId, roleId);
         String refreshToken = jwtUtils.createRefreshToken(userId, roleId);
@@ -201,7 +251,8 @@ public class AuthServiceImpl implements AuthService {
         String openId = dto.getOpenId();
 
         // 2. 检查openid是否已注册，未注册则注册
-        Long userId = userService.saveOrUpdateUser(openId);
+        UserPlatform platformRecord = userService.saveOrUpdateUser(openId, dto.getPlatform());
+        Long userId = platformRecord.getUserId();
 
         UserAuth existingUserAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
                 .eq(UserAuth::getUserId, userId)
@@ -246,6 +297,7 @@ public class AuthServiceImpl implements AuthService {
 
         return ResponseDTO.success(new RegisterVO(openId));
     }
+
 
     /**
      * 通用角色权限校验
@@ -341,5 +393,6 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("注册失败，身份信息初始化异常");
         }
     }
+
 
 }

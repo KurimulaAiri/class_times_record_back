@@ -1,7 +1,7 @@
 package com.shiroko.mapper;
 
-import com.shiroko.repository.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.shiroko.repository.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -14,6 +14,9 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
+    User selectUserByPlatformOpenid(String platform, String openId);
+
+    User selectUserByPlatformOpenidAndInstitution(String platform, String openId, Long institutionId);
 }
 
 
