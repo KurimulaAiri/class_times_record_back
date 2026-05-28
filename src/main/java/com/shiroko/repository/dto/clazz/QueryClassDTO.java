@@ -12,6 +12,7 @@ import lombok.Data;
 @Data
 public class QueryClassDTO {
     private Long classId;
+    private Long classStatus;
     private Long studentId;
     private Long teacherId;
     private Long institutionId;

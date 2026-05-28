@@ -19,6 +19,7 @@ import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
+@Slf4j
 public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, CourseRecord> implements CourseRecordService {
 
     private final PermissionRecordMapper permissionRecordMapper;
@@ -202,6 +204,15 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
         });
 
         return ResponseDTO.success(new DeductCourseRecordVO(res.get()));
+    }
+
+    @Override
+    public ResponseDTO<Object> insertCourseRecord(InsertCourseRecordDTO insertCourseRecordDTO) {
+        CourseRecord newCourseRecord = courseRecordConverter.insertDtoToPojo(insertCourseRecordDTO);
+
+        this.baseMapper.insert(newCourseRecord);
+
+        return ResponseDTO.success(courseRecordConverter.pojoToVO(newCourseRecord));
     }
 
     /**

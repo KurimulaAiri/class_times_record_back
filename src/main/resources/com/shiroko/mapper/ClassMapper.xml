@@ -69,6 +69,9 @@
         left join class_teacher as ct on ct.class_id = cl.id
         left join teacher as t on ct.teacher_id = t.id
         where ct_filter.teacher_id = #{teacherId}
+        <if test="classStatus != null and classStatus != -1">
+            and cl.status = #{classStatus}
+        </if>
         <if test="keyword != null and keyword != ''">
             and cl.class_name like concat('%', #{keyword}, '%')
         </if>
@@ -106,6 +109,9 @@
         left join class_teacher as ct on ct.class_id = cl.id
         left join teacher as t on ct.teacher_id = t.id
         where co.institution_id = #{institutionId}
+        <if test="classStatus != null and classStatus != -1">
+            and cl.status = #{classStatus}
+        </if>
         <if test="keyword != null and keyword != ''">
             and cl.class_name like concat('%', #{keyword}, '%')
         </if>

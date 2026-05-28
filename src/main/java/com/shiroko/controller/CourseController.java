@@ -3,6 +3,7 @@ package com.shiroko.controller;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.course.InsertCourseDTO;
 import com.shiroko.repository.dto.course.QueryCourseDTO;
+import com.shiroko.repository.dto.course.validategroup.QueryGroup;
 import com.shiroko.repository.vo.course.InsertCourseVO;
 import com.shiroko.repository.vo.course.QueryCourseVO;
 import com.shiroko.service.CourseService;
@@ -28,10 +29,14 @@ public class CourseController {
     private final CourseService courseService;
 
     @PostMapping("/get_course_by_institution_id")
-    public ResponseDTO<QueryCourseVO> getCourseByInstitutionId(@Validated @RequestBody QueryCourseDTO queryCourseDTO) {
+    public ResponseDTO<QueryCourseVO> getCourseByInstitutionId(@Validated(QueryGroup.ByInstitutionId.class) @RequestBody QueryCourseDTO queryCourseDTO) {
         return courseService.getCourseByInstitutionId(queryCourseDTO);
     }
 
+    @PostMapping("/get_course_by_student_id")
+    public ResponseDTO<QueryCourseVO> getCourseByStudentId(@Validated(QueryGroup.ByStudentId.class) @RequestBody QueryCourseDTO queryCourseDTO) {
+        return courseService.getCourseByStudentId(queryCourseDTO);
+    }
     @PostMapping("/add_course")
     public ResponseDTO<InsertCourseVO> addCourse(@RequestBody InsertCourseDTO insertCourseDTO) {
         return courseService.addCourse(insertCourseDTO);

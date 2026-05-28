@@ -1,5 +1,6 @@
 package com.shiroko.repository.dto.course;
 
+import com.shiroko.repository.dto.course.validategroup.QueryGroup;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -12,13 +13,17 @@ import lombok.Data;
  */
 @Data
 public class QueryCourseDTO {
-    @NotNull(message = "机构ID不能为空")
+
+    @NotNull(message = "学生ID不能为空", groups = QueryGroup.ByStudentId.class)
+    private Long studentId;
+
+    @NotNull(message = "机构ID不能为空", groups = QueryGroup.ByInstitutionId.class)
     private Long institutionId;
 
     private String keyword;
 
-    @NotNull(message = "当前页不能为空")
+    @NotNull(message = "当前页不能为空", groups = {QueryGroup.ByInstitutionId.class, QueryGroup.ByStudentId.class})
     private Long currentPage;
-    @NotNull(message = "每页数量不能为空")
+    @NotNull(message = "每页数量不能为空", groups = {QueryGroup.ByInstitutionId.class, QueryGroup.ByStudentId.class})
     private Long pageSize;
 }

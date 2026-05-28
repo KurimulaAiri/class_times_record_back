@@ -21,14 +21,14 @@ public class CourseRecordVO {
     private Long id;
 
     /**
-     * 学生姓名
+     * 学生id
      */
-    private String stuName;
+    private Long studentId;
 
     /**
-     * 课程名
+     * 课程id
      */
-    private String courseName;
+    private Long courseId;
 
     /**
      * 课时总数

@@ -2,6 +2,7 @@ package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.courserecord.*;
+import com.shiroko.repository.dto.courserecord.validategroup.InsertGroup;
 import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
@@ -47,8 +48,13 @@ public class CourseRecordController {
     }
 
     @PostMapping("/add")
-    public ResponseDTO<Object> addCourseRecord(@Valid @RequestBody InsertCourseRecordDTO insertCourseRecordDTO) {
+    public ResponseDTO<Object> addCourseRecord(@Validated(InsertGroup.OldGroup.class) @RequestBody InsertCourseRecordDTO insertCourseRecordDTO) {
         return courseRecordService.addCourseRecord(insertCourseRecordDTO);
+    }
+
+    @PostMapping("/insert")
+    public ResponseDTO<Object> insertCourseRecord(@Validated(InsertGroup.NewGroup.class) @RequestBody InsertCourseRecordDTO insertCourseRecordDTO) {
+        return courseRecordService.insertCourseRecord(insertCourseRecordDTO);
     }
 
     @PostMapping("/delete")

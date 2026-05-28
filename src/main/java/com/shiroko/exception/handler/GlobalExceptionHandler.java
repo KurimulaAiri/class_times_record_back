@@ -53,10 +53,42 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.OK);
     }
 
+    // ==================== 🌟 新增：精准捕获联合索引冲突 🌟 ====================
+    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
+    public ResponseEntity<ResponseDTO<Void>> handleDuplicateKeyException(org.springframework.dao.DuplicateKeyException e) {
+        logger.error("数据重复冲突异常: ", e);
+
+        String rootMsg = e.getRootCause() != null ? e.getRootCause().getMessage() : "";
+        String userFriendlyMsg = "该记录已存在，请勿重复提交";
+
+        // 针对你的 course_record 表做定制化友好提示
+        if (rootMsg.contains("course_record")) {
+            userFriendlyMsg = "该学生已绑定过此课程，请勿重复添加";
+        }
+
+        // 返回 400 或者是自定义的 409 (Conflict) 状态码，配合你的统一 DTO
+        return new ResponseEntity<>(ResponseDTO.fail(409L, userFriendlyMsg), HttpStatus.CONFLICT);
+    }
+
+    // ==================== 🌟 新增：精准捕获外键约束失败 🌟 ====================
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ResponseDTO<Void>> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException e) {
+        logger.error("数据完整性/外键约束冲突异常: ", e);
+
+        String rootMsg = e.getRootCause() != null ? e.getRootCause().getMessage() : "";
+        String userFriendlyMsg = "数据关联校验失败，引用的上级数据不存在";
+
+        if (rootMsg.contains("foreign key constraint fails")) {
+            userFriendlyMsg = "关联引用的上级数据（如学生或课程）不存在，请刷新重试";
+        }
+
+        return new ResponseEntity<>(ResponseDTO.fail(400L, userFriendlyMsg), HttpStatus.BAD_REQUEST);
+    }
+
     // 处理SQL错误/运行时异常（核心修复）
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResponseDTO<Void>> handleRuntimeException(RuntimeException e) {
-        logger.error("系统异常：{}", (Object) e.getStackTrace()); // 打印异常栈，方便排查SQL错误
+        logger.error("系统运行时出现未捕获异常: ", e); // 直接把整个异常对象 e 作为最后一个参数传进去，SLF4J 会自动展开打印完整的报错行数和堆栈
         // 返回500状态码+JSON，而非视图
         return new ResponseEntity<>(ResponseDTO.fail(500L, "系统异常：" + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }

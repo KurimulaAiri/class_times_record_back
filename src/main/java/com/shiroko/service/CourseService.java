@@ -20,4 +20,6 @@ public interface CourseService extends IService<Course> {
     ResponseDTO<QueryCourseVO> getCourseByInstitutionId(QueryCourseDTO queryCourseDTO);
 
     ResponseDTO<InsertCourseVO> addCourse(InsertCourseDTO insertCourseDTO);
+
+    ResponseDTO<QueryCourseVO> getCourseByStudentId(QueryCourseDTO queryCourseDTO);
 }

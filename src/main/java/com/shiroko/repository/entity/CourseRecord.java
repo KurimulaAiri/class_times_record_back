@@ -43,12 +43,6 @@ public class CourseRecord extends BaseEntity {
     private Long courseId;
 
     /**
-     * 课程名
-     */
-    @TableField(value = "course_name")
-    private String courseName;
-
-    /**
      * 课时总数
      */
     @TableField(value = "course_total_time")

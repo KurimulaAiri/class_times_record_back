@@ -40,13 +40,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         IPage<CourseVO> iPage = courseMapper.selectCourseByInstitutionId(pageParam, queryCourseDTO);
 
-        List<CourseVO> courseVOList = iPage.getRecords();
-
-        QueryCourseVO queryCourseVO = new QueryCourseVO();
-
-        queryCourseVO.setCourses(courseVOList);
-        queryCourseVO.setTotal(iPage.getTotal());
-
+        QueryCourseVO queryCourseVO = convertToQueryCourseVO(iPage);
         return ResponseDTO.success(queryCourseVO);
     }
 
@@ -55,6 +49,25 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         Course course = courseConverter.insertDtoToPojo(insertCourseDTO);
         courseMapper.insert(course);
         return ResponseDTO.success(new InsertCourseVO(course.getId()));
+    }
+
+    @Override
+    public ResponseDTO<QueryCourseVO> getCourseByStudentId(QueryCourseDTO queryCourseDTO) {
+        IPage<Course> pageParam = new Page<>(queryCourseDTO.getCurrentPage(), queryCourseDTO.getPageSize());
+
+        IPage<CourseVO> iPage = courseMapper.selectCourseByStudentId(pageParam, queryCourseDTO);
+
+        QueryCourseVO queryCourseVO = convertToQueryCourseVO(iPage);
+        return ResponseDTO.success(queryCourseVO);
+    }
+
+    private QueryCourseVO convertToQueryCourseVO(IPage<CourseVO> iPage) {
+        List<CourseVO> courseVOList = iPage.getRecords();
+        QueryCourseVO queryCourseVO = new QueryCourseVO();
+
+        queryCourseVO.setCourses(courseVOList);
+        queryCourseVO.setTotal(iPage.getTotal());
+        return queryCourseVO;
     }
 }
 

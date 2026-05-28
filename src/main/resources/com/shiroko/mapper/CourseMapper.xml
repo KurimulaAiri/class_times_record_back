@@ -24,10 +24,22 @@
                i.institution_address,
                i.status
         from course as c
-                 left join institution as i on c.institution_id = i.id
+        left join institution as i on c.institution_id = i.id
         where c.institution_id = #{dto.institutionId}
         <if test="dto.keyword != null and dto.keyword != ''">
             and (c.course_name like concat('%', #{dto.keyword}, '%'))
         </if>
+    </select>
+
+    <select id="selectCourseByStudentId" resultMap="courseResultMap">
+        select c.*,
+               i.id as institution_id,
+               i.institution_name,
+               i.institution_address,
+               i.status
+        from course as c
+                 left join institution as i on c.institution_id = i.id
+                 left join course_record as cr on c.id = cr.course_id
+        where cr.student_id = #{dto.studentId}
     </select>
 </mapper>
