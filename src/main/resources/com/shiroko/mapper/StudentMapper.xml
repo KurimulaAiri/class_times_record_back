@@ -38,50 +38,78 @@
 
     <select id="selectStudentByTeacherId" resultType="com.shiroko.repository.dto.student.StudentDTO">
         SELECT s.* FROM student s
-        JOIN (
-        SELECT DISTINCT s.id
-        FROM student s
-        JOIN course_record cr ON s.id = cr.student_id
-        JOIN teacher_course tc ON cr.course_id = tc.course_id
-        LEFT JOIN parent_student ps ON s.id = ps.student_id
-        LEFT JOIN parent p ON ps.parent_id = p.id
         <where>
-            tc.teacher_id = #{dto.teacherId}
+            AND EXISTS (
+            SELECT 1
+            FROM course_record cr
+            JOIN teacher_course tc ON cr.course_id = tc.course_id
+            WHERE cr.student_id = s.id
+            AND tc.teacher_id = #{dto.teacherId}
+            )
+
             <if test="dto.sex != null">
                 AND s.sex = #{dto.sex}
+            </if>
+
+            <if test="dto.hasClass != null and dto.hasClass != -1">
+                <choose>
+                    <when test="dto.hasClass == 1">
+                        AND EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                    <when test="dto.hasClass == 0">
+                        AND NOT EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                </choose>
+            </if>
+
+            <if test="dto.keyword != null and dto.keyword != ''">
+                AND (
+                s.student_name LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR s.id LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR EXISTS (
+                SELECT 1
+                FROM parent_student ps
+                JOIN parent p ON ps.parent_id = p.id
+                WHERE ps.student_id = s.id
+                AND p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
+                )
+                )
+            </if>
+        </where>
+        ORDER BY s.update_time DESC, s.id DESC
+    </select>
+
+    <select id="selectStudentByInstitutionId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        SELECT s.*
+        FROM student s
+        <where>
+            s.institution_id = #{dto.institutionId}
+            <if test="dto.sex != null">
+                AND s.sex = #{dto.sex}
+            </if>
+            <if test="dto.hasClass != null and dto.hasClass != -1">
+                <choose>
+                    <when test="dto.hasClass == 1">
+                        AND EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                    <when test="dto.hasClass == 0">
+                        AND NOT EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                </choose>
             </if>
             <if test="dto.keyword != null and dto.keyword != ''">
                 AND (
                 s.student_name LIKE CONCAT('%', #{dto.keyword}, '%')
                 OR s.id LIKE CONCAT('%', #{dto.keyword}, '%')
-                OR p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
+                -- 改为 EXISTS 子查询，避免 JOIN 导致重复
+                OR EXISTS (
+                SELECT 1 FROM parent_student ps
+                JOIN parent p ON ps.parent_id = p.id
+                WHERE ps.student_id = s.id AND p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
+                )
                 )
             </if>
         </where>
-        ) AS temp ON s.id = temp.id
-        <!-- 关键点：双重排序保证分页唯一性 -->
-        ORDER BY s.update_time DESC, s.id
-    </select>
-    <select id="selectStudentByInstitutionId" resultType="com.shiroko.repository.dto.student.StudentDTO">
-        SELECT s.*
-        FROM student s
-        WHERE s.institution_id = #{dto.institutionId}
-        <!-- 性别查询，这里需要注意的是，当数字类型为 0 时，不能进行判空字符（''）否则 0 会被视为空字符从而跳过 if 语句 -->
-        <if test="dto.sex != null">
-            AND s.sex = #{dto.sex}
-        </if>
-        <if test="dto.keyword != null and dto.keyword != ''">
-            AND (
-            s.student_name LIKE CONCAT('%', #{dto.keyword}, '%')
-            OR s.id LIKE CONCAT('%', #{dto.keyword}, '%')
-            -- 改为 EXISTS 子查询，避免 JOIN 导致重复
-            OR EXISTS (
-            SELECT 1 FROM parent_student ps
-            JOIN parent p ON ps.parent_id = p.id
-            WHERE ps.student_id = s.id AND p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
-            )
-            )
-        </if>
         ORDER BY s.update_time DESC, s.id
     </select>
 
@@ -92,8 +120,9 @@
                cr.course_rest_time,
                p.phone
         from class_student as cs
+                 left join class c on c.id = cs.class_id
                  left join student s on s.id = cs.student_id
-                 left join course_record as cr on cr.student_id = s.id
+                 left join course_record as cr on cr.student_id = s.id and cr.course_id = c.course_id
                  left join parent_student as ps on ps.student_id = s.id and ps.is_primary = true
                  left join parent p on ps.parent_id = p.id
         where cs.class_id = #{dto.classId}

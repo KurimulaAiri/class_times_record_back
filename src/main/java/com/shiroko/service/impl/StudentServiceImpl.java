@@ -96,7 +96,18 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         // 1. 分页查询学生
         IPage<StudentDTO> page = getPage(queryStudentDTO);
         queryStudentDTO.setSex(queryStudentDTO.getSex() == -1 ? null : queryStudentDTO.getSex());
+        log.debug("根据教师id查询学生列表，教师id：{}，查询参数：{}", queryStudentDTO.getTeacherId(), queryStudentDTO);
         studentMapper.selectStudentByTeacherId(page, queryStudentDTO);
+        return injectParentInfo(page);
+    }
+
+    @Override
+    public ResponseDTO<QueryStudentVO> getStudentByInstitutionId(QueryStudentDTO queryStudentDTO) {
+        // 1. 分页查询学生
+        IPage<StudentDTO> page = getPage(queryStudentDTO);
+        queryStudentDTO.setSex(queryStudentDTO.getSex() == -1 ? null : queryStudentDTO.getSex());
+        log.debug("根据机构id查询学生列表，机构id：{}，查询参数：{}", queryStudentDTO.getInstitutionId(), queryStudentDTO);
+        studentMapper.selectStudentByInstitutionId(page, queryStudentDTO);
         return injectParentInfo(page);
     }
 
@@ -146,16 +157,6 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
             return ResponseDTO.success("插入学生成功(仅包含主要家长)", new InsertStudentVO(student.getId()));
         }
         return ResponseDTO.fail("插入学生失败");
-    }
-
-    @Override
-    public ResponseDTO<QueryStudentVO> getStudentByInstitutionId(QueryStudentDTO queryStudentDTO) {
-        // 1. 分页查询学生
-        IPage<StudentDTO> page = getPage(queryStudentDTO);
-        queryStudentDTO.setSex(queryStudentDTO.getSex() == -1 ? null : queryStudentDTO.getSex());
-        log.debug("根据机构id查询学生列表，机构id：{}，查询参数：{}", queryStudentDTO.getInstitutionId(), queryStudentDTO);
-        studentMapper.selectStudentByInstitutionId(page, queryStudentDTO);
-        return injectParentInfo(page);
     }
 
     @Override
@@ -239,7 +240,8 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return ResponseDTO.success(new QueryStudentVO(voList, page.getTotal()));
     }
 
-    private IPage<StudentDTO> getPage(QueryStudentDTO queryStudentDTO) {
+    // 将返回值从 IPage 显式改为 Page 具体的实现类
+    private Page<StudentDTO> getPage(QueryStudentDTO queryStudentDTO) {
         return new Page<>(
                 queryStudentDTO.getCurrentPage() == null ? 1 : queryStudentDTO.getCurrentPage(),
                 queryStudentDTO.getPageSize() == null ? 10 : queryStudentDTO.getPageSize()

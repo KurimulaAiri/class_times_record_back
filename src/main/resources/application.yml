@@ -1,7 +1,5 @@
+# yaml-language-server: $schema=http://json.schemastore.org/spring-boot
 # 基础配置文件
-crypto:
-  sm2:
-    private-key: 00b3b8e61213bbd5e7d001e0cd4e33015efc04ae68ae61f2a36da55d92903cb0eb
 spring:
   config:
     import: "optional:classpath:git.properties"
@@ -22,16 +20,20 @@ spring:
     virtual:
       enabled: true
 
+crypto:
+  sm2:
+    private-key: 00b3b8e61213bbd5e7d001e0cd4e33015efc04ae68ae61f2a36da55d92903cb0eb
+
+
 # MyBatis-Plus 核心配置
 mybatis-plus:
   # 1. 基础配置
   configuration:
     map-underscore-to-camel-case: true # 开启下划线转驼峰（默认开启，可省略）
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印 SQL 日志（开发环境开启）
     cache-enabled: false # 关闭二级缓存（默认false，按需开启）
   # 2. 映射配置
   mapper-locations: classpath:com/shiroko/mapper/**/*.xml # 自定义 SQL 的 XML 文件路径
-  type-aliases-package: com.shiroko.entity # 实体类包名（简化 XML 中的类型别名）
+  type-aliases-package: com.shiroko.repository.entity # 实体类包名（简化 XML 中的类型别名）
   type-handlers-package: com.shiroko.handler # 自定义类型处理器包名（可选）
   # 3. 全局配置
   global-config:

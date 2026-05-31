@@ -9,9 +9,11 @@ import com.shiroko.mapper.ClassScheduleMapper;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.classschedule.ClassScheduleDTO;
 import com.shiroko.repository.dto.classschedule.QueryClassScheduleDTO;
+import com.shiroko.repository.dto.classschedule.UpdateClassScheduleDTO;
 import com.shiroko.repository.entity.ClassSchedule;
 import com.shiroko.repository.vo.classschedule.ClassScheduleVO;
 import com.shiroko.repository.vo.classschedule.QueryClassScheduleVO;
+import com.shiroko.repository.vo.classschedule.UpdateClassScheduleVO;
 import com.shiroko.service.ClassScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,13 @@ public class ClassScheduleServiceImpl extends ServiceImpl<ClassScheduleMapper, C
 
         List<ClassScheduleVO> voList = classScheduleConverter.dtoListToVOList(page.getRecords());
         return ResponseDTO.success(new QueryClassScheduleVO(voList, page.getTotal()));
+    }
+
+    @Override
+    public ResponseDTO<UpdateClassScheduleVO> updateByClassScheduleId(UpdateClassScheduleDTO dto) {
+        ClassSchedule classSchedule = classScheduleConverter.updateDtoToPojo(dto);
+        classScheduleMapper.updateById(classSchedule);
+        return ResponseDTO.success(new UpdateClassScheduleVO(List.of(classScheduleConverter.pojoToVO(classSchedule))));
     }
 }
 

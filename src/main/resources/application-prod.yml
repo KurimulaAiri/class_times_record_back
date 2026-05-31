@@ -4,3 +4,10 @@ server:
 logging:
   level:
     com.shiroko: INFO
+    com.baomidou.mybatisplus: info
+
+    # 3. 关闭 MyBatis 核心底层的连接池与标准执行器调试
+    org.apache.ibatis: info
+    java.sql.Connection: info
+    java.sql.Statement: info
+    java.sql.PreparedStatement: info

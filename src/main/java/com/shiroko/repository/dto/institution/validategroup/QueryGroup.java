@@ -9,6 +9,9 @@ package com.shiroko.repository.dto.institution.validategroup;
  */
 public interface QueryGroup {
 
+    interface ById {
+    }
+
     interface ByOpenId {
     }
 
