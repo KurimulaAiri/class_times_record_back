@@ -35,6 +35,8 @@ public class QueryStudentDTO {
     @NotNull(message = "课程ID不能为空", groups = QueryGroup.ByCourseId.class)
     private Long courseId;
 
+    private Long hasClass;
+
     private Long sex;
 
     private String keyword;

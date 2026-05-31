@@ -13,6 +13,10 @@ import lombok.Data;
  */
 @Data
 public class QueryInstitutionDTO {
+
+    @NotNull(message = "institutionId不能为空", groups = QueryGroup.ById.class)
+    private Long institutionId;
+
     private Long studentId;
 
     @NotNull(message = "institutionCode不能为空", groups = QueryGroup.ByInstitutionCode.class)

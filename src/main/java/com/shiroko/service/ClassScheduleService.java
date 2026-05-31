@@ -3,8 +3,10 @@ package com.shiroko.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.classschedule.QueryClassScheduleDTO;
+import com.shiroko.repository.dto.classschedule.UpdateClassScheduleDTO;
 import com.shiroko.repository.entity.ClassSchedule;
 import com.shiroko.repository.vo.classschedule.QueryClassScheduleVO;
+import com.shiroko.repository.vo.classschedule.UpdateClassScheduleVO;
 
 /**
  * Description: 班级排课映射接口
@@ -18,4 +20,6 @@ public interface ClassScheduleService extends IService<ClassSchedule> {
     ResponseDTO<QueryClassScheduleVO> getByClassId(QueryClassScheduleDTO dto);
 
     ResponseDTO<QueryClassScheduleVO> getByInstitutionId(QueryClassScheduleDTO dto);
+
+    ResponseDTO<UpdateClassScheduleVO> updateByClassScheduleId(UpdateClassScheduleDTO dto);
 }

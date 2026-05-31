@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException; // 🌟 确保引入该类
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -33,6 +34,27 @@ public class GlobalExceptionHandler {
         this.logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     }
 
+    // ==================== 🌟 新增：精准捕获请求体不可读/非法JSON异常 🌟 ====================
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ResponseDTO<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        logger.error("请求体解析失败（非法JSON或请求体缺失）: ", e);
+
+        String errorMsg = "请求体格式错误，请检查传入的数据结构或类型是否正确。";
+        String message = e.getMessage();
+
+        // 针对刚才你的报错（想要 DTO 对象却传了数字 25）进行语义化友好提示
+        if (message != null) {
+            if (message.contains("Cannot construct instance") || message.contains("MismatchedInputException")) {
+                errorMsg += " 原因：服务端期望接收一个 JSON 对象（{...}），但传入了不匹配的类型（如纯数字或数组）。";
+            } else if (message.contains("Required request body is missing")) {
+                errorMsg = "请求体缺失，该接口必须传入 JSON 参数。";
+            }
+        }
+
+        // 返回 400 Bad Request 状态码，表示客户端请求有误
+        return new ResponseEntity<>(ResponseDTO.fail(400L, errorMsg), HttpStatus.BAD_REQUEST);
+    }
+
     // 处理参数校验异常
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ResponseDTO<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
@@ -53,7 +75,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.OK);
     }
 
-    // ==================== 🌟 新增：精准捕获联合索引冲突 🌟 ====================
+    // ==================== 🌟 精准捕获联合索引冲突 🌟 ====================
     @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
     public ResponseEntity<ResponseDTO<Void>> handleDuplicateKeyException(org.springframework.dao.DuplicateKeyException e) {
         logger.error("数据重复冲突异常: ", e);
@@ -70,7 +92,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ResponseDTO.fail(409L, userFriendlyMsg), HttpStatus.CONFLICT);
     }
 
-    // ==================== 🌟 新增：精准捕获外键约束失败 🌟 ====================
+    // ==================== 🌟 精准捕获外键约束失败 🌟 ====================
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<ResponseDTO<Void>> handleDataIntegrityViolationException(org.springframework.dao.DataIntegrityViolationException e) {
         logger.error("数据完整性/外键约束冲突异常: ", e);
@@ -114,6 +136,4 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDTO<Void>> handleMediaTypeError(HttpMediaTypeNotSupportedException e) {
         return new ResponseEntity<>(ResponseDTO.fail("请求格式错误：仅支持application/json" + e.getSupportedMediaTypes()), HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
-
-
 }

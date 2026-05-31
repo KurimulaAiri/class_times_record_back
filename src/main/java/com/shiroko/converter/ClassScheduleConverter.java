@@ -1,6 +1,7 @@
 package com.shiroko.converter;
 
 import com.shiroko.repository.dto.classschedule.ClassScheduleDTO;
+import com.shiroko.repository.dto.classschedule.UpdateClassScheduleDTO;
 import com.shiroko.repository.entity.ClassSchedule;
 import com.shiroko.repository.vo.classschedule.ClassScheduleVO;
 import org.mapstruct.Mapper;
@@ -36,5 +37,7 @@ public interface ClassScheduleConverter extends BaseConverter<ClassSchedule, Cla
     ClassScheduleVO dtoToVO(ClassScheduleDTO dto);
 
     List<ClassScheduleVO> dtoListToVOList(List<ClassScheduleDTO> dtoList);
+
+    ClassSchedule updateDtoToPojo(UpdateClassScheduleDTO dto);
 
 }

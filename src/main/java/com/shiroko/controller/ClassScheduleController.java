@@ -2,7 +2,9 @@ package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.classschedule.QueryClassScheduleDTO;
+import com.shiroko.repository.dto.classschedule.UpdateClassScheduleDTO;
 import com.shiroko.repository.vo.classschedule.QueryClassScheduleVO;
+import com.shiroko.repository.vo.classschedule.UpdateClassScheduleVO;
 import com.shiroko.service.ClassScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +35,10 @@ public class ClassScheduleController {
     @PostMapping("/get_by_institution_id")
     public ResponseDTO<QueryClassScheduleVO> getByInstitutionId(@Valid @RequestBody QueryClassScheduleDTO dto) {
         return classScheduleService.getByInstitutionId(dto);
+    }
+
+    @PostMapping("/update_by_id")
+    public ResponseDTO<UpdateClassScheduleVO> updateById(@Valid @RequestBody UpdateClassScheduleDTO dto) {
+        return classScheduleService.updateByClassScheduleId(dto);
     }
 }

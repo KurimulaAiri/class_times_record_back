@@ -1,21 +1,18 @@
 package com.shiroko.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.annotation.UpdateStudentCount;
 import com.shiroko.converter.ClassConverter;
-import com.shiroko.mapper.ClassMapper;
-import com.shiroko.mapper.ClassScheduleMapper;
-import com.shiroko.mapper.ClassStudentMapper;
-import com.shiroko.mapper.ClassTeacherMapper;
+import com.shiroko.mapper.*;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.clazz.ClassDTO;
 import com.shiroko.repository.dto.clazz.InsertClassDTO;
 import com.shiroko.repository.dto.clazz.QueryClassDTO;
 import com.shiroko.repository.dto.clazz.UpdateClassDTO;
+import com.shiroko.repository.dto.student.StudentDTO;
+import com.shiroko.repository.entity.*;
 import com.shiroko.repository.entity.Class;
-import com.shiroko.repository.entity.ClassSchedule;
-import com.shiroko.repository.entity.ClassTeacher;
-import com.shiroko.repository.entity.Teacher;
 import com.shiroko.repository.vo.clazz.ClassVO;
 import com.shiroko.repository.vo.clazz.InsertClassVO;
 import com.shiroko.repository.vo.clazz.QueryClassVO;
@@ -45,9 +42,11 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     private final ClassMapper classMapper;
     private final ClassConverter classConverter;
+
     private final ClassStudentMapper classStudentMapper;
     private final ClassTeacherMapper classTeacherMapper;
     private final ClassScheduleMapper classScheduleMapper;
+    private final CourseRecordMapper courseRecordMapper;
 
     @Override
     public ResponseDTO<QueryClassVO> getClassesByStudentId(QueryClassDTO queryClassDTO) {
@@ -96,12 +95,67 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     @Override
     @UpdateStudentCount
     public ResponseDTO<UpdateClassVO> addStudentToClass(UpdateClassDTO updateClassDTO) {
+        List<StudentDTO> students = updateClassDTO.getStudents();
+        if (students == null || students.isEmpty()) {
+            return ResponseDTO.fail("学生列表不能为空");
+        }
+
+        Integer studentCount = students.size();
+
+        // 1. 检查班级是否存在
+        Class clazz = classMapper.selectById(updateClassDTO.getClassId());
+        if (clazz == null) {
+            return ResponseDTO.fail("班级不存在");
+        }
+
+        // 2. 检查班级是否已满
+        if (clazz.getStudentCount() + studentCount > clazz.getStudentMaxCount()) {
+            return ResponseDTO.fail("班级人数已达上限，无法添加");
+        }
+
+        // 🌟 核心修正：获取当前班级对应的课程 ID
+        Long courseId = clazz.getCourseId(); // 如果你的 Class 实体里有这个字段；或者用 updateClassDTO.getCourseId()
+        if (courseId == null) {
+            return ResponseDTO.fail("该班级未绑定有效的课程，无法校验学生报名状态");
+        }
+
+        // 提取学生 ID 列表
+        List<Long> studentIds = students.stream().map(StudentDTO::getId).collect(Collectors.toList());
+
+        // 3. 🌟 修正：多条件组合批量查询（锁定学生 ＋ 锁定特定课程）
+        List<Long> existingStudentIds = courseRecordMapper.selectList(
+                        new LambdaQueryWrapper<CourseRecord>()
+                                .eq(CourseRecord::getCourseId, courseId)  // 👈 必须限定为当前课程！
+                                .in(CourseRecord::getStudentId, studentIds)
+                                .select(CourseRecord::getStudentId)       // 只查 ID 提高性能
+                ).stream()
+                .map(CourseRecord::getStudentId)
+                .distinct()
+                .toList();
+
+        // 如果查询出来的数量小于前端传过来的学生数量，说明有人没报这门课
+        if (existingStudentIds.size() < studentCount) {
+            // 找出哪些学生在该课程下没有记录
+            List<StudentDTO> missingStudents = students.stream()
+                    .filter(student -> !existingStudentIds.contains(student.getId()))
+                    .toList();
+
+            // 提取这些没报名学生的姓名或ID，给前端更直观的报错提示
+            String missingNames = missingStudents.stream()
+                    .map(s -> s.getStudentName() != null ? s.getStudentName() : s.getId().toString())
+                    .collect(Collectors.joining(", "));
+
+            return ResponseDTO.fail("添加失败：以下学生未报名本班级对应的课程: [" + missingNames + "]");
+        }
+
+        // 4. 执行批量插入
         Long result;
         try {
             result = classStudentMapper.insertBatch(updateClassDTO);
         } catch (DuplicateKeyException e) {
-            return ResponseDTO.fail("班级中已存在该学生");
+            return ResponseDTO.fail("班级中已存在该学生，请勿重复添加");
         }
+
         return ResponseDTO.success(new UpdateClassVO(result));
     }
 
