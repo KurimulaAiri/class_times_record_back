@@ -2,6 +2,7 @@ package com.shiroko.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.shiroko.repository.dto.courserecord.CourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.QueryCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
@@ -25,7 +26,7 @@ public interface CourseRecordMapper extends BaseMapper<CourseRecord> {
             @Param("dto") QueryCourseRecordDTO dto
     );
 
-    IPage<CourseRecord> selectCourseRecords(IPage<CourseRecord> pageParam, QueryCourseRecordDTO dto);
+    IPage<CourseRecordDTO> selectCourseRecords(IPage<CourseRecordDTO> pageParam, QueryCourseRecordDTO dto);
 
     Integer updateRestTime(@Param("cr") CourseRecord cr, @Param("totalCount") Integer totalCount);
 }

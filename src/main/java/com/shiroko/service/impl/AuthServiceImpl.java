@@ -135,7 +135,7 @@ public class AuthServiceImpl implements AuthService {
             return ResponseDTO.fail("用户身份不可用（当前用户未注册该身份或该身份被禁用）");
         }
 
-        // 7. 💡 核心修正：后置精准校验与绑定（带着 userId 去查，绝不会查出多条）
+        // 7. 核心修正：后置精准校验与绑定（带着 userId 去查，绝不会查出多条）
         UserPlatform existRecord = userPlatformService.getOne(
                 new LambdaQueryWrapper<UserPlatform>()
                         .eq(UserPlatform::getPlatform, platform)

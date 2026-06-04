@@ -3,10 +3,12 @@ package com.shiroko.controller;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.courserecord.*;
 import com.shiroko.repository.dto.courserecord.validategroup.InsertGroup;
+import com.shiroko.repository.dto.courserecord.validategroup.QueryGroup;
 import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
 import com.shiroko.repository.vo.courserecord.QueryCourseRecordVO;
 import com.shiroko.service.CourseRecordService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,13 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/course_record")
+@RequiredArgsConstructor
 public class CourseRecordController {
 
     private final CourseRecordService courseRecordService;
-
-    public CourseRecordController(CourseRecordService courseRecordService) {
-        this.courseRecordService = courseRecordService;
-    }
 
     /**
      * 获取课程记录
@@ -71,9 +70,15 @@ public class CourseRecordController {
     public ResponseDTO<DeductCourseRecordVO> deductByCourseId(@Validated @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
         return courseRecordService.deductByCourseId(deductCourseRecordDTO);
     }
+
     @PostMapping("/update")
     public ResponseDTO<Object> updateCourseRecord(@Valid @RequestBody UpdateCourseRecordDTO updateCourseRecordDTO) {
         // System.out.println(updateCourseRecordDTO);
         return courseRecordService.updateCourseRecord(updateCourseRecordDTO);
+    }
+
+    @PostMapping("/get_by_student_id")
+    public ResponseDTO<QueryCourseRecordVO> getCourseRecordsByStudentId(@Validated(QueryGroup.ByStudentId.class) @RequestBody QueryCourseRecordDTO queryCourseRecordDTO) {
+        return courseRecordService.newGetCourseRecords(queryCourseRecordDTO);
     }
 }

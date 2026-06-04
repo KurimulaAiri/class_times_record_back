@@ -24,7 +24,7 @@ public class QueryCourseRecordDTO {
 
     private Long userId;
 
-    @NotNull(message = "学生ID不能为空", groups = {QueryGroup.NewQueryGroup.class})
+    @NotNull(message = "学生ID不能为空", groups = {QueryGroup.NewQueryGroup.class, QueryGroup.ByStudentId.class})
     private Long studentId;
 
     private String stuName;

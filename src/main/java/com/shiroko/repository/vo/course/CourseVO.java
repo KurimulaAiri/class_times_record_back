@@ -1,6 +1,7 @@
 package com.shiroko.repository.vo.course;
 
-import com.shiroko.repository.entity.Institution;
+import com.shiroko.repository.vo.courserecord.CourseRecordVO;
+import com.shiroko.repository.vo.institution.InstitutionVO;
 import lombok.Data;
 
 /**
@@ -16,5 +17,6 @@ public class CourseVO {
     private String courseName;
     private Long courseType;
     private Boolean available;
-    private Institution institution;
+    private InstitutionVO institution;
+    private CourseRecordVO currentStudentCourseRecord;
 }

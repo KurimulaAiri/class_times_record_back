@@ -1,11 +1,14 @@
 package com.shiroko.converter;
 
+import com.shiroko.repository.dto.courserecord.CourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import java.util.List;
 
 /**
  * Description: 课程记录转换器
@@ -24,6 +27,14 @@ public interface CourseRecordConverter extends BaseConverter<CourseRecord, Cours
     @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
     @Override
     CourseRecordVO pojoToVO(CourseRecord pojo);
+
+    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
+    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
+    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateTimeToString")
+        // 自定义转换规则
+    CourseRecordVO dtoToVO(CourseRecordDTO dto);
+
+    List<CourseRecordVO> dtoListToVOList(List<CourseRecordDTO> dtoList);
 
     CourseRecord insertDtoToPojo(InsertCourseRecordDTO insertCourseRecordDTO);
 

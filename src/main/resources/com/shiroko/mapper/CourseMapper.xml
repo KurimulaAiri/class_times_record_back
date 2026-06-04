@@ -9,11 +9,20 @@
         <result property="courseName" column="course_name"/>
         <result property="courseType" column="course_type"/>
         <result property="available" column="is_available"/>
-        <association property="institution" javaType="com.shiroko.repository.entity.Institution">
+        <association property="institution" javaType="com.shiroko.repository.vo.institution.InstitutionVO">
             <result property="id" column="institution_id"/>
             <result property="institutionName" column="institution_name"/>
             <result property="institutionAddress" column="institution_address"/>
+            <result property="institutionCode" column="institution_code"/>
             <result property="status" column="status"/>
+        </association>
+        <association property="currentStudentCourseRecord"
+                     javaType="com.shiroko.repository.vo.courserecord.CourseRecordVO">
+            <id property="id" column="course_record_id"/>
+            <result property="courseId" column="course_id"/>
+            <result property="studentId" column="student_id"/>
+            <result property="courseRestTime" column="course_rest_time"/>
+            <result property="courseTotalTime" column="course_total_time"/>
         </association>
     </resultMap>
 
@@ -33,9 +42,15 @@
 
     <select id="selectCourseByStudentId" resultMap="courseResultMap">
         select c.*,
+               cr.id as course_record_id,
+               cr.course_id,
+               cr.student_id,
+               cr.course_rest_time,
+               cr.course_total_time,
                i.id as institution_id,
                i.institution_name,
                i.institution_address,
+               i.institution_code,
                i.status
         from course as c
                  left join institution as i on c.institution_id = i.id

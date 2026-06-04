@@ -1,5 +1,6 @@
 package com.shiroko.repository.vo;
 
+import com.shiroko.repository.vo.admin.AdminVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class UserVO<RoleBaseEntity> {
     private Long userId;
     private Long roleId;
     private RoleBaseEntity identityInfo;
+    private AdminVO admin;
     private String createTimeStr;
     private String updateTimeStr;
    }

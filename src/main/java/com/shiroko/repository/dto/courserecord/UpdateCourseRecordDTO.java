@@ -24,5 +24,6 @@ public class UpdateCourseRecordDTO extends BaseDTO {
     private Long courseStatus;
     private String courseName;
     private String courseRemark;
+    private Long studentId;
     private String stuName;
    }

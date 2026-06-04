@@ -4,13 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shiroko.converter.AdminConverter;
 import com.shiroko.converter.UserConverter;
 import com.shiroko.mapper.UserMapper;
+import com.shiroko.repository.entity.Admin;
 import com.shiroko.repository.entity.Permission;
 import com.shiroko.repository.entity.User;
 import com.shiroko.repository.entity.UserPlatform;
 import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.vo.UserVO;
+import com.shiroko.service.AdminService;
 import com.shiroko.service.UserPlatformService;
 import com.shiroko.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +34,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+    private final AdminService adminService;
     private final UserPlatformService userPlatformService;
 
+    private final AdminConverter adminConverter;
     private final UserConverter userConverter;
 
     private final Map<String, IService<? extends RoleBaseEntity>> identityServiceMap;
@@ -133,6 +138,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 传入 user.getId()，因为身份表里存的是业务用户的 ID
         fillIdentityDetail(permissionService, vo, user.getId());
 
+        // 6. 检查是否是管理员
+        Admin admin = adminService.getOne(new LambdaQueryWrapper<Admin>().eq(Admin::getUserId, user.getId()));
+        vo.setAdmin(adminConverter.pojoToVO(admin));
         return vo;
     }
 

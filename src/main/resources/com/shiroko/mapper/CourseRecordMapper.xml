@@ -4,6 +4,23 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.CourseRecordMapper">
 
+    <resultMap id="courseRecordResultMap" type="com.shiroko.repository.dto.courserecord.CourseRecordDTO">
+        <id property="id" column="id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="courseRestTime" column="course_rest_time"/>
+        <result property="courseTotalTime" column="course_total_time"/>
+        <result property="isDelete" column="is_delete"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <association property="course" javaType="com.shiroko.repository.entity.Course">
+            <id property="id" column="course_id"/>
+            <result property="courseName" column="course_name"/>
+            <result property="courseType" column="course_type"/>
+            <result property="createTime" column="course_create_time"/>
+        </association>
+    </resultMap>
+
     <update id="updateRestTime">
         <!-- 1. 执行更新，同时利用 LAST_INSERT_ID() 记录下被更新行的 ID -->
         UPDATE course_record
@@ -63,17 +80,23 @@
         ORDER BY cr.update_time DESC, cr.id DESC
     </select>
 
-    <select id="selectCourseRecords" resultType="com.shiroko.repository.entity.CourseRecord">
+    <select id="selectCourseRecords" resultMap="courseRecordResultMap">
         SELECT
         cr.*,
-        c.course_name
+        c.id as course_id,
+        c.course_name,
+        c.course_type,
+        c.create_time as course_create_time
         FROM
         course_record cr
         LEFT JOIN
         course c ON cr.course_id = c.id
         <where>
             <!-- 这里可以继续加你的条件，比如：-->
-            cr.student_id = #{dto.studentId} AND cr.is_delete = 0
+            <if test="dto.studentId != null">
+                AND cr.student_id = #{dto.studentId}
+            </if>
+            AND cr.is_delete = 0
         </where>
     </select>
 

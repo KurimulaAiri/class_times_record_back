@@ -12,6 +12,9 @@ public interface QueryGroup {
     interface OldQueryGroup {
     }
 
+    interface ByStudentId {
+    }
+
     interface NewQueryGroup {
     }
 

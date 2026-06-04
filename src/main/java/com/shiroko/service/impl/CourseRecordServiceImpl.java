@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -106,20 +105,20 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
         int rowsUpdated = courseRecordMapper.updateById(
                 courseRecord
         );
-        return ResponseDTO.success("更新成功，影响记录数：" + rowsUpdated);
+        return ResponseDTO.success(rowsUpdated);
     }
 
     @Override
     public ResponseDTO<QueryCourseRecordVO> newGetCourseRecords(QueryCourseRecordDTO dto) {
 
-        IPage<CourseRecord> pageParam = new Page<>(
+        IPage<CourseRecordDTO> pageParam = new Page<>(
                 dto.getCurrentPage() == null ? 1 : dto.getCurrentPage(),
                 dto.getPageSize() == null ? 10 : dto.getPageSize()
         );
         courseRecordMapper.selectCourseRecords(pageParam, dto);
-        List<CourseRecord> list = pageParam.getRecords();
+        List<CourseRecordDTO> list = pageParam.getRecords();
 
-        List<CourseRecordVO> voList = courseRecordConverter.pojoListToVOList(list);
+        List<CourseRecordVO> voList = courseRecordConverter.dtoListToVOList(list);
 
         injectPermissionType(voList);
 
@@ -155,7 +154,7 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
                 // 课程余额充足，更新成功，添加记录
                 recordMapper.insert(new Record()
                         .setCourseRecordId(cr.getId())
-                        .setRecordTime(LocalDateTime.now())
+                        .setRecordTime(dto.getRecordTime())
                         .setRecordRemark(dto.getRemark())
                         .setRecordType(2L) // 2 为减少
                         .setRecordChange(Long.valueOf(totalCount))
@@ -195,7 +194,7 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
                 // 4. 扣除成功，记录扣课流水
                 recordMapper.insert(new Record()
                         .setCourseRecordId(cr.getId())
-                        .setRecordTime(LocalDateTime.now())
+                        .setRecordTime(dto.getRecordTime())
                         .setRecordRemark(dto.getRemark())
                         .setRecordType(2L) // 2 为减少
                         .setRecordChange(Long.valueOf(deductCount))

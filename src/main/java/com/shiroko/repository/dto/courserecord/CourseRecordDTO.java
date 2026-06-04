@@ -1,21 +1,23 @@
-package com.shiroko.repository.vo.courserecord;
+package com.shiroko.repository.dto.courserecord;
 
-import com.shiroko.repository.vo.course.CourseVO;
+import com.shiroko.repository.entity.Course;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
- * Description: 课程记录VO
+ * Description: 课程记录DTO类
  *
  * @author Guguguy
  * @version 1.0
- * @since 2026/2/7 下午9:52
+ * @since 2026/6/2 下午2:11
  */
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class CourseRecordVO {
+public class CourseRecordDTO {
     /**
      * 表id
      */
@@ -43,15 +45,16 @@ public class CourseRecordVO {
 
     /**
      * 课程状态
-     * 0：未完成
-     * 1：已完成
+     * 0：
+     * 1：未完成
+     * 2：已完成
      */
     private Long courseStatus;
 
     /**
      * 上次上课时间
      */
-    private String courseLastTimeStr;
+    private LocalDateTime courseLastTime;
 
     /**
      * 课程归属人
@@ -66,22 +69,18 @@ public class CourseRecordVO {
     /**
      * 逻辑删除
      */
-    private String isDelete;
-
-    /**
-     * 权限名称
-     */
-    private Long permissionType;
+    private Boolean isDelete;
 
     /**
      * 记录创建时间
      */
-    private String createTimeStr;
+    private LocalDateTime createTime;
 
     /**
      * 记录更新时间
      */
-    private String updateTimeStr;
+    private LocalDateTime updateTime;
 
-    private CourseVO course;
+    private Course course;
+
 }
