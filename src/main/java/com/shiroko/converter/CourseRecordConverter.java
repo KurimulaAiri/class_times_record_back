@@ -1,10 +1,12 @@
 package com.shiroko.converter;
 
+import com.shiroko.annotation.BaseDateTimeToString;
 import com.shiroko.repository.dto.courserecord.CourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.InsertCourseRecordDTO;
 import com.shiroko.repository.dto.courserecord.UpdateCourseRecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
+import com.shiroko.util.DateTransformUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -18,19 +20,20 @@ import java.util.List;
  * @since 2026/2/7 下午9:43
  */
 // 声明为MapStruct的映射器，componentModel = "spring" 支持Spring注入
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {DateTransformUtils.class})
 public interface CourseRecordConverter extends BaseConverter<CourseRecord, CourseRecordVO> {
 
 
-    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
-    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
-    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
+    @Mapping(source = "createTime", target = "createTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
+    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
+    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedBy = BaseDateTimeToString.class)
+    // 自定义转换规则
     @Override
     CourseRecordVO pojoToVO(CourseRecord pojo);
 
-    @Mapping(source = "createTime", target = "createTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
-    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedByName = "dateTimeToString") // 自定义转换规则
-    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedByName = "dateTimeToString")
+    @Mapping(source = "createTime", target = "createTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
+    @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
+    @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedBy = BaseDateTimeToString.class)
         // 自定义转换规则
     CourseRecordVO dtoToVO(CourseRecordDTO dto);
 

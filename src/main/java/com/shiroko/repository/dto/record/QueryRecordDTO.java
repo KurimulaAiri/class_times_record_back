@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QueryRecordDTO extends BaseDTO {
+    private Long institutionId;
     private Long courseRecordId;
     private Integer pageSize;
     private Integer currentPage;

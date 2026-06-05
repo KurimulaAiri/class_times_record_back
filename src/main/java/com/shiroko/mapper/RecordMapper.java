@@ -1,8 +1,12 @@
 package com.shiroko.mapper;
 
-import org.apache.ibatis.annotations.Mapper;
-import com.shiroko.repository.entity.Record;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.shiroko.repository.dto.record.QueryRecordDTO;
+import com.shiroko.repository.dto.record.RecordDTO;
+import com.shiroko.repository.entity.Record;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * Description: 记录Mapper
@@ -14,6 +18,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 @Mapper
 public interface RecordMapper extends BaseMapper<Record> {
 
+    IPage<RecordDTO> selectRecords(IPage<RecordDTO> recordPage, @Param("dto") QueryRecordDTO dto);
 }
 
 

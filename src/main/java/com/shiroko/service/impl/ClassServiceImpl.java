@@ -11,8 +11,8 @@ import com.shiroko.repository.dto.clazz.InsertClassDTO;
 import com.shiroko.repository.dto.clazz.QueryClassDTO;
 import com.shiroko.repository.dto.clazz.UpdateClassDTO;
 import com.shiroko.repository.dto.student.StudentDTO;
-import com.shiroko.repository.entity.*;
 import com.shiroko.repository.entity.Class;
+import com.shiroko.repository.entity.*;
 import com.shiroko.repository.vo.clazz.ClassVO;
 import com.shiroko.repository.vo.clazz.InsertClassVO;
 import com.shiroko.repository.vo.clazz.QueryClassVO;
@@ -145,7 +145,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                     .map(s -> s.getStudentName() != null ? s.getStudentName() : s.getId().toString())
                     .collect(Collectors.joining(", "));
 
-            return ResponseDTO.fail("添加失败：以下学生未报名本班级对应的课程: [" + missingNames + "]");
+            return ResponseDTO.fail("添加失败：以下学生未报名本班级对应的课程[" + missingNames + "]");
         }
 
         // 4. 执行批量插入

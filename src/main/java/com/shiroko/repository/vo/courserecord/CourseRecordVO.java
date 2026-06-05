@@ -16,72 +16,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CourseRecordVO {
-    /**
-     * 表id
-     */
     private Long id;
-
-    /**
-     * 学生id
-     */
     private Long studentId;
-
-    /**
-     * 课程id
-     */
     private Long courseId;
-
-    /**
-     * 课时总数
-     */
     private Long courseTotalTime;
-
-    /**
-     * 课程剩余次数
-     */
     private Long courseRestTime;
-
-    /**
-     * 课程状态
-     * 0：未完成
-     * 1：已完成
-     */
     private Long courseStatus;
-
-    /**
-     * 上次上课时间
-     */
     private String courseLastTimeStr;
-
-    /**
-     * 课程归属人
-     */
     private Long courseOwnerUserId;
-
-    /**
-     * 课程备注
-     */
     private String courseRemark;
-
-    /**
-     * 逻辑删除
-     */
     private String isDelete;
-
-    /**
-     * 权限名称
-     */
     private Long permissionType;
-
-    /**
-     * 记录创建时间
-     */
     private String createTimeStr;
-
-    /**
-     * 记录更新时间
-     */
     private String updateTimeStr;
-
     private CourseVO course;
 }

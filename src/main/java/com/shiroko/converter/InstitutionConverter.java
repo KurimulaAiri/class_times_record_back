@@ -1,8 +1,10 @@
 package com.shiroko.converter;
 
+import com.shiroko.annotation.BaseDateTimeToString;
 import com.shiroko.repository.dto.institution.UpdateInstitutionDTO;
 import com.shiroko.repository.entity.Institution;
 import com.shiroko.repository.vo.institution.InstitutionVO;
+import com.shiroko.util.DateTransformUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,14 +15,14 @@ import org.mapstruct.Mapping;
  * @version 1.0
  * @since 2026/5/31 下午3:08
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {DateTransformUtils.class})
 public interface InstitutionConverter extends BaseConverter<Institution, InstitutionVO> {
 
     @Mapping(target = "id", source = "institutionId")
     Institution updateDtoToPojo(UpdateInstitutionDTO updateInstitutionDTO);
 
-    @Mapping(target = "updateTimeStr", source = "updateTime", qualifiedByName = "dateTimeToString")
-    @Mapping(target = "createTimeStr", source = "createTime", qualifiedByName = "dateTimeToString")
+    @Mapping(target = "updateTimeStr", source = "updateTime", qualifiedBy = BaseDateTimeToString.class)
+    @Mapping(target = "createTimeStr", source = "createTime", qualifiedBy = BaseDateTimeToString.class)
     @Override
     InstitutionVO pojoToVO(Institution institution);
 

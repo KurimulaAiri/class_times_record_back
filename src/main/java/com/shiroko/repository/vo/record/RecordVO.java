@@ -1,12 +1,13 @@
 package com.shiroko.repository.vo.record;
 
 import com.shiroko.repository.vo.BaseVO;
+import com.shiroko.repository.vo.course.CourseVO;
+import com.shiroko.repository.vo.courserecord.CourseRecordVO;
+import com.shiroko.repository.vo.student.StudentVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * Description: 记录VO
@@ -22,10 +23,13 @@ import java.time.LocalDateTime;
 public class RecordVO extends BaseVO {
     private Long id;
     private Long courseRecordId;
-    private LocalDateTime recordTime;
-    private Long recordType;
+    private CourseRecordVO courseRecord;
+    private CourseVO course;
+    private StudentVO student;
+    private String recordTimeStr;
     private String recordRemark;
+    private Long recordType;
     private Long recordChange;
-    private String updateTimeStr;
     private String createTimeStr;
+    private String updateTimeStr;
 }

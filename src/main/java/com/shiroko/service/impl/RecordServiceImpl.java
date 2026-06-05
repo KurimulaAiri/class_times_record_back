@@ -1,15 +1,17 @@
 package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.RecordConverter;
 import com.shiroko.mapper.CourseRecordMapper;
 import com.shiroko.mapper.RecordMapper;
+import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.record.InsertRecordDTO;
 import com.shiroko.repository.dto.record.InsertRecordsDTO;
 import com.shiroko.repository.dto.record.QueryRecordDTO;
-import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.record.RecordDTO;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.entity.Record;
 import com.shiroko.repository.vo.record.QueryRecordVO;
@@ -88,7 +90,7 @@ public class RecordServiceImpl extends ServiceImpl<RecordMapper, Record> impleme
 
     @Override
     public ResponseDTO<QueryRecordVO> getRecord(QueryRecordDTO queryRecordDTO) {
-        System.out.println(queryRecordDTO);
+        // System.out.println(queryRecordDTO);
         Page<Record> recordPage = recordMapper.selectPage(
                 new Page<>(queryRecordDTO.getCurrentPage(),
                         queryRecordDTO.getPageSize()),
@@ -102,6 +104,17 @@ public class RecordServiceImpl extends ServiceImpl<RecordMapper, Record> impleme
                 .setRecords(recordConverter.pojoListToVOList(recordList))
                 .setTotal(recordPage.getTotal());
         return ResponseDTO.success(queryRecordVO);
+    }
+
+    @Override
+    public ResponseDTO<QueryRecordVO> newGetRecord(QueryRecordDTO queryRecordDTO) {
+        IPage<RecordDTO> recordPage = new Page<>(queryRecordDTO.getCurrentPage(),
+                queryRecordDTO.getPageSize());
+        recordMapper.selectRecords(recordPage, queryRecordDTO);
+        List<RecordDTO> recordList = recordPage.getRecords();
+        return ResponseDTO.success(new QueryRecordVO()
+                .setRecords(recordConverter.dtoListToVoList(recordList))
+                .setTotal(recordPage.getTotal()));
     }
 }
 

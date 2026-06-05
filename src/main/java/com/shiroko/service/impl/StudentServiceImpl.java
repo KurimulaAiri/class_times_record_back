@@ -255,7 +255,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
             // 处理 parentId 为 0 的情况
             // 没有家长 id ，说明是新增家长，设置 userId 为 0
-            if (parentEntity.getParentId() == 0) {
+            if (parentEntity.getParentId() == 0L) {
                 parentEntity.setUserId(0L);
             }
             parentMapper.insertOrUpdate(parentEntity);

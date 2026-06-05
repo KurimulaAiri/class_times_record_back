@@ -4,19 +4,59 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shiroko.mapper.RecordMapper">
 
-    <resultMap id="BaseResultMap" type="com.shiroko.repository.entity.Record">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="recordTime" column="record_time" jdbcType="TIMESTAMP"/>
-            <result property="recordRemark" column="record_remark" jdbcType="VARCHAR"/>
-            <result property="recordType" column="record_type" jdbcType="INTEGER"/>
-            <result property="recordChange" column="record_change" jdbcType="INTEGER"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    <resultMap id="recordResultMap" type="com.shiroko.repository.dto.record.RecordDTO">
+        <id column="id" property="id"/>
+        <result column="course_record_id" property="courseRecordId"/>
+        <result column="record_time" property="recordTime"/>
+        <result column="record_type" property="recordType"/>
+        <result column="record_remark" property="recordRemark"/>
+        <result column="record_change" property="recordChange"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_time" property="createTime"/>
+        <association property="courseRecord" javaType="com.shiroko.repository.entity.CourseRecord">
+            <id column="course_record_id" property="id"/>
+            <result column="course_id" property="courseId"/>
+            <result column="student_id" property="studentId"/>
+            <result column="course_total_time" property="courseTotalTime"/>
+            <result column="course_rest_time" property="courseRestTime"/>
+            <result column="course_record_create_time" property="createTime"/>
+            <result column="course_record_update_time" property="updateTime"/>
+        </association>
+        <association property="course" javaType="com.shiroko.repository.entity.Course">
+            <id column="course_id" property="id"/>
+            <result column="course_name" property="courseName"/>
+            <result column="course_type" property="courseType"/>
+            <result column="is_available" property="isAvailable"/>
+            <result column="course_create_time" property="createTime"/>
+            <result column="course_update_time" property="updateTime"/>
+        </association>
+        <association property="student" javaType="com.shiroko.repository.entity.Student">
+            <id column="student_id" property="id"/>
+            <result column="student_name" property="studentName"/>
+        </association>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,record_time,record_remark,
-        record_type,record_change,create_time,
-        update_time
-    </sql>
+    <select id="selectRecords" resultMap="recordResultMap">
+        select r.*,
+               cr.id          as course_record_id,
+               c.id           as course_id,
+               cr.student_id,
+               cr.course_total_time,
+               cr.course_rest_time,
+               cr.create_time as course_record_create_time,
+               cr.update_time as course_record_update_time,
+               c.course_name,
+               c.course_type,
+               c.is_available,
+               c.create_time  as course_create_time,
+               c.update_time  as course_update_time,
+               s.student_name,
+               s.id           as student_id
+        from record as r
+                 left join course_record as cr on r.course_record_id = cr.id
+                 left join course as c on cr.course_id = c.id
+                 left join student as s on cr.student_id = s.id
+        where c.institution_id = #{dto.institutionId}
+        order by r.record_time desc
+    </select>
 </mapper>
