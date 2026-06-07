@@ -34,6 +34,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -111,10 +112,13 @@ public class AuthServiceImpl implements AuthService {
             return ResponseDTO.fail("非法角色参数");
         }
 
-        // 3. 💡 精准定位认证信息（通过机构、账号、角色找人）
-        UserAuth userAuth = userAuthMapper.selectAuthByAccountAndInstitution(account, role, institutionId);
+        // 3. 精准定位认证信息（通过机构、账号、角色找人）
+        UserAuth userAuth = validAuth(account, role, institutionId);
         if (userAuth == null) {
             return ResponseDTO.fail("该机构下不存在当前账号或身份不匹配");
+        } else {
+            userAuth.setLastLoginTime(LocalDateTime.now());
+            userAuthService.updateById(userAuth);
         }
 
         // 4. 盐值密码哈希校验
@@ -170,6 +174,12 @@ public class AuthServiceImpl implements AuthService {
             // 场景：已经有绑定记录了，精准看当前微信对【当前这个账号】有没有被禁用
             if (!existRecord.getIsAvailable()) {
                 return ResponseDTO.fail("当前微信登录权限已被禁用，请联系管理员");
+            } else {
+                // 更新上次登录时间和平台
+                existRecord.setPlatform(platform);
+                existRecord.setLastLoginTime(LocalDateTime.now());
+                existRecord.setLastLoginRole(role);
+                userPlatformService.updateById(existRecord);
             }
         }
 
@@ -219,6 +229,27 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtUtils.createAccessToken(userId, roleId);
         String refreshToken = jwtUtils.createRefreshToken(userId, roleId);
+
+        // 更新上次登录时间
+        UserAuth userAuth = userAuthService.getOne(new LambdaQueryWrapper<UserAuth>()
+                .eq(UserAuth::getUserId, userId)
+                .eq(UserAuth::getRoleId, roleId)
+        );
+        userAuth.setLastLoginTime(LocalDateTime.now());
+        userAuthService.updateById(userAuth);
+
+        // 更新上次登录时间和平台
+        UserPlatform platformRecord = userPlatformService.getOne(
+                new LambdaQueryWrapper<UserPlatform>()
+                        .eq(UserPlatform::getUserId, userId)
+                        .eq(UserPlatform::getOpenId, dto.getOpenId())
+                        .eq(UserPlatform::getPlatform, dto.getPlatform())
+        );
+
+        platformRecord.setLastLoginTime(LocalDateTime.now());
+        platformRecord.setLastLoginRole(roleId);
+
+        userPlatformService.updateById(platformRecord);
 
         return ResponseDTO.success(new LoginVO(accessToken, refreshToken, dto.getOpenId(), user));
     }
@@ -394,5 +425,8 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    private UserAuth validAuth(String account, Long role, Long institutionId) {
+        return userAuthMapper.selectAuthByAccountAndInstitution(account, role, institutionId);
+    }
 
 }

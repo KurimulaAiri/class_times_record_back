@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.shiroko.repository.entity.common.BaseEntity;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
@@ -20,13 +23,22 @@ import java.time.LocalDateTime;
  */
 @EqualsAndHashCode(callSuper = true)
 @TableName(value ="user")
+@Accessors(chain = true)
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User extends BaseEntity {
     /**
      * 用户id
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
+    /**
+     * 学院id
+     */
+    @TableField(value = "institution_id")
+    private Long institutionId;
 
     /**
      * 创建时间

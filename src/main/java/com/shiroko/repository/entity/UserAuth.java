@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Description: 权限实体类
@@ -62,7 +62,7 @@ public class UserAuth extends BaseEntity {
      * 上次登录时间
      */
     @TableField(value = "last_login_time")
-    private Date lastLoginTime;
+    private LocalDateTime lastLoginTime;
 
     @Serial
     @TableField(exist = false)

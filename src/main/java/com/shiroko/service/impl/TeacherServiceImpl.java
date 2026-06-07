@@ -1,18 +1,32 @@
 package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shiroko.converter.TeacherConverter;
 import com.shiroko.mapper.TeacherMapper;
+import com.shiroko.mapper.UserMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.teacher.InsertTeacherDTO;
 import com.shiroko.repository.dto.teacher.QueryTeacherDTO;
+import com.shiroko.repository.dto.teacher.UpdateTeacherDTO;
 import com.shiroko.repository.entity.Teacher;
+import com.shiroko.repository.entity.User;
+import com.shiroko.repository.entity.UserAuth;
+import com.shiroko.repository.vo.teacher.InsertTeacherVO;
 import com.shiroko.repository.vo.teacher.QueryTeacherVO;
 import com.shiroko.repository.vo.teacher.TeacherVO;
+import com.shiroko.repository.vo.teacher.UpdateTeacherVO;
 import com.shiroko.service.TeacherService;
+import com.shiroko.service.UserAuthService;
+import com.shiroko.util.SM2Util;
+import com.shiroko.util.SM3Util;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Description: 教师服务实现
@@ -22,10 +36,17 @@ import java.util.List;
  * @since 2026/4/15 下午22:37
  */
 @Service("teacherService")
+@Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService{
 
+    private final UserMapper userMapper;
+    private final TeacherConverter teacherConverter;
+    private final UserAuthService userAuthService;
+
     private final TeacherMapper teacherMapper;
+    @Value("${crypto.sm2.private-key:}")
+    private String privateKey;
 
     @Override
     public ResponseDTO<QueryTeacherVO> getTeacherById(QueryTeacherDTO queryTeacherDTO) {
@@ -51,6 +72,55 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
         return ResponseDTO.success(queryTeacherVO);
     }
+
+    @Override
+    public ResponseDTO<UpdateTeacherVO> updateTeacherById(UpdateTeacherDTO updateTeacherDTO) {
+        int effect = this.teacherMapper.updateById(teacherConverter.updateDTOToPOJO(updateTeacherDTO));
+        if (effect > 0) {
+            return ResponseDTO.success(new UpdateTeacherVO(effect));
+        }
+        return ResponseDTO.fail("更新失败");
+    }
+
+    @Override
+    public ResponseDTO<InsertTeacherVO> insertTeacher(InsertTeacherDTO insertTeacherDTO) {
+
+        User user = new User().setInstitutionId(insertTeacherDTO.getInstitutionId());
+        userMapper.insert(user);
+
+        Teacher teacher = teacherConverter.insertDTOToPOJO(insertTeacherDTO);
+        teacher.setUserId(user.getId());
+        teacherMapper.insert(teacher);
+
+        // 2. 解密前端 SM2 密文得到明文
+        String rawPassword = SM2Util.decrypt(insertTeacherDTO.getPassword(), privateKey);
+
+        // 3. 【核心步骤】自动生成随机盐值
+        // 使用 UUID 去掉横杠，生成 32 位随机字符串
+        String salt = UUID.randomUUID().toString().replace("-", "");
+
+        // 4. 使用 SM3 算法结合盐值进行哈希
+        // 计算公式：SM3(明文 + 盐)
+        String hashedPassword = SM3Util.digestWithSalt(rawPassword, salt);
+
+        // 5. 保存到数据库
+
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUserId(user.getId());
+        userAuth.setAccount(insertTeacherDTO.getAccount());
+        userAuth.setPassword(hashedPassword); // 存入哈希后的密文
+        userAuth.setSalt(salt);               // 必须存入盐值，否则登录时无法校验
+        userAuth.setRoleId(4L);
+
+        userAuthService.save(userAuth);
+
+        if (userAuth.getId() != null) {
+            return ResponseDTO.success(new InsertTeacherVO(teacherMapper.getTeacherById(teacher.getTeacherId())));
+        }
+
+        return ResponseDTO.fail("注册失败");
+    }
+
 }
 
 

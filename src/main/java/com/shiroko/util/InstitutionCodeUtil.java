@@ -22,7 +22,7 @@ public class InstitutionCodeUtil {
 
     public static void main(String[] args) {
         InstitutionCodeUtil codeUtil = new InstitutionCodeUtil();
-        System.out.println(codeUtil.encodeToCode(2L));
+        System.out.println(codeUtil.encodeToCode((-1L)));
         System.out.println(codeUtil.decodeToId("DP9YVWJ75M"));
     }
 
