@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shiroko.mapper.InstitutionMapper">
+
+    <select id="selectListByStudentId" resultType="com.shiroko.repository.entity.Institution">
+        SELECT DISTINCT
+            i.*
+        FROM
+            course_record cr
+                INNER JOIN
+            course c ON cr.course_id = c.id
+                INNER JOIN
+            institution i ON c.institution_id = i.id
+        WHERE cr.student_id = #{studentId}
+          AND cr.is_delete = 0
+    </select>
+
+    <select id="selectListByOpenId" resultType="com.shiroko.repository.entity.Institution">
+        SELECT DISTINCT i.*
+        FROM user_platform up
+                 INNER JOIN `user` u ON up.user_id = u.id
+                 INNER JOIN institution i ON u.institution_id = i.id -- 联查机构主表获取机构详情
+        WHERE up.platform = #{platform}
+          AND up.open_id = #{openId}
+          AND up.is_available = 1 -- 过滤掉已经被禁用的微信绑定关系
+    </select>
+
+</mapper>

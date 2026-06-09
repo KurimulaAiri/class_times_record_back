@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shiroko.mapper.StudentMapper">
+
+    <resultMap id="studentMap" type="com.shiroko.repository.entity.Student">
+        <id property="id" column="id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="studentName" column="student_name"/>
+        <result property="birth" column="birth"/>
+        <result property="school" column="school"/>
+        <result property="address" column="address"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="studentDTOMap" type="com.shiroko.repository.dto.student.StudentDTO" extends="studentMap">
+        <result property="relation" column="relation"/>
+    </resultMap>
+
+    <select id="selectStudentByParentId" resultMap="studentDTOMap">
+        select s.id,
+               s.avatar,
+               s.student_name,
+               s.institution_id,
+               ps.relation,
+               s.birth,
+               s.school,
+               s.address,
+               s.sex,
+               s.create_time,
+               s.update_time
+        from parent_student ps
+        left join student s on s.id = ps.student_id
+        where ps.parent_id = #{dto.parentId}
+    </select>
+
+    <select id="selectStudentByTeacherId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        SELECT s.* FROM student s
+        <where>
+            AND EXISTS (
+            SELECT 1
+            FROM course_record cr
+            JOIN teacher_course tc ON cr.course_id = tc.course_id
+            WHERE cr.student_id = s.id
+            AND tc.teacher_id = #{dto.teacherId}
+            )
+
+            <if test="dto.sex != null">
+                AND s.sex = #{dto.sex}
+            </if>
+
+            <if test="dto.hasClass != null and dto.hasClass != -1">
+                <choose>
+                    <when test="dto.hasClass == 1">
+                        AND EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                    <when test="dto.hasClass == 0">
+                        AND NOT EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                </choose>
+            </if>
+
+            <if test="dto.keyword != null and dto.keyword != ''">
+                AND (
+                s.student_name LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR s.id LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR EXISTS (
+                SELECT 1
+                FROM parent_student ps
+                JOIN parent p ON ps.parent_id = p.id
+                WHERE ps.student_id = s.id
+                AND p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
+                )
+                )
+            </if>
+        </where>
+        ORDER BY s.update_time DESC, s.id DESC
+    </select>
+
+    <select id="selectStudentByInstitutionId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        SELECT s.*
+        FROM student s
+        <where>
+            s.institution_id = #{dto.institutionId}
+            <if test="dto.sex != null">
+                AND s.sex = #{dto.sex}
+            </if>
+            <if test="dto.hasClass != null and dto.hasClass != -1">
+                <choose>
+                    <when test="dto.hasClass == 1">
+                        AND EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                    <when test="dto.hasClass == 0">
+                        AND NOT EXISTS (SELECT 1 FROM class_student cs WHERE cs.student_id = s.id)
+                    </when>
+                </choose>
+            </if>
+            <if test="dto.keyword != null and dto.keyword != ''">
+                AND (
+                s.student_name LIKE CONCAT('%', #{dto.keyword}, '%')
+                OR s.id LIKE CONCAT('%', #{dto.keyword}, '%')
+                -- 改为 EXISTS 子查询，避免 JOIN 导致重复
+                OR EXISTS (
+                SELECT 1 FROM parent_student ps
+                JOIN parent p ON ps.parent_id = p.id
+                WHERE ps.student_id = s.id AND p.phone LIKE CONCAT('%', #{dto.keyword}, '%')
+                )
+                )
+            </if>
+        </where>
+        ORDER BY s.update_time DESC, s.id
+    </select>
+
+    <select id="selectStudentByClassId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        select s.*,
+               ps.relation,
+               cr.course_total_time,
+               cr.course_rest_time,
+               p.phone
+        from class_student as cs
+                 left join class c on c.id = cs.class_id
+                 left join student s on s.id = cs.student_id
+                 left join course_record as cr on cr.student_id = s.id and cr.course_id = c.course_id
+                 left join parent_student as ps on ps.student_id = s.id and ps.is_primary = true
+                 left join parent p on ps.parent_id = p.id
+        where cs.class_id = #{dto.classId}
+    </select>
+
+    <select id="selectByStudentId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        SELECT s.*
+        FROM student s
+        WHERE s.id = #{dto.studentId}
+    </select>
+    <select id="selectStudentByCourseId" resultType="com.shiroko.repository.dto.student.StudentDTO">
+        SELECT s.*,
+               cr.course_total_time,
+               cr.course_rest_time
+        from student as s
+                 left join course_record as cr on s.id = cr.student_id
+        where cr.course_id = #{dto.courseId}
+        order by s.update_time desc, s.id
+    </select>
+</mapper>

@@ -1,0 +1,6 @@
+spring:
+  autoconfigure:
+    exclude:
+      - com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration
+  main:
+    allow-bean-definition-overriding: true

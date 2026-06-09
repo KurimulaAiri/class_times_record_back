@@ -1,0 +1,11 @@
+target/
+.idea/
+.mvn/
+.m2/
+*.log
+.git/
+.trae/
+docs/
+pipeline/
+*.md
+.gitignore

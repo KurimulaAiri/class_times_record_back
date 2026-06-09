@@ -2,152 +2,218 @@ pipeline {
     agent any
 
     environment {
-        // 项目基础配置
-        GIT_REPO_URL        = 'git@github.com:KurimulaAiri/class_times_record_back.git'
-        GIT_BRANCH          = 'master'
-        PROJECT_NAME        = 'class-times-record'
-        APP_PORT            = 9999
-        MAVEN_BUILD_CMD     = 'clean package -Dmaven.test.skip=true'
-
-        // 容器内共享目录（已挂载到宿主机 /opt/java-deploy/...）
-        CONTAINER_DEPLOY_DIR = '/opt/deploy/class_times_record_back'
-
-        // 宿主机配置
-        HOST_USER           = 'root'
-        HOST_IP             = '172.21.0.1'
-        HOST_SSH_PORT       = 25184
-        HOST_JAVA_CMD       = '/www/server/java/jdk-21.0.2/bin/java'
-        HOST_DEPLOY_DIR     = '/opt/java-deploy/class_times_record_back'
-        HOST_PID_FILE       = "${HOST_DEPLOY_DIR}/${PROJECT_NAME}.pid"
+        GIT_REPO_URL    = "git@github.com:KurimulaAiri/class_times_record_back.git"
+        GIT_BRANCH      = "master"
+        PROJECT_NAME    = "class-times-record"
+        MAVEN_BUILD_CMD = "clean package -Dmaven.test.skip=true"
+        // 部署目标主机（Jenkins 容器通过 SSH 连接宿主机执行 docker compose）
+        HOST_USER       = "root"
+        HOST_IP         = "172.21.0.1"
+        HOST_SSH_PORT   = 25184
+        HOST_DEPLOY_DIR = "/opt/java-deploy/class_times_record_back"
+        DB_HOST         = "172.17.0.1"
+        COMPOSE_PROJECT = "class-times-record"
     }
 
     tools {
-        jdk 'Java'
-        maven '3.9.13'
+        jdk "Java"
+        maven "3.9.13"
     }
 
     options {
         skipDefaultCheckout true
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 30, unit: "MINUTES")
+    }
+
+    parameters {
+        choice(name: 'DEPLOY_SCOPE', choices: ['all', 'gateway', 'auth-service', 'business-service'], description: '部署范围：all=全部，或指定单个服务')
+        booleanParam(name: 'SKIP_BUILD', defaultValue: false, description: '跳过构建，直接部署')
+        booleanParam(name: 'ROLLBACK', defaultValue: false, description: '回滚到上一版本镜像')
     }
 
     stages {
-        // 1. 拉取代码
-        stage('拉取代码') {
+        stage("Pull Code") {
+            when { expression { params.ROLLBACK == false } }
             steps {
-                echo '→ 拉取最新代码'
-                withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh-key', keyFileVariable: 'GIT_SSH_KEY_PATH')]) {
-                    sh '''
-                        export GIT_SSH_COMMAND="ssh -i ${GIT_SSH_KEY_PATH} -o StrictHostKeyChecking=no"
+                echo "-> Pulling latest code from ${GIT_BRANCH}"
+                withCredentials([sshUserPrivateKey(credentialsId: "github-ssh-key", keyFileVariable: "GIT_SSH_KEY_PATH")]) {
+                    sh """
+                        export GIT_SSH_COMMAND="ssh -i \${GIT_SSH_KEY_PATH} -o StrictHostKeyChecking=no"
                         git init || true
-                        git remote add origin ${GIT_REPO_URL} || git remote set-url origin ${GIT_REPO_URL}
+                        git remote add origin \${GIT_REPO_URL} || git remote set-url origin \${GIT_REPO_URL}
                         git fetch --all
-                        git reset --hard origin/${GIT_BRANCH}
-                        git pull origin ${GIT_BRANCH} --force
-                    '''
+                        git reset --hard origin/\${GIT_BRANCH}
+                        git pull origin \${GIT_BRANCH} --force
+                    """
                 }
             }
         }
 
-        // 2. 编译打包
-        stage('编译打包') {
+        stage("Build JARs") {
+            when { expression { params.ROLLBACK == false && params.SKIP_BUILD == false } }
             steps {
-                echo '→ 编译打包 SpringBoot 项目'
-                sh "mvn ${MAVEN_BUILD_CMD}"
+                echo "-> Building all modules"
+                sh "mvn \${MAVEN_BUILD_CMD}"
             }
             post {
-                failure { error '编译打包失败，终止部署' }
-                success { echo '✅ 编译打包成功' }
+                failure { error "Build failed" }
+                success { echo "Build success" }
             }
         }
 
-        // 3. 发布 jar 到宿主机
-        stage('发布 jar 到宿主机') {
+        stage("Sync to Host") {
+            when { expression { params.ROLLBACK == false } }
             steps {
-                echo '→ 同步 jar 包到宿主机共享目录'
-                sh '''
-                    if [ ! -w ${CONTAINER_DEPLOY_DIR} ]; then
-                        chmod 777 ${CONTAINER_DEPLOY_DIR} || true
-                    fi
-                    JAR_FILE=$(ls target/*.jar | grep -v 'original-' | head -1)
-                    cp -f $JAR_FILE ${CONTAINER_DEPLOY_DIR}/${PROJECT_NAME}.jar
-                    echo '✅ jar 包已同步到宿主机'
-                '''
-            }
-        }
-
-        // 4. 停止旧进程 (修复重点：防止变量在容器内解析)
-        stage('停止旧进程') {
-            steps {
-                echo "→ 停止宿主机端口为 ${APP_PORT} 的进程"
-                withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
-                    sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
-                        # 注入变量（因为使用了 'EOF'，需要重新手动指定这些来自 Jenkins 的变量）
-                        PORT=''' + APP_PORT + '''
-                        PID_FILE=''' + HOST_PID_FILE + '''
-
-                        # 1. 尝试通过 PID 文件停止
-                        if [ -f "$PID_FILE" ]; then
-                            OLD_PID=$(cat "$PID_FILE")
-                            kill -9 $OLD_PID 2>/dev/null || true
-                            rm -f "$PID_FILE"
-                        fi
-
-                        # 2. 检查端口占用（解决 grep 转义报错，改用 tr 过滤）
-                        PORT_PID=$(netstat -tlnp 2>/dev/null | grep ":$PORT " | awk '{print $7}' | cut -d/ -f1 | tr -cd '0-9\\n')
-                        if [ -n "$PORT_PID" ]; then
-                            echo "杀除端口 $PORT 残留进程: $PORT_PID"
-                            kill -9 $PORT_PID 2>/dev/null || true
-                        fi
-                        echo "✅ 旧进程清理完成"
-EOF
-                    '''
+                echo "-> Syncing project to host deploy dir"
+                withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
+                    sh """
+                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_DEPLOY_DIR}"
+                        # Sync only needed files (JARs, Dockerfiles, docker-compose.yml)
+                        rsync -azP -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
+                            pom.xml docker-compose.yml \${HOST_USER}@\${HOST_IP}:\${HOST_DEPLOY_DIR}/
+                        for SVC in gateway auth-service business-service; do
+                            rsync -azP --include='target/*.jar' --include='Dockerfile' --include='*/' --exclude='*' \\
+                                -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
+                                ./\${SVC}/ \${HOST_USER}@\${HOST_IP}:\${HOST_DEPLOY_DIR}/\${SVC}/
+                        done
+                    """
                 }
             }
         }
 
-        // 5. 启动新进程 (修复重点：路径一致性 + 动态监测)
-        stage('启动新进程') {
+        stage("Build Docker Images & Deploy") {
             steps {
-                echo "→ 启动宿主机进程（端口: ${APP_PORT}）"
-                withCredentials([sshUserPrivateKey(credentialsId: 'host-ssh-key', keyFileVariable: 'HOST_SSH_KEY_PATH')]) {
-                    sh '''
-                        ssh -i ${HOST_SSH_KEY_PATH} -p ${HOST_SSH_PORT} -o StrictHostKeyChecking=no ${HOST_USER}@${HOST_IP} << 'EOF'
-                        # 注入变量
-                        JAVA_CMD=''' + HOST_JAVA_CMD + '''
-                        DEPLOY_DIR=''' + HOST_DEPLOY_DIR + '''
-                        PROJ_NAME=''' + PROJECT_NAME + '''
-                        PORT=''' + APP_PORT + '''
-                        PID_FILE=''' + HOST_PID_FILE + '''
-                        LOG_FILE="$DEPLOY_DIR/$PROJ_NAME.log"
+                echo "-> Building images and deploying (scope: ${params.DEPLOY_SCOPE})"
+                withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
+                    sh """
+                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'DEPLOY_EOF'
+cd "${HOST_DEPLOY_DIR}"
+export DB_HOST="${DB_HOST}"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT}"
+DEPLOY_SCOPE="${params.DEPLOY_SCOPE}"
+ROLLBACK="${params.ROLLBACK}"
 
-                        # 执行启动
-                        nohup $JAVA_CMD -jar $DEPLOY_DIR/$PROJ_NAME.jar \
-                            --server.port=$PORT \
-                            --spring.profiles.active=prod > "$LOG_FILE" 2>&1 &
+# Tag current images as backup before deploying
+if [ "\$ROLLBACK" = "false" ]; then
+    for SVC in gateway auth-service business-service; do
+        EXISTING=\$(docker images -q \${COMPOSE_PROJECT_NAME}_\${SVC}:latest 2>/dev/null)
+        if [ -n "\$EXISTING" ]; then
+            docker tag \${COMPOSE_PROJECT_NAME}_\${SVC}:latest \${COMPOSE_PROJECT_NAME}_\${SVC}:backup 2>/dev/null || true
+        fi
+    done
+fi
 
-                        echo $! > "$PID_FILE"
+# Rollback: retag backup images
+if [ "\$ROLLBACK" = "true" ]; then
+    echo "-> Rolling back to previous images"
+    for SVC in gateway auth-service business-service; do
+        BACKUP=\$(docker images -q \${COMPOSE_PROJECT_NAME}_\${SVC}:backup 2>/dev/null)
+        if [ -n "\$BACKUP" ]; then
+            docker tag \${COMPOSE_PROJECT_NAME}_\${SVC}:backup \${COMPOSE_PROJECT_NAME}_\${SVC}:latest
+            echo "Restored \$SVC from backup"
+        else
+            echo "No backup found for \$SVC"
+        fi
+    done
+fi
 
-                        # 动态监测日志，看到 Started 标识才认为成功
-                        echo "等待启动中，查看日志: $LOG_FILE"
-                        for i in {1..60}; do
-                            if grep -q "Started .* in .* seconds" "$LOG_FILE" 2>/dev/null; then
-                                echo "🎉 启动成功！"
-                                exit 0
-                            fi
-                            # 进程是否还在运行
-                            if ! ps -p $(cat $PID_FILE) > /dev/null; then
-                                echo "❌ 启动失败，查看日志末尾："
-                                tail -n 20 "$LOG_FILE"
-                                exit 1
-                            fi
-                            sleep 1
-                        done
-                        echo "❌ 启动超时"
-                        exit 1
-EOF
-                    '''
+# Build and deploy based on scope
+BUILD_ARGS=""
+if [ "\$DEPLOY_SCOPE" != "all" ]; then
+    BUILD_ARGS="--no-deps build \$DEPLOY_SCOPE && docker compose up -d \$DEPLOY_SCOPE"
+else
+    BUILD_ARGS="build && docker compose up -d"
+fi
+
+if [ "\$ROLLBACK" = "false" ]; then
+    docker compose build \$([ "\$DEPLOY_SCOPE" = "all" ] && echo "" || echo "\$DEPLOY_SCOPE")
+fi
+
+# Start Nacos first if not running
+if ! docker compose ps nacos | grep -q "running"; then
+    echo "-> Starting Nacos..."
+    docker compose up -d nacos
+    echo "-> Waiting for Nacos to be healthy..."
+    for i in \$(seq 1 60); do
+        if docker compose exec nacos curl -sf http://localhost:8848/nacos/ > /dev/null 2>&1; then
+            echo "Nacos is healthy"
+            break
+        fi
+        if [ \$i -eq 60 ]; then
+            echo "Nacos health check timeout"
+            exit 1
+        fi
+        sleep 2
+    done
+fi
+
+# Start services (downstream first, gateway last)
+if [ "\$DEPLOY_SCOPE" = "all" ]; then
+    docker compose up -d auth-service business-service
+    sleep 10
+    docker compose up -d gateway
+else
+    docker compose up -d \$DEPLOY_SCOPE
+fi
+
+echo "Deploy completed"
+DEPLOY_EOF
+                    """
+                }
+            }
+        }
+
+        stage("Verify") {
+            steps {
+                echo "-> Verifying services"
+                withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
+                    sh """
+                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'VERIFY_EOF'
+cd "${HOST_DEPLOY_DIR}"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT}"
+FAILED=0
+
+verify_service() {
+    local NAME=\$1
+    local PORT=\$2
+    local CONTAINER="\${COMPOSE_PROJECT_NAME}-\${NAME}-1"
+
+    # Check container is running
+    STATUS=\$(docker inspect -f '{{.State.Status}}' \$CONTAINER 2>/dev/null)
+    if [ "\$STATUS" != "running" ]; then
+        echo "FAIL: \$NAME - container not running (status: \$STATUS)"
+        docker compose logs --tail=20 \$NAME 2>/dev/null
+        FAILED=1
+        return
+    fi
+
+    # Health check via HTTP
+    sleep 3
+    if curl -sf "http://localhost:\$PORT/actuator/health" > /dev/null 2>&1; then
+        echo "OK:   \$NAME (port \$PORT, health=UP)"
+    elif curl -sf "http://localhost:\$PORT/" > /dev/null 2>&1; then
+        echo "OK:   \$NAME (port \$PORT, responding)"
+    else
+        echo "WARN: \$NAME (port \$PORT, container running but not responding yet)"
+    fi
+}
+
+verify_service "auth-service" 8081
+verify_service "business-service" 8082
+verify_service "gateway" 8080
+
+# Check Nacos registration
+echo ""
+echo "--- Nacos Service Registry ---"
+docker compose exec nacos curl -sf "http://localhost:8848/nacos/v1/ns/service/list?pageNo=1&pageSize=10" 2>/dev/null || echo "Cannot query Nacos"
+
+if [ \$FAILED -ne 0 ]; then
+    echo ""
+    echo "Some services failed verification!"
+    exit 1
+fi
+VERIFY_EOF
+                    """
                 }
             }
         }
@@ -155,22 +221,23 @@ EOF
 
     post {
         success {
-            echo ''
-            echo '=================================================='
-            echo '                🎉 部署全流程成功！'
-            echo " 项目名称：${PROJECT_NAME}"
-            echo " 运行环境：prod（生产环境）"
-            echo " 访问地址：http://${HOST_IP}:${APP_PORT}"
-            echo " 日志路径：${HOST_DEPLOY_DIR}/app.log"
-            echo '=================================================='
+            echo ""
+            echo "=================================================="
+            echo "       Deployment Success (Docker Microservices)"
+            echo " Scope:         ${params.DEPLOY_SCOPE}"
+            echo " Gateway:       http://${HOST_IP}:8080"
+            echo " Auth Service:  http://${HOST_IP}:8081"
+            echo " Business Svc:  http://${HOST_IP}:8082"
+            echo " Nacos:         http://${HOST_IP}:8848/nacos"
+            echo "=================================================="
         }
         failure {
-            echo ''
-            echo '=================================================='
-            echo '                ❌ 部署失败！'
-            echo ' 核心原因：Java 路径错误 / 应用启动失败'
-            echo ' 请检查：1. 宿主机 Java 路径  2. 应用日志'
-            echo '=================================================='
+            echo ""
+            echo "=================================================="
+            echo "            Deployment Failed"
+            echo " Check: docker compose logs <service>"
+            echo " Rollback: re-run pipeline with ROLLBACK=true"
+            echo "=================================================="
         }
     }
 }

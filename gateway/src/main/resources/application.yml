@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${nacos-server-addr:localhost:8848}
+        namespace: ${nacos-namespace:}
+        group: DEFAULT_GROUP
+    sentinel:
+      transport:
+        dashboard: ${sentinel-dashboard:localhost:8080}
+      eager: true
+      filter:
+        enabled: true
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # Auth service routes
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/**, /user/**, /admin/**, /menu/**, /permission_record/**
+        # Business service routes
+        - id: business-service
+          uri: lb://business-service
+          predicates:
+            - Path=/institution/**, /student/**, /teacher/**, /class/**, /course/**, /class_schedule/**, /course_record/**, /record/**, /test/**
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+jwt:
+  secret: class-times-record-secret-key-2024
+  expiration: 86400000
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.alibaba.cloud.nacos: INFO
+    com.alibaba.csp.sentinel: INFO
