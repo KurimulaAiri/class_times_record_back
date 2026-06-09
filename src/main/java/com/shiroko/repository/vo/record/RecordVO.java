@@ -4,6 +4,7 @@ import com.shiroko.repository.vo.BaseVO;
 import com.shiroko.repository.vo.course.CourseVO;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
 import com.shiroko.repository.vo.student.StudentVO;
+import com.shiroko.repository.vo.teacher.TeacherVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,6 +27,7 @@ public class RecordVO extends BaseVO {
     private CourseRecordVO courseRecord;
     private CourseVO course;
     private StudentVO student;
+    private TeacherVO operatorTeacher;
     private String recordTimeStr;
     private String recordRemark;
     private Long recordType;

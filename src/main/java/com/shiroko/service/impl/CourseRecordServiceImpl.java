@@ -12,6 +12,7 @@ import com.shiroko.mapper.*;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.clazz.DeductClassDTO;
 import com.shiroko.repository.dto.courserecord.*;
+import com.shiroko.repository.entity.Class;
 import com.shiroko.repository.entity.Record;
 import com.shiroko.repository.entity.*;
 import com.shiroko.repository.vo.courserecord.CourseRecordVO;
@@ -46,30 +47,25 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
     private final RecordMapper recordMapper;
     private final CourseRecordMapper courseRecordMapper;
     private final StudentMapper studentMapper;
+    private final ClassMapper classMapper;
+    private final ClassStudentMapper classStudentMapper;
 
     private final CourseRecordConverter courseRecordConverter;
 
-    // Service 逻辑简化
+    @Override
     public ResponseDTO<QueryCourseRecordVO> getCourseRecords(QueryCourseRecordDTO dto) {
-        // 1. 获取当前用户 ID
         dto.setUserId(UserContext.getUser().getId());
 
-        // 2. 构造分页对象 (如果没有传分页参数，可以给个默认值或者不分页)
-        // 注意：即便不分页，也可以传一个 Page(1, -1) 或者通过条件判断
         IPage<CourseRecordVO> pageParam = new Page<>(
                 dto.getCurrentPage() == null ? 1 : dto.getCurrentPage(),
                 dto.getPageSize() == null ? 10 : dto.getPageSize()
         );
 
-        // 3. 执行查询 (MyBatis Plus 会自动把结果填充回 pageParam)
         courseRecordMapper.selectCourseCustomPage(pageParam, dto);
-
-        // 4. 处理 VO 注入逻辑
         List<CourseRecordVO> list = pageParam.getRecords();
 
         injectPermissionType(list);
 
-        // 5. 返回封装结果
         return ResponseDTO.success(new QueryCourseRecordVO(list, pageParam.getTotal()));
     }
 
@@ -77,14 +73,14 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
     public ResponseDTO<Object> addCourseRecord(InsertCourseRecordDTO dto) {
         CourseRecord courseRecord = courseRecordConverter.insertDtoToPojo(dto);
         courseRecord.setCourseOwnerUserId(UserContext.getUser().getId());
-        int rowsInserted = courseRecordMapper.insert(
-                courseRecord
-        );
+        int rowsInserted = courseRecordMapper.insert(courseRecord);
+
         PermissionRecord permissionRecord = new PermissionRecord()
                 .setCourseRecordId(courseRecord.getId())
                 .setUserId(UserContext.getUser().getId())
                 .setPermissionType(1L);
         int rowsInsertedAdminGroupRecord = permissionRecordMapper.insert(permissionRecord);
+
         return ResponseDTO.success("添加成功，影响记录数：" + rowsInserted + "\n管理员分组记录数：" + rowsInsertedAdminGroupRecord, new int[]{rowsInserted, rowsInsertedAdminGroupRecord});
     }
 
@@ -101,16 +97,12 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
     @Override
     public ResponseDTO<Object> updateCourseRecord(UpdateCourseRecordDTO dto) {
         CourseRecord courseRecord = courseRecordConverter.updateDtoToPojo(dto);
-        System.out.println(courseRecord);
-        int rowsUpdated = courseRecordMapper.updateById(
-                courseRecord
-        );
+        int rowsUpdated = courseRecordMapper.updateById(courseRecord);
         return ResponseDTO.success(rowsUpdated);
     }
 
     @Override
     public ResponseDTO<QueryCourseRecordVO> newGetCourseRecords(QueryCourseRecordDTO dto) {
-
         IPage<CourseRecordDTO> pageParam = new Page<>(
                 dto.getCurrentPage() == null ? 1 : dto.getCurrentPage(),
                 dto.getPageSize() == null ? 10 : dto.getPageSize()
@@ -119,7 +111,6 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
         List<CourseRecordDTO> list = pageParam.getRecords();
 
         List<CourseRecordVO> voList = courseRecordConverter.dtoListToVOList(list);
-
         injectPermissionType(voList);
 
         return ResponseDTO.success(new QueryCourseRecordVO(voList, pageParam.getTotal()));
@@ -127,11 +118,9 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
 
     @Override
     public ResponseDTO<DeductCourseRecordVO> deductByStudentId(DeductCourseRecordDTO dto) {
-
         AtomicReference<Integer> res = new AtomicReference<>(0);
 
         // 1. 数据聚合：将相同 courseId 的扣除数量相加
-        // Map<courseId, totalDeductCount>
         Map<Long, Integer> combinedMap = dto.getClasses().stream()
                 .collect(Collectors.groupingBy(
                         DeductClassDTO::getCourseId,
@@ -140,21 +129,20 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
 
         // 2. 批量更新数据库
         combinedMap.forEach((courseId, totalCount) -> {
-            // SQL: UPDATE course_record SET course_rest_time = course_rest_time - #{totalCount}
-            // WHERE id = #{courseId} AND student_id = #{studentId}
             CourseRecord cr = new CourseRecord()
                     .setCourseId(courseId)
                     .setStudentId(dto.getStudentId());
             Integer rows = courseRecordMapper.updateRestTime(cr, totalCount);
             res.updateAndGet(v -> v + rows);
+
             if (rows == 0) {
                 Course course = courseMapper.selectById(courseId);
                 throw new BusinessException(ResultCode.COURSE_BALANCE_NOT_ENOUGH, "课程 [ " + course.getCourseName() + " ] 余额不足");
             } else {
-                // 课程余额充足，更新成功，添加记录
                 recordMapper.insert(new Record()
                         .setCourseRecordId(cr.getId())
                         .setRecordTime(dto.getRecordTime())
+                        .setOperateTeacherId(dto.getOperatorId())
                         .setRecordRemark(dto.getRemark())
                         .setRecordType(2L) // 2 为减少
                         .setRecordChange(Long.valueOf(totalCount))
@@ -166,40 +154,41 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
 
     @Override
     public ResponseDTO<DeductCourseRecordVO> deductByCourseId(DeductCourseRecordDTO dto) {
+        AtomicReference<Integer> res = new AtomicReference<>(0);
+
+        // 提取复用：遍历前端传来的学生列表，逐个调用扣费公共方法
+        dto.getStudents().forEach(studentDto -> {
+            int rows = executeStudentDeduct(dto.getCourseId(), studentDto.getStudentId(), studentDto.getDeductCount(), dto);
+            res.updateAndGet(v -> v + rows);
+        });
+
+        return ResponseDTO.success(new DeductCourseRecordVO(res.get()));
+    }
+
+    @Override
+    public ResponseDTO<DeductCourseRecordVO> deductByClassId(DeductCourseRecordDTO dto) {
+        // 1. 查询班级信息，获取 courseId
+        Class clazz = classMapper.selectById(dto.getClassId());
+        if (clazz == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "班级不存在");
+        }
+        Long courseId = clazz.getCourseId();
+
+        // 2. 查询班级下所有学生
+        List<ClassStudent> classStudents = classStudentMapper.selectList(
+                new LambdaQueryWrapper<ClassStudent>()
+                        .eq(ClassStudent::getClassId, dto.getClassId())
+        );
+        if (classStudents.isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "班级中没有学生");
+        }
 
         AtomicReference<Integer> res = new AtomicReference<>(0);
 
-        // 因为学生不会重复，直接遍历前端传来的学生列表即可
-        dto.getStudents().forEach(studentDto -> {
-            Long studentId = studentDto.getStudentId();
-            Integer deductCount = studentDto.getDeductCount();
-
-            // 1. 构建更新条件
-            // WHERE course_id = #{courseId} AND student_id = #{studentId}
-            CourseRecord cr = new CourseRecord()
-                    .setCourseId(dto.getCourseId())
-                    .setStudentId(studentId);
-
-            // 2. 扣减课时
-            Integer rows = courseRecordMapper.updateRestTime(cr, deductCount);
+        // 3. 提取复用：遍历班级学生，逐个调用扣费公共方法
+        classStudents.forEach(cs -> {
+            int rows = executeStudentDeduct(courseId, cs.getStudentId(), dto.getDeductCount(), dto);
             res.updateAndGet(v -> v + rows);
-
-            // 3. 校验扣减结果
-            if (rows == 0) {
-                // 扣除失败，抛出异常阻断事务，并提示哪个学生课时不够
-                Student student = studentMapper.selectById(studentId);
-                String studentName = student != null ? student.getStudentName() : "未知学员";
-                throw new BusinessException(ResultCode.COURSE_BALANCE_NOT_ENOUGH, "学员 [ " + studentName + " ] 课时余额不足");
-            } else {
-                // 4. 扣除成功，记录扣课流水
-                recordMapper.insert(new Record()
-                        .setCourseRecordId(cr.getId())
-                        .setRecordTime(dto.getRecordTime())
-                        .setRecordRemark(dto.getRemark())
-                        .setRecordType(2L) // 2 为减少
-                        .setRecordChange(Long.valueOf(deductCount))
-                );
-            }
         });
 
         return ResponseDTO.success(new DeductCourseRecordVO(res.get()));
@@ -208,10 +197,46 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
     @Override
     public ResponseDTO<Object> insertCourseRecord(InsertCourseRecordDTO insertCourseRecordDTO) {
         CourseRecord newCourseRecord = courseRecordConverter.insertDtoToPojo(insertCourseRecordDTO);
-
         this.baseMapper.insert(newCourseRecord);
-
         return ResponseDTO.success(courseRecordConverter.pojoToVO(newCourseRecord));
+    }
+
+    /**
+     * Core Extracted Method: 执行单个学员的扣费、校验与流水记录
+     *
+     * @param courseId    课程 ID
+     * @param studentId   学生 ID
+     * @param deductCount 扣减课时数
+     * @param dto         基础上下文信息DTO (包含remark, recordTime等)
+     * @return 影响行数
+     */
+    private int executeStudentDeduct(Long courseId, Long studentId, Integer deductCount, DeductCourseRecordDTO dto) {
+        // 1. 构建更新条件条件
+        CourseRecord cr = new CourseRecord()
+                .setCourseId(courseId)
+                .setStudentId(studentId);
+
+        // 2. 扣减课时余额
+        Integer rows = courseRecordMapper.updateRestTime(cr, deductCount);
+
+        // 3. 余额不足校验
+        if (rows == 0) {
+            Student student = studentMapper.selectById(studentId);
+            String studentName = student != null ? student.getStudentName() : "未知学员";
+            throw new BusinessException(ResultCode.COURSE_BALANCE_NOT_ENOUGH, "学员 [ " + studentName + " ] 课时余额不足");
+        }
+
+        // 4. 扣除成功，记录流水明细
+        recordMapper.insert(new Record()
+                .setCourseRecordId(cr.getId())
+                .setRecordTime(dto.getRecordTime())
+                .setOperateTeacherId(dto.getOperatorId())
+                .setRecordRemark(dto.getRemark())
+                .setRecordType(2L) // 2 为减少
+                .setRecordChange(Long.valueOf(deductCount))
+        );
+
+        return rows;
     }
 
     /**
@@ -220,30 +245,24 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
      * @param voList 课程记录 VO 列表
      */
     private void injectPermissionType(List<CourseRecordVO> voList) {
-        // 2. 批量处理关联字段 (核心增强)
         if (!voList.isEmpty()) {
-            // 2.1 提取当前页所有的 courseId
             List<Long> courseIds = voList.stream()
                     .map(CourseRecordVO::getId)
                     .toList();
 
-            // 2.2 调用你写好的 Service 批量查询权限记录
-            // 假设你要查当前用户的权限类型，WHERE course_id IN (...) AND user_id = current
             List<PermissionRecord> permissions = permissionRecordMapper.selectList(
                     new LambdaQueryWrapper<PermissionRecord>()
                             .in(PermissionRecord::getCourseRecordId, courseIds)
                             .eq(PermissionRecord::getUserId, UserContext.getUser().getId())
             );
 
-            // 2.3 将查询结果转为 Map 结构 (Key: courseId, Value: 权限字段)
             Map<Long, Long> permissionMap = permissions.stream()
                     .collect(Collectors.toMap(
                             PermissionRecord::getCourseRecordId,
-                            PermissionRecord::getPermissionType, // 假设你要拿这个字段
-                            (existing, replacement) -> existing // 防止重复 Key 冲突
+                            PermissionRecord::getPermissionType,
+                            (existing, replacement) -> existing
                     ));
 
-            // 2.4 回填到 voList 中
             voList.forEach(vo -> {
                 Long type = permissionMap.get(vo.getId());
                 vo.setPermissionType(type);

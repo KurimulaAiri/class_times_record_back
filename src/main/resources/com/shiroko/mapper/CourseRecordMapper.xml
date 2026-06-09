@@ -10,6 +10,9 @@
         <result property="studentId" column="student_id"/>
         <result property="courseRestTime" column="course_rest_time"/>
         <result property="courseTotalTime" column="course_total_time"/>
+        <result property="courseStatus" column="course_status"/>
+        <result property="courseLastTime" column="course_last_time"/>
+        <result property="expireTime" column="expire_time"/>
         <result property="isDelete" column="is_delete"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
@@ -26,6 +29,7 @@
         UPDATE course_record
         SET
         course_rest_time = course_rest_time - #{totalCount},
+        course_last_time = NOW(),
         id = LAST_INSERT_ID(id)
         WHERE
         course_id = #{cr.courseId}

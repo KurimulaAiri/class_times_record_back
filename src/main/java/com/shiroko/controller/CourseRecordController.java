@@ -2,6 +2,7 @@ package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.courserecord.*;
+import com.shiroko.repository.dto.courserecord.validategroup.DeductGroup;
 import com.shiroko.repository.dto.courserecord.validategroup.InsertGroup;
 import com.shiroko.repository.dto.courserecord.validategroup.QueryGroup;
 import com.shiroko.repository.vo.courserecord.DeductCourseRecordVO;
@@ -62,13 +63,18 @@ public class CourseRecordController {
     }
 
     @PostMapping("/deduct_by_student_id")
-    public ResponseDTO<DeductCourseRecordVO> deductByStudentId(@Validated @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
+    public ResponseDTO<DeductCourseRecordVO> deductByStudentId(@Validated(DeductGroup.ByStudent.class) @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
         return courseRecordService.deductByStudentId(deductCourseRecordDTO);
     }
 
     @PostMapping("/deduct_by_course_id")
-    public ResponseDTO<DeductCourseRecordVO> deductByCourseId(@Validated @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
+    public ResponseDTO<DeductCourseRecordVO> deductByCourseId(@Validated(DeductGroup.ByCourse.class) @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
         return courseRecordService.deductByCourseId(deductCourseRecordDTO);
+    }
+
+    @PostMapping("/deduct_by_class_id")
+    public ResponseDTO<DeductCourseRecordVO> deductByClassId(@Validated(DeductGroup.ByClassId.class) @RequestBody DeductCourseRecordDTO deductCourseRecordDTO) {
+        return courseRecordService.deductByClassId(deductCourseRecordDTO);
     }
 
     @PostMapping("/update")

@@ -19,4 +19,6 @@ public class CourseVO {
     private Boolean available;
     private InstitutionVO institution;
     private CourseRecordVO currentStudentCourseRecord;
+    private String createTimeStr;
+    private String updateTimeStr;
 }

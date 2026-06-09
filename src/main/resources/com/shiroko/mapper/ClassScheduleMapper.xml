@@ -7,6 +7,7 @@
     <resultMap id="classScheduleResultMap" type="com.shiroko.repository.dto.classschedule.ClassScheduleDTO">
         <id property="id" column="id"/>
         <result property="classId" column="class_id"/>
+        <result property="className" column="class_name"/>
         <result property="dayOfWeek" column="day_of_week"/>
         <result property="startDate" column="start_date"/>
         <result property="endDate" column="end_date"/>

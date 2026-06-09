@@ -30,10 +30,16 @@ public class DeductCourseRecordDTO {
     @NotNull(message = "课程ID不能为空", groups = DeductGroup.ByCourse.class)
     private Long courseId;
 
+    @NotNull(message = "班级ID不能为空", groups = DeductGroup.ByClassId.class)
+    private Long classId;
+
     // 加上这行注解，让 Jackson 认识带空格的经典时间格式
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @NotNull(message = "记录课时间不能为空", groups = {DeductGroup.ByStudent.class, DeductGroup.ByCourse.class})
+    @NotNull(message = "记录课时间不能为空", groups = {DeductGroup.ByStudent.class, DeductGroup.ByCourse.class, DeductGroup.ByClassId.class})
     private LocalDateTime recordTime;
+
+    @NotNull(message = "操作人ID不能为空", groups = {DeductGroup.ByStudent.class, DeductGroup.ByCourse.class, DeductGroup.ByClassId.class})
+    private Long operatorId;
 
     private String remark;
 
@@ -42,5 +48,8 @@ public class DeductCourseRecordDTO {
 
     @NotNull(message = "学生列表不能为空", groups = DeductGroup.ByCourse.class)
     private List<DeductStudentDTO> students;
+
+    @NotNull(message = "扣课次数不能为空", groups = DeductGroup.ByClassId.class)
+    private Integer deductCount;
 
 }

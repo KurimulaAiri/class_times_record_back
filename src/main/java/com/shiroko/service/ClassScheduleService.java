@@ -22,4 +22,6 @@ public interface ClassScheduleService extends IService<ClassSchedule> {
     ResponseDTO<QueryClassScheduleVO> getByInstitutionId(QueryClassScheduleDTO dto);
 
     ResponseDTO<UpdateClassScheduleVO> updateByClassScheduleId(UpdateClassScheduleDTO dto);
+
+    ResponseDTO<QueryClassScheduleVO> getClassScheduleById(QueryClassScheduleDTO dto);
 }

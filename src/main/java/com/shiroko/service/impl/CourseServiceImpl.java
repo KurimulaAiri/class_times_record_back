@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.CourseConverter;
 import com.shiroko.mapper.CourseMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.course.CourseDTO;
 import com.shiroko.repository.dto.course.InsertCourseDTO;
 import com.shiroko.repository.dto.course.QueryCourseDTO;
 import com.shiroko.repository.dto.course.UpdateCourseDTO;
@@ -40,7 +41,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         IPage<Course> pageParam = new Page<>(queryCourseDTO.getCurrentPage(), queryCourseDTO.getPageSize());
 
-        IPage<CourseVO> iPage = courseMapper.selectCourseByInstitutionId(pageParam, queryCourseDTO);
+        IPage<CourseDTO> iPage = courseMapper.selectCourseByInstitutionId(pageParam, queryCourseDTO);
 
         QueryCourseVO queryCourseVO = convertToQueryCourseVO(iPage);
         return ResponseDTO.success(queryCourseVO);
@@ -57,7 +58,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     public ResponseDTO<QueryCourseVO> getCourseByStudentId(QueryCourseDTO queryCourseDTO) {
         IPage<Course> pageParam = new Page<>(queryCourseDTO.getCurrentPage(), queryCourseDTO.getPageSize());
 
-        IPage<CourseVO> iPage = courseMapper.selectCourseByStudentId(pageParam, queryCourseDTO);
+        IPage<CourseDTO> iPage = courseMapper.selectCourseByStudentId(pageParam, queryCourseDTO);
 
         QueryCourseVO queryCourseVO = convertToQueryCourseVO(iPage);
         return ResponseDTO.success(queryCourseVO);
@@ -68,8 +69,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         return null;
     }
 
-    private QueryCourseVO convertToQueryCourseVO(IPage<CourseVO> iPage) {
-        List<CourseVO> courseVOList = iPage.getRecords();
+    private QueryCourseVO convertToQueryCourseVO(IPage<CourseDTO> iPage) {
+
+        List<CourseVO> courseVOList = courseConverter.dtoListToVOList(iPage.getRecords());
+
         QueryCourseVO queryCourseVO = new QueryCourseVO();
 
         queryCourseVO.setCourses(courseVOList);

@@ -23,7 +23,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = {DateTransformUtils.class})
 public interface CourseRecordConverter extends BaseConverter<CourseRecord, CourseRecordVO> {
 
-
+    @Mapping(source = "expireTime", target = "expireTimeStr", qualifiedBy = BaseDateTimeToString.class)
     @Mapping(source = "createTime", target = "createTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
     @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
     @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedBy = BaseDateTimeToString.class)
@@ -31,6 +31,7 @@ public interface CourseRecordConverter extends BaseConverter<CourseRecord, Cours
     @Override
     CourseRecordVO pojoToVO(CourseRecord pojo);
 
+    @Mapping(source = "expireTime", target = "expireTimeStr", qualifiedBy = BaseDateTimeToString.class)
     @Mapping(source = "createTime", target = "createTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
     @Mapping(source = "updateTime", target = "updateTimeStr", qualifiedBy = BaseDateTimeToString.class) // 自定义转换规则
     @Mapping(source = "courseLastTime", target = "courseLastTimeStr", qualifiedBy = BaseDateTimeToString.class)

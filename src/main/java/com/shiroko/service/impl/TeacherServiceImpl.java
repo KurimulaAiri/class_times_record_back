@@ -93,6 +93,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                     Long roleId = 4L; // 教师角色ID
 
                     boolean isDuplicate = userAuthMapper.existsByInstitutionAndAccountAndRole(institutionId, account, roleId);
+                    log.debug("isDuplicate: {}", isDuplicate);
                     if (isDuplicate) {
                         log.warn("该机构 {} 下已存在相同的账号: {}", institutionId, account);
                         return ResponseDTO.fail("该机构下已存在相同的账号");

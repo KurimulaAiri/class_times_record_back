@@ -1,5 +1,6 @@
 package com.shiroko.repository.dto.courserecord;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.shiroko.repository.dto.BaseDTO;
 import com.shiroko.repository.dto.courserecord.validategroup.InsertGroup;
 import jakarta.validation.constraints.NotBlank;
@@ -8,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 /**
  * Description: TODO
@@ -32,6 +35,9 @@ public class InsertCourseRecordDTO extends BaseDTO {
 
     @NotNull(message = "课程ID不能为空", groups = InsertGroup.NewGroup.class)
     private Long courseId;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime expireTime;
 
     @NotNull(message = "课程总时间不能为空", groups = {InsertGroup.OldGroup.class, InsertGroup.NewGroup.class})
     private Long courseTotalTime;

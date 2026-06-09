@@ -18,69 +18,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CourseRecordDTO {
-    /**
-     * 表id
-     */
     private Long id;
-
-    /**
-     * 学生id
-     */
     private Long studentId;
-
-    /**
-     * 课程id
-     */
     private Long courseId;
-
-    /**
-     * 课时总数
-     */
     private Long courseTotalTime;
-
-    /**
-     * 课程剩余次数
-     */
     private Long courseRestTime;
-
-    /**
-     * 课程状态
-     * 0：
-     * 1：未完成
-     * 2：已完成
-     */
     private Long courseStatus;
-
-    /**
-     * 上次上课时间
-     */
     private LocalDateTime courseLastTime;
-
-    /**
-     * 课程归属人
-     */
+    private LocalDateTime expireTime;
     private Long courseOwnerUserId;
-
-    /**
-     * 课程备注
-     */
     private String courseRemark;
-
-    /**
-     * 逻辑删除
-     */
     private Boolean isDelete;
-
-    /**
-     * 记录创建时间
-     */
     private LocalDateTime createTime;
-
-    /**
-     * 记录更新时间
-     */
     private LocalDateTime updateTime;
-
     private Course course;
 
 }

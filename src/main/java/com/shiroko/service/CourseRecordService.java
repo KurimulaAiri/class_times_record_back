@@ -34,4 +34,6 @@ public interface CourseRecordService extends IService<CourseRecord> {
     ResponseDTO<DeductCourseRecordVO> deductByCourseId(DeductCourseRecordDTO deductCourseRecordDTO);
 
     ResponseDTO<Object> insertCourseRecord(InsertCourseRecordDTO insertCourseRecordDTO);
+
+    ResponseDTO<DeductCourseRecordVO> deductByClassId(DeductCourseRecordDTO deductCourseRecordDTO);
 }

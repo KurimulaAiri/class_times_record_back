@@ -30,15 +30,4 @@
           AND ua.role_id = #{roleId}
         LIMIT 1
     </select>
-
-    <select id="existsByInstitutionAndAccountAndRoleExcludeUser" resultType="boolean">
-        SELECT COUNT(1)
-        FROM user_auth ua
-                 INNER JOIN user u ON ua.user_id = u.id
-        WHERE u.institution_id = #{institutionId}
-          AND ua.account = #{account}
-          AND ua.role_id = #{roleId}
-          AND u.id != #{excludeUserId}
-        LIMIT 1
-    </select>
 </mapper>

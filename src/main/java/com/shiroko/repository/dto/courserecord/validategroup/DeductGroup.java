@@ -17,4 +17,8 @@ public interface DeductGroup {
 
     }
 
+    interface ByClassId {
+
+    }
+
 }

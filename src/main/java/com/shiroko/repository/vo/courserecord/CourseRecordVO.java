@@ -23,6 +23,7 @@ public class CourseRecordVO {
     private Long courseRestTime;
     private Long courseStatus;
     private String courseLastTimeStr;
+    private String expireTimeStr;
     private Long courseOwnerUserId;
     private String courseRemark;
     private String isDelete;

@@ -61,6 +61,15 @@ public class ClassScheduleServiceImpl extends ServiceImpl<ClassScheduleMapper, C
         classScheduleMapper.updateById(classSchedule);
         return ResponseDTO.success(new UpdateClassScheduleVO(List.of(classScheduleConverter.pojoToVO(classSchedule))));
     }
+
+    @Override
+    public ResponseDTO<QueryClassScheduleVO> getClassScheduleById(QueryClassScheduleDTO dto) {
+        ClassSchedule classSchedule = classScheduleMapper.selectById(dto.getId());
+        if (classSchedule == null) {
+            return ResponseDTO.fail("排课记录不存在");
+        }
+        return ResponseDTO.success(new QueryClassScheduleVO(List.of(classScheduleConverter.pojoToVO(classSchedule)), 1L));
+    }
 }
 
 

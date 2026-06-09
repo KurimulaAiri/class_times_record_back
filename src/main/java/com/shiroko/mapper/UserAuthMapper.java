@@ -23,13 +23,6 @@ public interface UserAuthMapper extends BaseMapper<UserAuth> {
             @Param("account") String account,
             @Param("roleId") Long roleId
     );
-
-    boolean existsByInstitutionAndAccountAndRoleExcludeUser(
-            @Param("institutionId") Long institutionId,
-            @Param("account") String account,
-            @Param("roleId") Long roleId,
-            @Param("excludeUserId") Long excludeUserId
-    );
 }
 
 

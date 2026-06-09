@@ -37,6 +37,11 @@ public class ClassScheduleController {
         return classScheduleService.getByInstitutionId(dto);
     }
 
+    @PostMapping("/get_by_id")
+    public ResponseDTO<QueryClassScheduleVO> getById(@Valid @RequestBody QueryClassScheduleDTO dto) {
+        return classScheduleService.getClassScheduleById(dto);
+    }
+
     @PostMapping("/update_by_id")
     public ResponseDTO<UpdateClassScheduleVO> updateById(@Valid @RequestBody UpdateClassScheduleDTO dto) {
         return classScheduleService.updateByClassScheduleId(dto);

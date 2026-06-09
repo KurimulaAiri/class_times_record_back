@@ -70,6 +70,12 @@ public class CourseRecord extends BaseEntity {
     private LocalDateTime courseLastTime;
 
     /**
+     * 课程过期时间
+     */
+    @TableField(value = "expire_time")
+    private LocalDateTime expireTime;
+
+    /**
      * 课程归属人
      */
     @TableField(value = "course_owner_user_id")

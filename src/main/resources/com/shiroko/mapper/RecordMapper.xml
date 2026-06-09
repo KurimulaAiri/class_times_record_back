@@ -34,6 +34,10 @@
             <id column="student_id" property="id"/>
             <result column="student_name" property="studentName"/>
         </association>
+        <association property="operatorTeacher" javaType="com.shiroko.repository.entity.Teacher">
+            <id column="teacher_id" property="teacherId"/>
+            <result column="teacher_name" property="username"/>
+        </association>
     </resultMap>
 
     <select id="selectRecords" resultMap="recordResultMap">
@@ -51,11 +55,14 @@
                c.create_time  as course_create_time,
                c.update_time  as course_update_time,
                s.student_name,
-               s.id           as student_id
+               s.id       as student_id,
+               t.id       as teacher_id,
+               t.username as teacher_name
         from record as r
                  left join course_record as cr on r.course_record_id = cr.id
                  left join course as c on cr.course_id = c.id
                  left join student as s on cr.student_id = s.id
+                 left join teacher as t on r.operate_teacher_id = t.id
         where c.institution_id = #{dto.institutionId}
         order by r.record_time desc
     </select>

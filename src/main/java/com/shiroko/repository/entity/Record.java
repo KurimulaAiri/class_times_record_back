@@ -61,6 +61,12 @@ public class Record extends BaseEntity {
     private Long recordChange;
 
     /**
+     * 操作人ID
+     */
+    @TableField(value = "operate_teacher_id")
+    private Long operateTeacherId;
+
+    /**
      * 记录创建时间
      */
     @TableField(value = "create_time")

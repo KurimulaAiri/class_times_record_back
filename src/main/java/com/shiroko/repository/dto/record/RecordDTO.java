@@ -3,6 +3,7 @@ package com.shiroko.repository.dto.record;
 import com.shiroko.repository.entity.Course;
 import com.shiroko.repository.entity.CourseRecord;
 import com.shiroko.repository.entity.Student;
+import com.shiroko.repository.entity.Teacher;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ public class RecordDTO {
     private Course course;
     private Student student;
     private LocalDateTime recordTime;
+    private Teacher operatorTeacher;
     private String recordRemark;
     private Long recordType;
     private Long recordChange;
