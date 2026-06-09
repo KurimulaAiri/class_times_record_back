@@ -7,6 +7,9 @@
     <resultMap id="TeacherVOMap" type="com.shiroko.repository.vo.teacher.TeacherVO">
         <id property="teacherId" column="id"/>
         <result property="username" column="username"/>
+        <result property="isAvailable" column="is_available"/>
+        <result property="isAdmin" column="is_admin"/>
+
         <association property="institution" javaType="com.shiroko.repository.entity.Institution">
             <id property="id" column="inst_id"/>
             <result property="institutionAddress" column="institution_address"/>
@@ -16,7 +19,6 @@
     </resultMap>
 
     <update id="updateBatchById">
-
     </update>
 
     <select id="getTeacherById" resultMap="TeacherVOMap">
@@ -24,19 +26,24 @@
                i.id as inst_id,
                i.institution_address,
                i.institution_name,
-               i.institution_code
+               i.institution_code,
+               IF(a.user_id IS NOT NULL, 1, 0) as is_admin
         from teacher as t
-        left join institution as i on t.institution_id = i.id
+                 left join institution as i on t.institution_id = i.id
+                 left join admin as a on t.user_id = a.user_id
         where t.id = #{teacherId}
     </select>
 
     <select id="getTeacherByInstitutionId" resultMap="TeacherVOMap">
         select t.*,
+               i.id                            as inst_id,
                i.institution_address,
                i.institution_name,
-               i.institution_code
+               i.institution_code,
+               IF(a.user_id IS NOT NULL, 1, 0) as is_admin
         from teacher as t
                  left join institution as i on t.institution_id = i.id
+                 left join admin as a on t.user_id = a.user_id
         where t.institution_id = #{institutionId}
     </select>
 

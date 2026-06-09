@@ -19,6 +19,10 @@ public class TeacherVO {
     @TableField(exist = false)
     private Institution institution;
 
+    private Boolean isAdmin;
+
+    private Boolean isAvailable;
+
     private String username;
 
 }

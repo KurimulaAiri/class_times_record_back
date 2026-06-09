@@ -3,6 +3,7 @@ package com.shiroko.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.TeacherConverter;
 import com.shiroko.mapper.TeacherMapper;
+import com.shiroko.mapper.UserAuthMapper;
 import com.shiroko.mapper.UserMapper;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.teacher.InsertTeacherDTO;
@@ -20,6 +21,7 @@ import com.shiroko.service.UserAuthService;
 import com.shiroko.util.SM2Util;
 import com.shiroko.util.SM3Util;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ import java.util.UUID;
 @Service("teacherService")
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
+@Slf4j
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService{
 
     private final UserMapper userMapper;
@@ -45,7 +48,8 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     private final UserAuthService userAuthService;
 
     private final TeacherMapper teacherMapper;
-    @Value("${crypto.sm2.private-key:}")
+    private final UserAuthMapper userAuthMapper;
+    @Value("${crypto.sm2.private-key}")
     private String privateKey;
 
     @Override
@@ -76,6 +80,37 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     @Override
     public ResponseDTO<UpdateTeacherVO> updateTeacherById(UpdateTeacherDTO updateTeacherDTO) {
         int effect = this.teacherMapper.updateById(teacherConverter.updateDTOToPOJO(updateTeacherDTO));
+
+        if (updateTeacherDTO.getPassword() != null || updateTeacherDTO.getAccount() != null) {
+            UserAuth userAuth = userAuthMapper.selectAuthByTeacherId(updateTeacherDTO.getTeacherId());
+            if (userAuth != null) {
+                // 更新账号
+                if (updateTeacherDTO.getAccount() != null) {
+                    log.debug("更新账号: {}", updateTeacherDTO.getAccount());
+                    // 【新增核心步骤】唯一性校验
+                    Long institutionId = updateTeacherDTO.getInstitutionId();
+                    String account = updateTeacherDTO.getAccount();
+                    Long roleId = 4L; // 教师角色ID
+
+                    boolean isDuplicate = userAuthMapper.existsByInstitutionAndAccountAndRole(institutionId, account, roleId);
+                    if (isDuplicate) {
+                        log.warn("该机构 {} 下已存在相同的账号: {}", institutionId, account);
+                        return ResponseDTO.fail("该机构下已存在相同的账号");
+                    }
+                    userAuth.setAccount(updateTeacherDTO.getAccount());
+                }
+                // 更新密码
+                if (updateTeacherDTO.getPassword() != null) {
+                    String rawPassword = SM2Util.decrypt(updateTeacherDTO.getPassword(), privateKey);
+                    String salt = UUID.randomUUID().toString().replace("-", "");
+                    String hashedPassword = SM3Util.digestWithSalt(rawPassword, salt);
+                    userAuth.setPassword(hashedPassword);
+                    userAuth.setSalt(salt);
+                }
+                userAuthService.updateById(userAuth);
+            }
+        }
+
         if (effect > 0) {
             return ResponseDTO.success(new UpdateTeacherVO(effect));
         }
@@ -84,6 +119,15 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
     @Override
     public ResponseDTO<InsertTeacherVO> insertTeacher(InsertTeacherDTO insertTeacherDTO) {
+        // 【新增核心步骤】唯一性校验
+        Long institutionId = insertTeacherDTO.getInstitutionId();
+        String account = insertTeacherDTO.getAccount();
+        Long roleId = 4L; // 教师角色ID
+
+        boolean isDuplicate = userAuthMapper.existsByInstitutionAndAccountAndRole(institutionId, account, roleId);
+        if (isDuplicate) {
+            return ResponseDTO.fail("该机构下已存在相同的账号");
+        }
 
         User user = new User().setInstitutionId(insertTeacherDTO.getInstitutionId());
         userMapper.insert(user);

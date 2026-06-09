@@ -11,6 +11,10 @@ import lombok.Data;
  */
 @Data
 public class UpdateTeacherDTO {
+    private Long institutionId;
     private Long teacherId;
     private String username;
+    private Boolean isAvailable;
+    private String account;
+    private String password;
 }

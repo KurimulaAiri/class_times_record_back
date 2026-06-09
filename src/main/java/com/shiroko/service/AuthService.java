@@ -1,8 +1,10 @@
 package com.shiroko.service;
 
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.auth.GetUserAuthInfoDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
+import com.shiroko.repository.vo.auth.GetUserAuthInfoVO;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
 
@@ -28,4 +30,6 @@ public interface AuthService {
     ResponseDTO<String> logout(LoginDTO dto);
 
     ResponseDTO<RegisterVO> register(RegisterDTO dto);
+
+    ResponseDTO<GetUserAuthInfoVO> getUserAuthByTeacherId(GetUserAuthInfoDTO dto);
 }

@@ -3,9 +3,11 @@ package com.shiroko.controller;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.course.InsertCourseDTO;
 import com.shiroko.repository.dto.course.QueryCourseDTO;
+import com.shiroko.repository.dto.course.UpdateCourseDTO;
 import com.shiroko.repository.dto.course.validategroup.QueryGroup;
 import com.shiroko.repository.vo.course.InsertCourseVO;
 import com.shiroko.repository.vo.course.QueryCourseVO;
+import com.shiroko.repository.vo.course.UpdateCourseVO;
 import com.shiroko.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -37,9 +39,15 @@ public class CourseController {
     public ResponseDTO<QueryCourseVO> getCourseByStudentId(@Validated(QueryGroup.ByStudentId.class) @RequestBody QueryCourseDTO queryCourseDTO) {
         return courseService.getCourseByStudentId(queryCourseDTO);
     }
+
     @PostMapping("/add_course")
     public ResponseDTO<InsertCourseVO> addCourse(@RequestBody InsertCourseDTO insertCourseDTO) {
         return courseService.addCourse(insertCourseDTO);
+    }
+
+    @PostMapping("/update_by_id")
+    public ResponseDTO<UpdateCourseVO> updateCourseById(@RequestBody UpdateCourseDTO updateCourseDTO) {
+        return courseService.updateCourseById(updateCourseDTO);
     }
 
 }

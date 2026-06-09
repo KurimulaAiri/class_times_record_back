@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.shiroko.context.UserContext;
 import com.shiroko.mapper.UserAuthMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.auth.GetUserAuthInfoDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
 import com.shiroko.repository.entity.Permission;
@@ -15,6 +16,7 @@ import com.shiroko.repository.entity.UserAuth;
 import com.shiroko.repository.entity.UserPlatform;
 import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.vo.UserVO;
+import com.shiroko.repository.vo.auth.GetUserAuthInfoVO;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
 import com.shiroko.service.*;
@@ -57,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private String secret;
 
     // 使用 @Value 注入配置，可以设置默认值以防配置缺失
-    @Value("${crypto.sm2.private-key:}")
+    @Value("${crypto.sm2.private-key}")
     private String privateKey;
 
     private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
@@ -144,7 +146,7 @@ public class AuthServiceImpl implements AuthService {
                 new LambdaQueryWrapper<UserPlatform>()
                         .eq(UserPlatform::getPlatform, platform)
                         .eq(UserPlatform::getOpenId, openId)
-                        .eq(UserPlatform::getUserId, user.getUserId()) // 💡 加上 userId 组合查询，精准定位
+                        .eq(UserPlatform::getUserId, user.getUserId()) // 加上 userId 组合查询，精准定位
         );
 
         if (existRecord == null) {
@@ -327,6 +329,16 @@ public class AuthServiceImpl implements AuthService {
         saveIdentityRecord(userId, dto.getRole());
 
         return ResponseDTO.success(new RegisterVO(openId));
+    }
+
+    @Override
+    public ResponseDTO<GetUserAuthInfoVO> getUserAuthByTeacherId(GetUserAuthInfoDTO dto) {
+        Long teacherId = dto.getTeacherId();
+        UserAuth userAuth = userAuthMapper.selectAuthByTeacherId(teacherId);
+        if (userAuth == null) {
+            return ResponseDTO.fail("该教师未绑定账号");
+        }
+        return ResponseDTO.success(new GetUserAuthInfoVO(userAuth.getAccount()));
     }
 
 

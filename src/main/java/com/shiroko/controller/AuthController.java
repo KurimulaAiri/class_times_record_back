@@ -1,9 +1,11 @@
 package com.shiroko.controller;
 
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.auth.GetUserAuthInfoDTO;
 import com.shiroko.repository.dto.auth.LoginDTO;
 import com.shiroko.repository.dto.auth.RegisterDTO;
 import com.shiroko.repository.dto.auth.validategroup.LoginGroup;
+import com.shiroko.repository.vo.auth.GetUserAuthInfoVO;
 import com.shiroko.repository.vo.auth.LoginVO;
 import com.shiroko.repository.vo.auth.RegisterVO;
 import com.shiroko.service.AuthService;
@@ -71,5 +73,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseDTO<RegisterVO> register(@Valid @RequestBody RegisterDTO dto) {
         return authService.register(dto);
+    }
+
+    @PostMapping("/get_user_auth_info_by_teacher_id")
+    public ResponseDTO<GetUserAuthInfoVO> getUserAuthByTeacherId(@RequestBody GetUserAuthInfoDTO dto) {
+        return authService.getUserAuthByTeacherId(dto);
     }
 }
