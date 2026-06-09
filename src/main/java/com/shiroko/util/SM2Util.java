@@ -20,6 +20,7 @@ public class SM2Util {
 
     /**
      * SM2 解密
+     *
      * @param cipherTextHex 前端传来的加密十六进制字符串
      * @param privateKeyHex 后端保存的私钥十六进制字符串
      * @return 解密后的明文
@@ -56,4 +57,5 @@ public class SM2Util {
         engine.init(false, privateKeyParams);
         return engine;
     }
+
 }

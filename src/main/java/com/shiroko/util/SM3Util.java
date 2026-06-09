@@ -6,6 +6,7 @@ import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
+import java.util.UUID;
 
 /**
  * Description: SM3 工具类
@@ -68,5 +69,17 @@ public class SM3Util {
         if (srcData == null || hashData == null) return false;
         String newHash = digest(srcData);
         return newHash.equalsIgnoreCase(hashData);
+    }
+
+    public static void main(String[] args) {
+        // 3. 【核心步骤】自动生成随机盐值
+        // 使用 UUID 去掉横杠，生成 32 位随机字符串
+        String salt = UUID.randomUUID().toString().replace("-", "");
+        System.out.println(salt);
+
+        // 4. 使用 SM3 算法结合盐值进行哈希
+        // 计算公式：SM3(明文 + 盐)
+        String hashedPassword = SM3Util.digestWithSalt("12345678", salt);
+        System.out.println(hashedPassword);
     }
 }
