@@ -24,6 +24,7 @@
         <module>gateway</module>
         <module>auth-service</module>
         <module>business-service</module>
+        <module>admin-service</module>
     </modules>
 
     <properties>

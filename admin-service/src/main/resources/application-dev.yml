@@ -1,0 +1,9 @@
+database-address: 121.196.229.10
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.shiroko: DEBUG
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

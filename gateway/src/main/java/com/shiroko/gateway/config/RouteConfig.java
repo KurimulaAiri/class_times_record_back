@@ -19,6 +19,10 @@ public class RouteConfig {
                         .path("/biz/**")
                         .filters(f -> f.stripPrefix(1))
                         .uri("lb://business-service"))
+                .route("admin-service", r -> r
+                        .path("/admin/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://admin-service"))
                 .build();
     }
 }

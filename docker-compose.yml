@@ -97,6 +97,27 @@
     networks:
       - app-network
 
+  admin-service:
+    build:
+      context: .
+      dockerfile: admin-service/Dockerfile
+    image: cr-admin-service:latest
+    container_name: cr-admin-service
+    restart: unless-stopped
+    ports:
+      - "10003:10003"
+    environment:
+      NACOS_SERVER_ADDR: nacos:8848
+      DATABASE_ADDRESS: 121.196.229.10
+      SENTINEL_DASHBOARD: cr-sentinel:8858
+    depends_on:
+      nacos:
+        condition: service_healthy
+      sentinel:
+        condition: service_started
+    networks:
+      - app-network
+
   # ==================== Nginx（最后启动，动态解析 gateway） ====================
   nginx:
     image: nginx:alpine
