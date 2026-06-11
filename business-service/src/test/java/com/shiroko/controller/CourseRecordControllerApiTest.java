@@ -46,16 +46,16 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/add - 娣诲姞璇剧▼璁板綍鎴愬姛")
+    @DisplayName("POST /course_record/add - 添加课程记录成功")
     void addCourseRecord_shouldReturn200() throws Exception {
         InsertCourseRecordDTO dto = new InsertCourseRecordDTO();
-        dto.setStuName("寮犱笁");
-        dto.setCourseName("鏁板");
+        dto.setStuName("张三");
+        dto.setCourseName("数学");
         dto.setCourseTotalTime(20L);
         dto.setCourseRestTime(20L);
 
         when(courseRecordService.addCourseRecord(any(InsertCourseRecordDTO.class)))
-                .thenReturn(ResponseDTO.success("娣诲姞鎴愬姛", new int[]{1, 1}));
+                .thenReturn(ResponseDTO.success("添加成功", new int[]{1, 1}));
 
         mockMvc.perform(post("/course_record/add")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -67,7 +67,7 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/add - 缂哄皯蹇呭～瀛楁杩斿洖400")
+    @DisplayName("POST /course_record/add - 缺少必要字段返回400")
     void addCourseRecord_missingField_shouldReturn400() throws Exception {
         InsertCourseRecordDTO dto = new InsertCourseRecordDTO();
 
@@ -78,12 +78,12 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/delete - 閫昏緫鍒犻櫎鎴愬姛")
+    @DisplayName("POST /course_record/delete - 逻辑删除成功")
     void deleteCourseRecord_shouldReturn200() throws Exception {
         DeleteCourseRecordDTO dto = new DeleteCourseRecordDTO(50L);
 
         when(courseRecordService.deleteCourseRecord(any(DeleteCourseRecordDTO.class)))
-                .thenReturn(ResponseDTO.success("鍒犻櫎鎴愬姛锛屽奖鍝嶈褰曟暟锛?"));
+                .thenReturn(ResponseDTO.success("删除成功，影响记录数：1"));
 
         mockMvc.perform(post("/course_record/delete")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +95,7 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/delete - 缂哄皯ID杩斿洖400")
+    @DisplayName("POST /course_record/delete - 缺少ID返回400")
     void deleteCourseRecord_missingId_shouldReturn400() throws Exception {
         DeleteCourseRecordDTO dto = new DeleteCourseRecordDTO();
 
@@ -106,17 +106,17 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/update - 鏇存柊璇剧▼璁板綍鎴愬姛")
+    @DisplayName("POST /course_record/update - 更新课程记录成功")
     void updateCourseRecord_shouldReturn200() throws Exception {
         UpdateCourseRecordDTO dto = new UpdateCourseRecordDTO();
         dto.setId(1L);
         dto.setCourseTotalTime(30L);
         dto.setCourseRestTime(15L);
         dto.setCourseStatus(1L);
-        dto.setCourseName("鏁板杩涢樁");
+        dto.setCourseName("数学进阶");
 
         when(courseRecordService.updateCourseRecord(any(UpdateCourseRecordDTO.class)))
-                .thenReturn(ResponseDTO.success("鏇存柊鎴愬姛锛屽奖鍝嶈褰曟暟锛?"));
+                .thenReturn(ResponseDTO.success("更新成功，影响记录数：1"));
 
         mockMvc.perform(post("/course_record/update")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -128,10 +128,15 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/deduct_by_student_id - 鎵ｈ鎴愬姛")
+    @DisplayName("POST /course_record/deduct_by_student_id - 扣课成功")
     void deductByStudentId_shouldReturn200() throws Exception {
-        DeductClassDTO deductClass = new DeductClassDTO(1L, 10L, 3, "鎵ｈ");
-        DeductCourseRecordDTO dto = new DeductCourseRecordDTO(100L, "娴嬭瘯鎵ｈ", List.of(deductClass));
+        DeductClassDTO deductClass = new DeductClassDTO(1L, 10L, 3, "扣课");
+        DeductCourseRecordDTO dto = new DeductCourseRecordDTO();
+        dto.setStudentId(100L);
+        dto.setRemark("测试扣课");
+        dto.setRecordTime(java.time.LocalDateTime.now());
+        dto.setOperatorId(1L);
+        dto.setClasses(List.of(deductClass));
 
         when(courseRecordService.deductByStudentId(any(DeductCourseRecordDTO.class)))
                 .thenReturn(ResponseDTO.success(new DeductCourseRecordVO(1)));
@@ -147,7 +152,7 @@ class CourseRecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /course_record/get - 鍒嗛〉鏌ヨ璇剧▼璁板綍")
+    @DisplayName("POST /course_record/get - 分页查询课程记录")
     void getCourseRecords_shouldReturnPagedData() throws Exception {
         QueryCourseRecordDTO dto = new QueryCourseRecordDTO();
         dto.setCurrentPage(1L);
@@ -155,8 +160,6 @@ class CourseRecordControllerApiTest {
 
         CourseRecordVO vo = new CourseRecordVO();
         vo.setId(1L);
-        vo.setStuName("寮犱笁");
-        vo.setCourseName("鏁板");
         vo.setCourseTotalTime(20L);
         vo.setCourseRestTime(15L);
 
@@ -171,12 +174,11 @@ class CourseRecordControllerApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.total").value(1))
-                .andExpect(jsonPath("$.data.courseRecords[0].stuName").value("寮犱笁"))
-                .andExpect(jsonPath("$.data.courseRecords[0].courseName").value("鏁板"));
+                .andExpect(jsonPath("$.data.courseRecords[0].id").value(1));
     }
 
     @Test
-    @DisplayName("POST /course_record/new_get - 鏂版柟寮忓垎椤垫煡璇?)
+    @DisplayName("POST /course_record/new_get - 新方式分页查询")
     void newGetCourseRecords_shouldReturnPagedData() throws Exception {
         QueryCourseRecordDTO dto = new QueryCourseRecordDTO();
         dto.setCurrentPage(1L);
@@ -184,7 +186,6 @@ class CourseRecordControllerApiTest {
 
         CourseRecordVO vo = new CourseRecordVO();
         vo.setId(1L);
-        vo.setStuName("鏉庡洓");
 
         QueryCourseRecordVO queryVO = new QueryCourseRecordVO(List.of(vo), 1L);
 

@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
  * <p>
  * 例如：permission 中有一个记录的 permission_name 为 "teacher"，则在数据库中有一个表名为 teacher 的表，用于存储教师的权限信息。
  * <p>
+ *
  * @author Guguguy
  * @version 1.0
  * @since 2026/4/26 下午1:40

@@ -41,7 +41,7 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/login_no_pwd - 寰俊鍏嶅瘑鐧诲綍鎴愬姛")
+    @DisplayName("POST /auth/login_no_pwd - 微信免密码登录成功")
     void loginNoPwd_shouldReturnToken() throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setCode("test_wx_code_001");
@@ -66,7 +66,7 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/login_no_pwd - 缂哄皯code杩斿洖400")
+    @DisplayName("POST /auth/login_no_pwd - 缺少code返回400")
     void loginNoPwd_missingCode_shouldReturn400() throws Exception {
         LoginDTO dto = new LoginDTO();
 
@@ -79,10 +79,12 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/login_by_pwd - 瀵嗙爜鐧诲綍鎴愬姛")
+    @DisplayName("POST /auth/login_by_pwd - 密码登录成功")
     void loginByPwd_shouldReturnToken() throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setOpenId("test_open_id");
+        dto.setInstitutionId(1L);
+        dto.setPlatform("wechat");
         dto.setRole(1L);
         dto.setAccount("admin");
         dto.setPassword("encrypted_password");
@@ -107,7 +109,7 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/login_by_pwd - 缂哄皯蹇呰瀛楁杩斿洖400")
+    @DisplayName("POST /auth/login_by_pwd - 缺少必要字段返回400")
     void loginByPwd_missingFields_shouldReturn400() throws Exception {
         LoginDTO dto = new LoginDTO();
 
@@ -118,10 +120,11 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/login_by_token - Token鐧诲綍鎴愬姛")
+    @DisplayName("POST /auth/login_by_token - Token登录成功")
     void loginByToken_shouldReturnSuccess() throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setOpenId("test_open_id");
+        dto.setPlatform("wechat");
         dto.setToken("existing_token");
         dto.setNeedValidateAdmin(false);
 
@@ -144,13 +147,14 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/register - 娉ㄥ唽鎴愬姛")
+    @DisplayName("POST /auth/register - 注册成功")
     void register_shouldReturn200() throws Exception {
         RegisterDTO dto = new RegisterDTO();
         dto.setAccount("test_user");
         dto.setPassword("encrypted_pwd");
         dto.setRole(2L);
         dto.setOpenId("wx_open_id_001");
+        dto.setPlatform("wechat");
 
         RegisterVO registerVO = new RegisterVO();
         registerVO.setOpenId("wx_open_id_001");
@@ -169,7 +173,7 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/register - 缂哄皯蹇呭～瀛楁杩斿洖400")
+    @DisplayName("POST /auth/register - 缺少必要字段返回400")
     void register_missingFields_shouldReturn400() throws Exception {
         RegisterDTO dto = new RegisterDTO();
 
@@ -182,13 +186,13 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/logout - 閫€鍑虹櫥褰曟垚鍔?)
+    @DisplayName("POST /auth/logout - 退出登录成功")
     void logout_shouldReturn200() throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setToken("token_to_logout");
 
         when(authService.logout(any(LoginDTO.class)))
-                .thenReturn(ResponseDTO.success("閫€鍑烘垚鍔?));
+                .thenReturn(ResponseDTO.success("退出成功"));
 
         mockMvc.perform(post("/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -200,7 +204,7 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/get_open_id - 鑾峰彇OpenId鎴愬姛")
+    @DisplayName("POST /auth/get_open_id - 获取OpenId成功")
     void getOpenId_shouldReturn200() throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setCode("wx_code_001");
@@ -222,7 +226,7 @@ class AuthControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /auth/refresh - 鍒锋柊AccessToken鎴愬姛")
+    @DisplayName("POST /auth/refresh - 刷新AccessToken成功")
     void refreshAccessToken_shouldReturnNewAccessToken() throws Exception {
         LoginDTO dto = new LoginDTO();
         dto.setToken("valid_refresh_token");

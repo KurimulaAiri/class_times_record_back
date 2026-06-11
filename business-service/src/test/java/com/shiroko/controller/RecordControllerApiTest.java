@@ -47,17 +47,17 @@ class RecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /record/add - 鎻掑叆鍗曟潯璁板綍鎴愬姛")
+    @DisplayName("POST /record/add - 插入单条记录成功")
     void insertRecord_shouldReturn200() throws Exception {
         InsertRecordDTO dto = new InsertRecordDTO();
         dto.setCourseRecordId(1L);
         dto.setRecordTime(LocalDateTime.of(2026, 3, 22, 10, 0, 0));
         dto.setRecordType(1L);
-        dto.setRecordRemark("娴嬭瘯澶囨敞");
+        dto.setRecordRemark("测试备注");
         dto.setRecordChange(2L);
 
         when(recordService.insertRecord(any(InsertRecordDTO.class)))
-                .thenReturn(ResponseDTO.success("鎻掑叆鎴愬姛锛屽奖鍝嶈鏁颁负1"));
+                .thenReturn(ResponseDTO.success("插入成功，影响行数为1"));
 
         mockMvc.perform(post("/record/add")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -70,7 +70,7 @@ class RecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /record/add_all - 鎵归噺鎻掑叆璁板綍鎴愬姛")
+    @DisplayName("POST /record/add_all - 批量插入记录成功")
     void insertRecords_shouldReturn200() throws Exception {
         InsertRecordsDTO dto = new InsertRecordsDTO();
         dto.setCourseRecordIdList(new Long[]{1L, 2L});
@@ -79,7 +79,7 @@ class RecordControllerApiTest {
         dto.setRecordTime(LocalDateTime.of(2026, 3, 22, 10, 0, 0));
 
         when(recordService.insertRecords(any(InsertRecordsDTO.class)))
-                .thenReturn(ResponseDTO.success("鎻掑叆鎴愬姛锛屽奖鍝嶈鏁颁负2"));
+                .thenReturn(ResponseDTO.success("插入成功，影响行数为2"));
 
         mockMvc.perform(post("/record/add_all")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,7 +91,7 @@ class RecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /record/get - 鍒嗛〉鏌ヨ璁板綍鎴愬姛")
+    @DisplayName("POST /record/get - 分页查询记录成功")
     void getRecord_shouldReturnPagedData() throws Exception {
         QueryRecordDTO dto = new QueryRecordDTO();
         dto.setCourseRecordId(1L);
@@ -124,7 +124,7 @@ class RecordControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /record/get - 鏌ヨ鏃犺褰曡繑鍥炵┖鍒楄〃")
+    @DisplayName("POST /record/get - 查询无记录返回空列表")
     void getRecord_noResults_shouldReturnEmptyList() throws Exception {
         QueryRecordDTO dto = new QueryRecordDTO();
         dto.setCourseRecordId(999L);

@@ -52,22 +52,22 @@ class StudentControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /student/insert - 鍒涘缓瀛︾敓鎴愬姛")
+    @DisplayName("POST /student/insert - 创建学生成功")
     void insertStudent_shouldReturn200() throws Exception {
         InsertParentDTO parentDTO = new InsertParentDTO();
-        parentDTO.setUsername("鐖朵翰");
-        parentDTO.setRelation("鐖朵翰");
+        parentDTO.setUsername("父亲");
+        parentDTO.setRelation("父亲");
         parentDTO.setPhone("13800001111");
 
         InsertStudentDTO dto = new InsertStudentDTO();
-        dto.setStudentName("寮犱笁");
+        dto.setStudentName("张三");
         dto.setInstitutionId(1L);
         dto.setSex(1L);
         dto.setPrimaryParent(parentDTO);
         dto.setSecondaryParent(null);
 
         when(studentService.insertStudent(any(InsertStudentDTO.class)))
-                .thenReturn(ResponseDTO.success("鎻掑叆瀛︾敓鎴愬姛(浠呭寘鍚富瑕佸闀?", new InsertStudentVO(100L)));
+                .thenReturn(ResponseDTO.success("插入学生成功(仅包含主要家长)", new InsertStudentVO(100L)));
 
         mockMvc.perform(post("/student/insert")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -80,22 +80,22 @@ class StudentControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /student/update - 鏇存柊瀛︾敓鎴愬姛")
+    @DisplayName("POST /student/update - 更新学生成功")
     void updateStudent_shouldReturn200() throws Exception {
         UpdateParentDTO parentDTO = new UpdateParentDTO();
         parentDTO.setParentId(200L);
-        parentDTO.setUsername("鐖朵翰鏇存柊");
-        parentDTO.setRelation("鐖朵翰");
+        parentDTO.setUsername("父亲更新");
+        parentDTO.setRelation("父亲");
         parentDTO.setIsPrimary(true);
 
         UpdateStudentDTO dto = new UpdateStudentDTO();
         dto.setId(100L);
-        dto.setStudentName("寮犱笁鏇存柊");
+        dto.setStudentName("张三更新");
         dto.setSex(1L);
         dto.setPrimaryParent(parentDTO);
 
         when(studentService.updateStudent(any(UpdateStudentDTO.class)))
-                .thenReturn(ResponseDTO.success("鏇存柊鎴愬姛", new UpdateStudentVO(100L)));
+                .thenReturn(ResponseDTO.success("更新成功", new UpdateStudentVO(100L)));
 
         mockMvc.perform(post("/student/update")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,14 +107,14 @@ class StudentControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /student/get_by_student_id - 鎸夊鐢烮D鏌ヨ鎴愬姛")
+    @DisplayName("POST /student/get_by_student_id - 按学生ID查询成功")
     void getStudentById_shouldReturn200() throws Exception {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setStudentId(100L);
 
         StudentVO vo = new StudentVO();
         vo.setId(100L);
-        vo.setStudentName("寮犱笁");
+        vo.setStudentName("张三");
 
         QueryStudentVO queryVO = new QueryStudentVO(Collections.singletonList(vo), 1L);
 
@@ -126,12 +126,12 @@ class StudentControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].studentName").value("寮犱笁"))
+                .andExpect(jsonPath("$.data.list[0].studentName").value("张三"))
                 .andExpect(jsonPath("$.data.total").value(1));
     }
 
     @Test
-    @DisplayName("POST /student/get_by_student_id - 缂哄皯ID杩斿洖400")
+    @DisplayName("POST /student/get_by_student_id - 缺少ID返回400")
     void getStudentById_missingId_shouldReturn400() throws Exception {
         QueryStudentDTO dto = new QueryStudentDTO();
 
@@ -142,7 +142,7 @@ class StudentControllerApiTest {
     }
 
     @Test
-    @DisplayName("POST /student/get_by_parent_id - 鎸夊闀縄D鍒嗛〉鏌ヨ")
+    @DisplayName("POST /student/get_by_parent_id - 按家长ID分页查询")
     void getStudentByParentId_shouldReturn200() throws Exception {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setParentId(200L);
@@ -151,7 +151,7 @@ class StudentControllerApiTest {
 
         StudentVO vo = new StudentVO();
         vo.setId(1L);
-        vo.setStudentName("寮犱笁");
+        vo.setStudentName("张三");
 
         QueryStudentVO queryVO = new QueryStudentVO(List.of(vo), 1L);
 
@@ -163,11 +163,11 @@ class StudentControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].studentName").value("寮犱笁"));
+                .andExpect(jsonPath("$.data.list[0].studentName").value("张三"));
     }
 
     @Test
-    @DisplayName("POST /student/get_by_teacher_id - 鎸夋暀甯圛D鍒嗛〉鏌ヨ")
+    @DisplayName("POST /student/get_by_teacher_id - 按教师ID分页查询")
     void getStudentByTeacherId_shouldReturn200() throws Exception {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setTeacherId(300L);
@@ -176,7 +176,7 @@ class StudentControllerApiTest {
 
         StudentVO vo = new StudentVO();
         vo.setId(2L);
-        vo.setStudentName("鏉庡洓");
+        vo.setStudentName("李四");
 
         QueryStudentVO queryVO = new QueryStudentVO(List.of(vo), 1L);
 
@@ -188,11 +188,11 @@ class StudentControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].studentName").value("鏉庡洓"));
+                .andExpect(jsonPath("$.data.list[0].studentName").value("李四"));
     }
 
     @Test
-    @DisplayName("POST /student/get_by_class_id - 鎸夌彮绾D鍒嗛〉鏌ヨ锛堝惈瀹堕暱淇℃伅锛?)
+    @DisplayName("POST /student/get_by_class_id - 按班级ID分页查询(含家长信息)")
     void getStudentByClassId_shouldReturn200() throws Exception {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setClassId(10L);
@@ -201,12 +201,12 @@ class StudentControllerApiTest {
 
         StudentVO vo = new StudentVO();
         vo.setId(1L);
-        vo.setStudentName("鐜嬩簲");
+        vo.setStudentName("王五");
 
         ParentVO primaryParent = new ParentVO();
         primaryParent.setIsPrimary(1);
         primaryParent.setStudentId(1L);
-        primaryParent.setUsername("鐖朵翰");
+        primaryParent.setUsername("父亲");
         vo.setPrimaryParent(primaryParent);
 
         QueryStudentVO queryVO = new QueryStudentVO(List.of(vo), 1L);
@@ -219,11 +219,11 @@ class StudentControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].primaryParent.username").value("鐖朵翰"));
+                .andExpect(jsonPath("$.data.list[0].primaryParent.username").value("父亲"));
     }
 
     @Test
-    @DisplayName("POST /student/get_by_institution_id - 鎸夋満鏋処D鍒嗛〉鏌ヨ")
+    @DisplayName("POST /student/get_by_institution_id - 按机构ID分页查询")
     void getStudentByInstitutionId_shouldReturn200() throws Exception {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setInstitutionId(1L);
@@ -232,7 +232,7 @@ class StudentControllerApiTest {
 
         StudentVO vo = new StudentVO();
         vo.setId(1L);
-        vo.setStudentName("璧靛叚");
+        vo.setStudentName("赵六");
 
         QueryStudentVO queryVO = new QueryStudentVO(List.of(vo), 1L);
 
@@ -244,6 +244,6 @@ class StudentControllerApiTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].studentName").value("璧靛叚"));
+                .andExpect(jsonPath("$.data.list[0].studentName").value("赵六"));
     }
 }

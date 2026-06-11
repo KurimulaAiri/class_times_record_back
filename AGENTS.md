@@ -1,149 +1,194 @@
-# AGENTS.md — class-times-record Backend
+# AGENTS.md — 教学录播课表记录后端
 
-> Microservice backend for the course/class recording WeChat Mini Program (uni-app).
-> Built with Spring Cloud Alibaba (Nacos + Sentinel + Gateway).
+基于 Spring Cloud Alibaba 微服务架构的教学管理系统后端。
 
-## Environment Setup
-
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `JAVA_HOME` | `D:\JAVA\jdk\jdk21` | JDK 21 (Zulu/Oracle) |
-| Maven | 3.9+ | `D:\Application\apache-maven-3.9.12` |
-| Nacos Server | `localhost:8848` | Configurable via `${nacos-server-addr}` |
-| Sentinel Dashboard | `localhost:8080` | Configurable via `${sentinel-dashboard}` |
-
-```powershell
-# Set JAVA_HOME before any Maven command
-$env:JAVA_HOME = "D:\JAVA\jdk\jdk21"
-```
-
-## Architecture
-
-```
-Client → Gateway (:8080) ──lb──→ auth-service (:8081)
-                        ──lb──→ business-service (:8082)
-                        ↑
-                   Nacos (:8848) — service registry
-                   Sentinel — flow control / circuit breaking
-```
-
-- **gateway** — Spring Cloud Gateway + Nacos Discovery + Sentinel. JWT validation, route dispatch, CORS, rate limiting.
-- **auth-service** — Auth, user CRUD, admin, menu/permission (RBAC). Registers with Nacos.
-- **business-service** — Institution, student, teacher, class, course, schedule, record. Registers with Nacos.
-- **common** — Shared library: entities, DTOs, VOs, converters, utils, filters, interceptors, config.
-
-## Tech Stack
-
-| Layer          | Tech                         | Version       |
-|----------------|------------------------------|---------------|
-| Framework      | Spring Boot                  | 4.0.4         |
-| JDK            | Java                         | 21            |
-| Cloud          | Spring Cloud Alibaba         | 2025.1.0.0    |
-| Cloud Base     | Spring Cloud                 | 2025.0.1      |
-| Registry       | Nacos                        | (Alibaba BOM) |
-| Flow Control   | Sentinel                     | (Alibaba BOM) |
-| Gateway        | Spring Cloud Gateway         | (Cloud BOM)   |
-| ORM            | MyBatis-Plus                 | 3.5.16        |
-| Database       | MySQL                        | 8.0+          |
-| Auth           | jjwt                         | 0.11.5        |
-| Encryption     | BouncyCastle SM2/SM3         | 1.84          |
-| Mapping        | MapStruct                    | 1.5.5.Final   |
-| JSON           | fastjson2                    | 2.0.60        |
-| Docs           | SpringDoc OpenAPI            | 3.0.3         |
-| Utils          | Hutool                       | 5.8.40        |
-| Build          | Maven                        | 3.9+          |
-
-## Module Map
+## 项目结构
 
 ```
 backend/
-├── pom.xml                      # Parent POM (multi-module, manages Alibaba + Cloud BOMs)
-├── common/                      # Shared library (no main class)
-│   ├── annotation/              # @BaseDateTimeToString, @UpdateStudentCount ...
-│   ├── aspect/                  # StudentCountAspect
-│   ├── common/enums/            # ResultCode
-│   ├── config/                  # MyBatisPlusConfig, WebConfig, OpenApiConfig
-│   ├── context/                 # UserContext (ThreadLocal)
-│   ├── converter/               # MapStruct converters (AdminConverter, UserConverter ...)
-│   ├── exception/               # BusinessException, GlobalExceptionHandler
-│   ├── filter/                  # RequestCachingFilter, GatewayUserFilter
-│   ├── interceptor/             # UserInterceptor, SignInterceptor
-│   ├── repository/dto/          # Request DTOs (auth/, course/, student/ ...)
-│   ├── repository/entity/       # Entities (User, Student, Class, Record ...)
-│   ├── repository/vo/           # Response VOs
-│   ├── support/                 # RepeatedlyRequestWrapper
-│   └── util/                    # JwtUtils, SM2Util, SM3Util, DateTransformUtils ...
-├── gateway/                     # API Gateway (port 8080)
-│   ├── filter/JwtAuthFilter     # Reactive JWT validation → X-User-Id header
-│   └── resources/application.yml  # Routes via lb://service-name, Nacos, Sentinel
-├── auth-service/                # Auth microservice (port 8081, Nacos-registered)
-│   └── Controllers: Auth, Menu, PermissionRecord
-└── business-service/            # Business microservice (port 8082, Nacos-registered)
-    └── Controllers: Institution, Student, Teacher, Class, Course,
-                     ClassSchedule, CourseRecord, Record, Test
+├── common/            # 共享代码库：DTO、VO、Entity、Service 接口、工具类
+├── docker/nginx/      # Nginx 配置（统一反向代理入口）
+├── gateway/           # Spring Cloud Gateway (端口 9999)
+├── auth-service/      # 认证授权微服务 (端口 10002)
+├── business-service/  # 核心业务微服务 (端口 10001)
+├── docs/              # 文档和初始化 SQL
+├── docker-compose.yml # 容器编排文件
+└── AGENTS.md          # 本文件
 ```
 
-## Request Flow
+## 技术栈
 
-1. **Gateway** receives the request at `:8080`
-2. `JwtAuthFilter` validates the JWT token (skips `/auth/**`, `/swagger/**`, `/test/**`)
-3. Gateway looks up service via **Nacos** (`lb://auth-service` or `lb://business-service`)
-4. **Sentinel** applies flow control rules if configured
-5. Gateway forwards `X-User-Id` and `X-User-Role` headers to downstream service
-6. **Service** receives the request — `GatewayUserFilter` reads headers into `UserContext` (ThreadLocal)
-7. `SignInterceptor` validates SM3 request signature (skips `/auth/**`, `/test/**`)
-8. Controller → Service → Mapper → MySQL
+| 组件 | 技术 |
+|------|------|
+| 语言 | Java 21 |
+| 框架 | Spring Boot 3.5, Spring Cloud 2024 |
+| 微服务治理 | Spring Cloud Gateway + Alibaba Nacos + Sentinel |
+| 数据访问 | MyBatis-Plus + MySQL |
+| 构建工具 | Maven 多模块 |
+| 容器化 | Docker + Docker Compose |
 
-## Coding Conventions
+## 目录约定
 
-### Package structure
-- All code under `com.shiroko` base package
-- `com.shiroko.repository.entity` — database entities
-- `com.shiroko.repository.dto` — request body DTOs (grouped by domain)
-- `com.shiroko.repository.vo` — response VOs
-- `com.shiroko.converter` — MapStruct converters (entity ↔ DTO/VO)
-- Validation groups in `validategroup/` sub-packages of each DTO package
+- `gateway/src/main/java/com/shiroko/gateway/` — Gateway 应用入口和配置
+- `auth-service/src/main/java/com/shiroko/` — Auth Service 应用入口和业务
+- `business-service/src/main/java/com/shiroko/` — Business Service 应用入口和业务
+- `common/src/main/java/com/shiroko/` — 跨模块共享代码
 
-### Naming
-- Controllers: `{Domain}Controller` (e.g., `StudentController`)
-- Services: `{Domain}Service` interface + `{Domain}ServiceImpl`
-- Mappers: `{Domain}Mapper` (MyBatis-Plus BaseMapper)
-- DTOs: `{Action}{Domain}DTO` (e.g., `InsertStudentDTO`, `QueryStudentDTO`)
-- VOs: mirror DTO naming with `VO` suffix
+## 核心模块
 
-### Controllers
-- All use `@RestController` + `@RequestMapping`
-- All use `@PostMapping` (POST for both reads and writes — non-RESTful convention)
-- Request body uses `@RequestBody` + `@Valid`/`@Validated`
-- Response wrapped in `ResponseDTO<T>`
-- OpenAPI: `@Tag` on class, `@Operation` on method
+### common
 
-### Database
-- Entity primary keys: `ASSIGN_ID` (snowflake algorithm)
-- Logical delete field: `isDeleted` (0 = not deleted, 1 = deleted)
-- Underscore-to-camelCase auto mapping enabled
-- Insert/update strategy: `NOT_NULL`
+- `converter/` — MapStruct 转换器接口
+- `repository/dto/` — 数据传输对象
+- `repository/entity/` — MyBatis-Plus 实体类
+- `repository/input/` — 请求输入对象
+- `repository/vo/` — 视图对象（返回给前端）
+- `service/` — 业务 Service 接口
+- `utils/` — 工具类 (JwtUtils, SnowflakeIdWorker 等)
+- `constant/` — 常量定义
+- `enums/` — 枚举
+- `interceptor/` — 通用拦截器
+- `context/` — 线程上下文
 
-### Auth
-- Gateway-level JWT validation (public paths configured in gateway)
-- SM2 encrypted private key for sensitive data
-- SM3 signing for request integrity (`SignInterceptor`)
+### gateway
+
+- `config/` — Gateway 配置（包括编程式路由定义 RouteConfig）
+- `filter/` — 自定义过滤器 (JwtAuthFilter)
+
+### auth-service
+
+- 认证相关接口（微信登录、Token 刷新等）
+- 自定义 `SignInterceptor` 签名验证拦截器
+
+### business-service
+
+- 机构管理、教职人员、课程、学生等核心业务
+- 自定义 `SignInterceptor` 签名验证拦截器
+
+## 跨模块约定
+
+### DTO / VO / Entity / Input / Converter
+
+- `repository/dto/` 下的 DTO 类使用 `@Data` 注解
+- `repository/vo/` 下的 VO 类使用 `@Data` 注解，返回前端
+- `repository/entity/` 下的实体类继承 `BaseEntity`（含创建/更新时间），使用 `@TableName` 指定表名
+- `repository/input/` 下的 Input 类表示请求参数
+- `converter/` 下的 Converter 接口使用 `@Mapper(componentModel = "spring")`
+
+### Service
+
+- Service 接口定义在 `common/src/.../service/` 中
+- ServiceImpl 实现在各微服务模块中（`auth-service` 或 `business-service`）
+- 使用 `@Service` 注解标记实现类
+
+### Controller
+
+- 使用 `@RestController` + `@RequestMapping`
+- 统一返回 `ResponseDTO<T>` 封装
+- Auth Service 的 Controller 路径前缀通常在 Gateway 中通过路由映射
+
+### Gateway 路由
+
+路由通过编程式 Java 配置定义（`gateway/src/.../config/RouteConfig.java`），而非 YAML 配置：
+
+```java
+// /auth/** → StripPrefix=1 → lb://auth-service
+// /biz/**  → StripPrefix=1 → lb://business-service
+```
+
+Gateway 依赖 `spring-cloud-starter-loadbalancer` 实现 `lb://` 服务发现。
+
+### 安全
+
+- `JwtAuthFilter` (Gateway) 在各路由请求进入前校验 JWT Token
+- `SignInterceptor` (auth-service, business-service) 校验 API 签名参数
 - `UserContext` (ThreadLocal, servlet services only) for per-request user identity
+- `JwtUtils` supports both AccessToken and RefreshToken
 
 ## Adding a New Feature
 
-1. **Add entity** in `common/src/.../repository/entity/`
-2. **Add DTOs/VOs** in `common/src/.../repository/dto/` and `vo/`
-3. **Add converter** in `common/src/.../converter/`
-4. **Add Mapper interface + XML** in the appropriate service module
-5. **Add Service interface + impl** in the service module
-6. **Add Controller** in the service module
-7. **Add route** in `gateway/src/.../resources/application.yml` if new path prefix
+1. **Determine domain**: auth (认证授权) or business (核心业务)
+2. **Add entity** in `common/src/.../repository/entity/`
+3. **Add DTOs/VOs** in `common/src/.../repository/dto/` and `vo/`
+4. **Add converter** in `common/src/.../converter/`
+5. **Add Service interface** in `common/src/.../service/`
+6. **Add Mapper interface + XML** in the appropriate service module
+7. **Add ServiceImpl** in the appropriate service module
+8. **Add Controller** in the appropriate service module
+9. **Add route** in `gateway/src/.../config/RouteConfig.java` if new path prefix needed
 
 ## Building & Running
 
+### Docker Compose（推荐）
+
+一键启动全部服务（Nginx + Nacos + MySQL + 微服务 + Sentinel）：
+
 ```powershell
-# Prerequisites — set JAVA_HOME
+cd d:\PRJ\fully-function-project\course_record\backend
+
+# 1. 编译
+$env:JAVA_HOME = "D:\JAVA\jdk\jdk21"
+mvn clean package -DskipTests
+
+# 2. 启动（首次启动自动构建镜像）
+docker compose up -d --build
+
+# 3. 查看状态
+docker compose ps
+docker compose logs -f
+```
+
+**服务访问地址**：
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| **Nginx (统一入口)** | **http://localhost:9080** | 反向代理到 Gateway |
+| Nacos 控制台 | http://localhost:8848/nacos/ | 免登录 (auth=off) |
+| MySQL | localhost:3306 | root/root123456 |
+| Gateway (直连) | http://localhost:9999 | 跳过 Nginx 直接访问 |
+| Sentinel 面板 | http://localhost:8080 | sentinel/sentinel |
+
+**常用命令**：
+
+```powershell
+docker compose down                        # 停止所有服务（保留数据）
+docker compose down -v                     # 停止并删除数据卷（⚠ 清空数据库）
+docker compose restart auth-service        # 重启单个服务
+docker compose logs -f nginx               # 查看 Nginx 日志
+docker compose up -d --build auth-service  # 重新构建并启动单个服务
+```
+
+**API 验证**：
+
+```powershell
+# Nginx 健康检查
+Invoke-RestMethod http://localhost:9080/nginx-health
+
+# 通过 Nginx → Gateway 健康检查
+Invoke-RestMethod http://localhost:9080/actuator/health
+
+# 全链路测试：Nginx → Gateway → Auth Service
+Invoke-RestMethod -Method POST -Uri http://localhost:9080/auth/auth/get_open_id `
+  -Body '{"code":"test"}' -ContentType "application/json"
+```
+
+**容器列表**：
+
+| 服务 | 容器名 |
+|------|--------|
+| Nginx | `cr-nginx` |
+| Nacos | `cr-nacos` |
+| MySQL | `cr-mysql` |
+| Gateway | `cr-gateway` |
+| Auth Service | `cr-auth-service` |
+| Business Service | `cr-business-service` |
+| Sentinel | `cr-sentinel` |
+
+> 完整教程见 [docs/docker-deploy.md](docs/docker-deploy.md)
+
+### 本地开发（直接运行）
+
+```powershell
 $env:JAVA_HOME = "D:\JAVA\jdk\jdk21"
 
 # Build all modules
@@ -151,12 +196,12 @@ mvn clean package -DskipTests
 
 # Run services (start Nacos first!)
 # Nacos: startup.cmd -m standalone  (from nacos/bin/)
-# Sentinel: java -jar sentinel-dashboard.jar
+# Sentinel Dashboard: java -jar sentinel-dashboard.jar (port 8080)
 
 # Start services in order:
-cd gateway && mvn spring-boot:run           # port 8080
-cd auth-service && mvn spring-boot:run      # port 8081 (registers with Nacos)
-cd business-service && mvn spring-boot:run  # port 8082 (registers with Nacos)
+cd gateway && mvn spring-boot:run           # port 9999
+cd auth-service && mvn spring-boot:run      # port 10002
+cd business-service && mvn spring-boot:run  # port 10001
 ```
 
 ## Testing
@@ -171,53 +216,3 @@ mvn test
 mvn test -pl auth-service
 mvn test -pl business-service
 ```
-
-- Unit tests use H2 in-memory database (profile: `test`)
-- API tests use `@SpringBootTest` + `MockMvc`
-- Test config: `src/test/resources/application-test.yml`
-
-## Environment Profiles
-
-| Profile | Config file            | Database host       |
-|---------|------------------------|---------------------|
-| dev     | application-dev.yml    | 121.196.229.10      |
-| prod    | application-prod.yml   | localhost           |
-| test    | application-test.yml   | H2 in-memory        |
-
-## Spring Cloud Alibaba Components
-
-### Nacos (Service Discovery)
-- Services register themselves at startup via `spring.cloud.nacos.discovery`
-- Gateway resolves `lb://service-name` URIs via Nacos
-- Server address: `${nacos-server-addr:localhost:8848}`
-
-### Sentinel (Flow Control)
-- Gateway-level rate limiting via `spring.cloud.alibaba.sentinel.gateway`
-- Dashboard: `${sentinel-dashboard:localhost:8080}`
-- Rules can be configured via Sentinel Dashboard UI
-
-### Common Module Note
-- `common` includes `spring-boot-starter-web` (servlet) for auth/business services
-- Gateway excludes it (`spring-boot-starter-web`, `springdoc-openapi-starter-webmvc-ui`)
-  to avoid conflict with reactive WebFlux
-
-## Git Conventions
-
-- Commit messages in **Chinese**
-- Prefix with verb: `fix`, `feat`, `refactor`, `docs`, `test`, `chore`
-- Format: `type(scope): short description`, then blank line, then bullet details
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `pom.xml` | Parent POM — manages Alibaba + Cloud BOMs |
-| `gateway/.../JwtAuthFilter.java` | Reactive Gateway JWT validation filter |
-| `common/.../filter/GatewayUserFilter.java` | Reads X-User-Id into UserContext (servlet) |
-| `common/.../config/WebConfig.java` | MVC config (filters, interceptors) |
-| `common/.../util/JwtUtils.java` | JWT token generation & validation |
-| `common/.../util/SM2Util.java` | SM2 encryption/decryption |
-| `common/.../util/SM3Util.java` | SM3 hashing & signing |
-| `common/.../exception/handler/GlobalExceptionHandler.java` | Unified exception handling |
-| `docs/class_times_record.sql` | Full database schema |
-| `pipeline/Jenkinsfile` | CI/CD pipeline |

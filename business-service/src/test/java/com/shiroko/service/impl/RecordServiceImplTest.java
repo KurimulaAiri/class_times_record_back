@@ -54,13 +54,13 @@ class RecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鎻掑叆鍗曟潯璁板綍鎴愬姛搴旇繑鍥瀞uccess")
+    @DisplayName("插入单条记录成功应返回success")
     void insertRecord_whenInsertSucceeds_shouldReturnSuccess() {
         InsertRecordDTO dto = new InsertRecordDTO();
         dto.setCourseRecordId(1L);
         dto.setRecordTime(LocalDateTime.now());
         dto.setRecordType(1L);
-        dto.setRecordRemark("娴嬭瘯澶囨敞");
+        dto.setRecordRemark("测试备注");
         dto.setRecordChange(2L);
 
         Record mockRecord = new Record();
@@ -70,13 +70,13 @@ class RecordServiceImplTest {
         ResponseDTO<Object> result = recordService.insertRecord(dto);
 
         assertEquals(Long.valueOf(200L), result.getCode());
-        assertTrue(result.getData().toString().contains("鎻掑叆鎴愬姛"));
+        assertTrue(result.getData().toString().contains("插入成功"));
         verify(recordConverter).insertDtoToPojo(dto);
         verify(recordMapper).insert(mockRecord);
     }
 
     @Test
-    @DisplayName("鎻掑叆鍗曟潯璁板綍澶辫触搴旇繑鍥瀎ail")
+    @DisplayName("插入单条记录失败应返回fail")
     void insertRecord_whenInsertFails_shouldReturnFail() {
         InsertRecordDTO dto = new InsertRecordDTO();
         dto.setCourseRecordId(1L);
@@ -91,18 +91,18 @@ class RecordServiceImplTest {
         ResponseDTO<Object> result = recordService.insertRecord(dto);
 
         assertEquals(Long.valueOf(400L), result.getCode());
-        assertEquals("鎻掑叆澶辫触", result.getMessage());
+        assertEquals("插入失败", result.getMessage());
     }
 
     @Test
-    @DisplayName("鎵归噺鎻掑叆璁板綍-娑堣绫诲瀷(type=1)搴旀纭墸鍑忓墿浣欒鏃?)
+    @DisplayName("批量插入记录-扣课类型(type=1)应正确减少剩余课时")
     void insertRecords_withDeductType_shouldUpdateRestTime() {
         InsertRecordsDTO dto = new InsertRecordsDTO();
         dto.setCourseRecordIdList(new Long[]{1L, 2L});
         dto.setRecordType(1L);
         dto.setRecordChange(3L);
         dto.setRecordTime(LocalDateTime.now());
-        dto.setRecordRemark("娑堣");
+        dto.setRecordRemark("扣课");
 
         CourseRecord cr1 = new CourseRecord().setId(1L).setCourseRestTime(10L);
         CourseRecord cr2 = new CourseRecord().setId(2L).setCourseRestTime(5L);
@@ -124,14 +124,14 @@ class RecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鎵归噺鎻掑叆璁板綍-澧炲姞璇炬椂绫诲瀷(type=2)搴旀纭鍔犲墿浣欒鏃跺拰鎬昏鏃?)
+    @DisplayName("批量插入记录-增加课时类型(type=2)应正确增加剩余课时和总课时")
     void insertRecords_withAddType_shouldUpdateRestAndTotalTime() {
         InsertRecordsDTO dto = new InsertRecordsDTO();
         dto.setCourseRecordIdList(new Long[]{1L});
         dto.setRecordType(2L);
         dto.setRecordChange(5L);
         dto.setRecordTime(LocalDateTime.now());
-        dto.setRecordRemark("澧炲姞璇炬椂");
+        dto.setRecordRemark("增加课时");
 
         CourseRecord cr = new CourseRecord().setId(1L).setCourseRestTime(10L).setCourseTotalTime(20L);
         when(courseRecordMapper.selectById(1L)).thenReturn(cr);
@@ -151,7 +151,7 @@ class RecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鎵归噺鎻掑叆璁板綍鍏ㄩ儴澶辫触搴旇繑鍥瀎ail")
+    @DisplayName("批量插入记录全部失败应返回fail")
     void insertRecords_whenAllFail_shouldReturnFail() {
         InsertRecordsDTO dto = new InsertRecordsDTO();
         dto.setCourseRecordIdList(new Long[]{1L});
@@ -169,7 +169,7 @@ class RecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鍒嗛〉鏌ヨ璁板綍搴旇繑鍥炴纭垎椤垫暟鎹?)
+    @DisplayName("分页查询记录应返回正确分页数据")
     void getRecord_shouldReturnPagedRecords() {
         QueryRecordDTO dto = new QueryRecordDTO();
         dto.setCourseRecordId(1L);
@@ -200,7 +200,7 @@ class RecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鍒嗛〉鏌ヨ鏃犺褰曞簲杩斿洖绌哄垪琛?)
+    @DisplayName("分页查询无记录时应返回空列表")
     void getRecord_whenNoRecords_shouldReturnEmptyList() {
         QueryRecordDTO dto = new QueryRecordDTO();
         dto.setCourseRecordId(999L);

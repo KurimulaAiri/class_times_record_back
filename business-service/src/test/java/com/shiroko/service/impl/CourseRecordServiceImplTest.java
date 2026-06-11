@@ -54,13 +54,24 @@ class CourseRecordServiceImplTest {
     @Mock
     private RecordMapper recordMapper;
 
+    @Mock
+    private com.shiroko.mapper.StudentMapper studentMapper;
+
+    @Mock
+    private com.shiroko.mapper.ClassMapper classMapper;
+
+    @Mock
+    private com.shiroko.mapper.ClassStudentMapper classStudentMapper;
+
     @InjectMocks
     private CourseRecordServiceImpl courseRecordService;
 
     @BeforeEach
     void setUp() {
-        UserDTO user = new UserDTO(2L);
+        UserDTO user = new UserDTO();
+        user.setRoleId(2L);
         user.setId(1L);
+        user.setInstitutionId(1L);
         UserContext.setUser(user);
     }
 
@@ -70,11 +81,11 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("娣诲姞璇剧▼璁板綍搴旀垚鍔熸彃鍏ュ苟杩斿洖success")
+    @DisplayName("添加课程记录应成功插入并返回success")
     void addCourseRecord_shouldInsertAndReturnSuccess() {
         InsertCourseRecordDTO dto = new InsertCourseRecordDTO();
-        dto.setStuName("寮犱笁");
-        dto.setCourseName("鏁板");
+        dto.setStuName("张三");
+        dto.setCourseName("数学");
         dto.setCourseTotalTime(20L);
         dto.setCourseRestTime(20L);
 
@@ -86,7 +97,7 @@ class CourseRecordServiceImplTest {
         ResponseDTO<Object> result = courseRecordService.addCourseRecord(dto);
 
         assertEquals(Long.valueOf(200L), result.getCode());
-        assertTrue(result.getMessage().contains("娣诲姞鎴愬姛"));
+        assertTrue(result.getMessage().contains("添加成功"));
         assertEquals(Long.valueOf(1L), mockEntity.getCourseOwnerUserId());
 
         verify(courseRecordMapper).insert(mockEntity);
@@ -94,7 +105,7 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("閫昏緫鍒犻櫎璇剧▼璁板綍搴旇繑鍥瀞uccess")
+    @DisplayName("逻辑删除课程记录应返回success")
     void deleteCourseRecord_shouldSetIsDeleteAndReturnSuccess() {
         DeleteCourseRecordDTO dto = new DeleteCourseRecordDTO(50L);
         when(courseRecordMapper.updateById((CourseRecord) any())).thenReturn(1);
@@ -107,7 +118,7 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鏇存柊璇剧▼璁板綍搴旇繑鍥瀞uccess")
+    @DisplayName("更新课程记录应返回success")
     void updateCourseRecord_shouldUpdateAndReturnSuccess() {
         UpdateCourseRecordDTO dto = new UpdateCourseRecordDTO();
         dto.setId(1L);
@@ -126,11 +137,15 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鎵ｈ-鍗曡绋嬫墸鍑忔垚鍔熷簲杩斿洖褰卞搷琛屾暟")
+    @DisplayName("扣课-单课程扣除成功应返回操作数量")
     void deductByStudentId_withSingleCourse_shouldDeductSuccessfully() {
-        DeductClassDTO deductClass = new DeductClassDTO(1L, 10L, 3, "鎵ｈ澶囨敞");
-        DeductCourseRecordDTO dto = new DeductCourseRecordDTO(100L, "鏁村崟澶囨敞",
-                List.of(deductClass));
+        DeductClassDTO deductClass = new DeductClassDTO(1L, 10L, 3, "扣课备注");
+        DeductCourseRecordDTO dto = new DeductCourseRecordDTO();
+        dto.setStudentId(100L);
+        dto.setRemark("单科备注");
+        dto.setRecordTime(java.time.LocalDateTime.now());
+        dto.setOperatorId(1L);
+        dto.setClasses(List.of(deductClass));
 
         when(courseRecordMapper.updateRestTime(any(CourseRecord.class), eq(3))).thenReturn(1);
         when(recordMapper.insert(any(Record.class))).thenReturn(1);
@@ -143,12 +158,16 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鎵ｈ-鍚岃绋嬪鐝骇搴旇仛鍚堟墸鍑忔暟閲?)
+    @DisplayName("扣课-同课程多班级应做合并扣除数量处理")
     void deductByStudentId_withSameCourseMultipleClasses_shouldAggregateDeductCount() {
-        DeductClassDTO classA = new DeductClassDTO(1L, 10L, 2, "A鐝?);
-        DeductClassDTO classB = new DeductClassDTO(2L, 10L, 3, "B鐝?);
-        DeductCourseRecordDTO dto = new DeductCourseRecordDTO(100L, "鑱氬悎鎵ｈ",
-                List.of(classA, classB));
+        DeductClassDTO classA = new DeductClassDTO(1L, 10L, 2, "A班");
+        DeductClassDTO classB = new DeductClassDTO(2L, 10L, 3, "B班");
+        DeductCourseRecordDTO dto = new DeductCourseRecordDTO();
+        dto.setStudentId(100L);
+        dto.setRemark("合并扣课");
+        dto.setRecordTime(java.time.LocalDateTime.now());
+        dto.setOperatorId(1L);
+        dto.setClasses(List.of(classA, classB));
 
         when(courseRecordMapper.updateRestTime(any(CourseRecord.class), eq(5))).thenReturn(1);
         when(recordMapper.insert(any(Record.class))).thenReturn(1);
@@ -160,14 +179,18 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("鎵ｈ-浣欓涓嶈冻搴旀姏鍑築usinessException")
+    @DisplayName("扣课-余额不足应抛BusinessException")
     void deductByStudentId_whenBalanceNotEnough_shouldThrowBusinessException() {
-        DeductClassDTO deductClass = new DeductClassDTO(1L, 10L, 100, "瓒呴鎵ｈ");
-        DeductCourseRecordDTO dto = new DeductCourseRecordDTO(100L, "瓒呴",
-                List.of(deductClass));
+        DeductClassDTO deductClass = new DeductClassDTO(1L, 10L, 100, "超额扣课");
+        DeductCourseRecordDTO dto = new DeductCourseRecordDTO();
+        dto.setStudentId(100L);
+        dto.setRemark("超额");
+        dto.setRecordTime(java.time.LocalDateTime.now());
+        dto.setOperatorId(1L);
+        dto.setClasses(List.of(deductClass));
 
         Course mockCourse = new Course();
-        mockCourse.setCourseName("鏁板");
+        mockCourse.setCourseName("数学");
         when(courseRecordMapper.updateRestTime(any(CourseRecord.class), eq(100))).thenReturn(0);
         when(courseMapper.selectById(10L)).thenReturn(mockCourse);
 
@@ -175,12 +198,12 @@ class CourseRecordServiceImplTest {
                 () -> courseRecordService.deductByStudentId(dto));
 
         assertEquals(ResultCode.COURSE_BALANCE_NOT_ENOUGH.getCode(), exception.getCode().intValue());
-        assertTrue(exception.getMessage().contains("鏁板"));
+        assertTrue(exception.getMessage().contains("数学"));
         verify(recordMapper, never()).insert(any(Record.class));
     }
 
     @Test
-    @DisplayName("getCourseRecords鏌ヨ搴旀敞鍏ユ潈闄愮被鍨?)
+    @DisplayName("getCourseRecords查询应注入权限类型")
     void getCourseRecords_shouldInjectPermissionType() {
         QueryCourseRecordDTO dto = new QueryCourseRecordDTO();
         dto.setCurrentPage(1L);
@@ -213,7 +236,7 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("getCourseRecords鏃犺褰曟椂搴旇繑鍥炵┖鍒楄〃")
+    @DisplayName("getCourseRecords无记录时应返回空列表")
     void getCourseRecords_whenNoRecords_shouldReturnEmptyList() {
         QueryCourseRecordDTO dto = new QueryCourseRecordDTO();
         dto.setCurrentPage(1L);
@@ -235,19 +258,21 @@ class CourseRecordServiceImplTest {
     }
 
     @Test
-    @DisplayName("newGetCourseRecords鏌ヨ搴旇繑鍥炶浆鎹㈠悗鐨刅O鍒楄〃")
+    @DisplayName("newGetCourseRecords查询应返回转换后的VO列表")
     void newGetCourseRecords_shouldReturnConvertedVOList() {
         QueryCourseRecordDTO dto = new QueryCourseRecordDTO();
         dto.setCurrentPage(1L);
         dto.setPageSize(10L);
 
-        CourseRecord entity1 = new CourseRecord().setId(1L);
-        CourseRecord entity2 = new CourseRecord().setId(2L);
-        List<CourseRecord> entityList = List.of(entity1, entity2);
+        CourseRecordDTO dto1 = new CourseRecordDTO();
+        dto1.setId(1L);
+        CourseRecordDTO dto2 = new CourseRecordDTO();
+        dto2.setId(2L);
+        List<CourseRecordDTO> dtoList = List.of(dto1, dto2);
 
         doAnswer(invocation -> {
-            com.baomidou.mybatisplus.core.metadata.IPage<CourseRecord> page = invocation.getArgument(0);
-            page.setRecords(entityList);
+            com.baomidou.mybatisplus.core.metadata.IPage<CourseRecordDTO> page = invocation.getArgument(0);
+            page.setRecords(dtoList);
             page.setTotal(2);
             return page;
         }).when(courseRecordMapper).selectCourseRecords(any(), eq(dto));
@@ -256,7 +281,7 @@ class CourseRecordServiceImplTest {
         vo1.setId(1L);
         CourseRecordVO vo2 = new CourseRecordVO();
         vo2.setId(2L);
-        when(courseRecordConverter.pojoListToVOList(entityList)).thenReturn(List.of(vo1, vo2));
+        when(courseRecordConverter.dtoListToVOList(dtoList)).thenReturn(List.of(vo1, vo2));
 
         PermissionRecord perm = new PermissionRecord().setCourseRecordId(1L).setPermissionType(1L);
         when(permissionRecordMapper.selectList(any(LambdaQueryWrapper.class)))

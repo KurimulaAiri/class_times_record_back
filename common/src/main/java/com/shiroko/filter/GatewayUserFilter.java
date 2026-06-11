@@ -2,11 +2,11 @@ package com.shiroko.filter;
 
 import com.shiroko.context.UserContext;
 import com.shiroko.repository.dto.UserDTO;
-import com.shiroko.repository.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -24,6 +24,7 @@ import java.io.IOException;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
+@Slf4j
 public class GatewayUserFilter extends OncePerRequestFilter {
 
     @Override
@@ -36,15 +37,12 @@ public class GatewayUserFilter extends OncePerRequestFilter {
         String roleHeader = request.getHeader("X-User-Role");
 
         if (userIdHeader != null) {
-            User user = new User();
-            user.setId(Long.valueOf(userIdHeader));
-
+            Long userId = Long.valueOf(userIdHeader);
+            Long roleId = roleHeader != null ? Long.valueOf(roleHeader) : null;
+            log.debug("userId: {}, roleId: {}", userId, roleId);
             UserDTO userDTO = new UserDTO();
-            userDTO.setId(user.getId());
-            if (roleHeader != null) {
-                userDTO.setRoleId(Long.valueOf(roleHeader));
-            }
-
+            userDTO.setId(userId);
+            userDTO.setRoleId(roleId);
             UserContext.setUser(userDTO);
         }
 

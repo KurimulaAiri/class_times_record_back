@@ -19,7 +19,7 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("鍒涘缓AccessToken搴旇繑鍥為潪绌哄瓧绗︿覆")
+    @DisplayName("创建 AccessToken 应返回非空字符串")
     void createAccessToken_shouldReturnNonNullString() {
         String token = jwtUtils.createAccessToken(1L, 2L);
         assertNotNull(token);
@@ -27,7 +27,7 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("鍒涘缓AccessToken搴斿寘鍚笁娈靛紡JWT鏍煎紡")
+    @DisplayName("创建 AccessToken 应包含三段式 JWT 格式")
     void createAccessToken_shouldHaveThreeParts() {
         String token = jwtUtils.createAccessToken(1L, 2L);
         String[] parts = token.split("\\.");
@@ -35,32 +35,32 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("鏈夋晥AccessToken鏍￠獙搴旇繑鍥瀟rue")
+    @DisplayName("有效 AccessToken 校验应返回 true")
     void validateAccessToken_withValidToken_shouldReturnTrue() {
         String token = jwtUtils.createAccessToken(1L, 2L);
         assertTrue(jwtUtils.validateAccessToken(token));
     }
 
     @Test
-    @DisplayName("鏃犳晥AccessToken鏍￠獙搴旇繑鍥瀎alse")
+    @DisplayName("无效 AccessToken 校验应返回 false")
     void validateAccessToken_withInvalidToken_shouldReturnFalse() {
         assertFalse(jwtUtils.validateAccessToken("invalid.token.here"));
     }
 
     @Test
-    @DisplayName("绌篈ccessToken鏍￠獙搴旇繑鍥瀎alse")
+    @DisplayName("空 AccessToken 校验应返回 false")
     void validateAccessToken_withEmptyToken_shouldReturnFalse() {
         assertFalse(jwtUtils.validateAccessToken(""));
     }
 
     @Test
-    @DisplayName("Null AccessToken鏍￠獙搴旇繑鍥瀎alse")
+    @DisplayName("null AccessToken 校验应返回 false")
     void validateAccessToken_withNullToken_shouldReturnFalse() {
         assertFalse(jwtUtils.validateAccessToken(null));
     }
 
     @Test
-    @DisplayName("瑙ｆ瀽鏈夋晥AccessToken搴旇繑鍥炴纭瓹laims")
+    @DisplayName("解析有效 AccessToken 应返回正确 Claims")
     void parseClaims_withValidToken_shouldReturnCorrectClaims() {
         Long userId = 100L;
         Long roleId = 200L;
@@ -75,7 +75,7 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("瑙ｆ瀽琚鏀圭殑Token搴旀姏鍑哄紓甯?)
+    @DisplayName("解析被篡改的 Token 应抛出异常")
     void parseClaims_withTamperedToken_shouldThrowException() {
         String token = jwtUtils.createAccessToken(1L, 2L);
         String tamperedToken = token.substring(0, token.length() - 5) + "xxxxx";
@@ -84,7 +84,7 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("getUserInfoFromToken鏈夋晥Token搴旇繑鍥炲寘鍚玼serId鍜宺oleId鐨凪ap")
+    @DisplayName("getUserInfoFromToken 有效 Token 应返回 userId 和 roleId")
     void getUserInfoFromToken_withValidToken_shouldReturnUserInfo() {
         Long userId = 50L;
         Long roleId = 99L;
@@ -98,21 +98,21 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("getUserInfoFromToken鏃犳晥Token搴旇繑鍥瀗ull")
+    @DisplayName("getUserInfoFromToken 无效 Token 应返回 null")
     void getUserInfoFromToken_withInvalidToken_shouldReturnNull() {
         Map<String, Object> userInfo = jwtUtils.getUserInfoFromToken("invalid.token");
         assertNull(userInfo);
     }
 
     @Test
-    @DisplayName("getUserInfoFromToken绌篢oken搴旇繑鍥瀗ull")
+    @DisplayName("getUserInfoFromToken 空 Token 应返回 null")
     void getUserInfoFromToken_withEmptyToken_shouldReturnNull() {
         Map<String, Object> userInfo = jwtUtils.getUserInfoFromToken("");
         assertNull(userInfo);
     }
 
     @Test
-    @DisplayName("涓嶅悓鐢ㄦ埛鐢熸垚鐨凙ccessToken搴斾笉鍚?)
+    @DisplayName("不同用户生成的 AccessToken 应不同")
     void createAccessToken_withDifferentUsers_shouldProduceDifferentTokens() {
         String token1 = jwtUtils.createAccessToken(1L, 1L);
         String token2 = jwtUtils.createAccessToken(2L, 1L);
@@ -120,28 +120,28 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("RefreshToken鏍￠獙搴旈€氳繃")
+    @DisplayName("RefreshToken 校验应通过")
     void validateRefreshToken_withValidToken_shouldReturnTrue() {
         String token = jwtUtils.createRefreshToken(1L, 2L);
         assertTrue(jwtUtils.validateRefreshToken(token));
     }
 
     @Test
-    @DisplayName("AccessToken涓嶅簲鐢ㄤ綔RefreshToken鏍￠獙")
+    @DisplayName("AccessToken 不应通过 RefreshToken 校验")
     void validateRefreshToken_withAccessToken_shouldReturnFalse() {
         String token = jwtUtils.createAccessToken(1L, 2L);
         assertFalse(jwtUtils.validateRefreshToken(token));
     }
 
     @Test
-    @DisplayName("RefreshToken涓嶅簲鐢ㄤ綔AccessToken鏍￠獙")
+    @DisplayName("RefreshToken 不应通过 AccessToken 校验")
     void validateAccessToken_withRefreshToken_shouldReturnFalse() {
         String token = jwtUtils.createRefreshToken(1L, 2L);
         assertFalse(jwtUtils.validateAccessToken(token));
     }
 
     @Test
-    @DisplayName("getUserInfoFromRefreshToken鏈夋晥RefreshToken搴旇繑鍥炵敤鎴蜂俊鎭?)
+    @DisplayName("getUserInfoFromRefreshToken 有效 RefreshToken 应返回用户信息")
     void getUserInfoFromRefreshToken_withValidToken_shouldReturnUserInfo() {
         Long userId = 50L;
         Long roleId = 99L;
@@ -155,7 +155,7 @@ class JwtUtilsTest {
     }
 
     @Test
-    @DisplayName("getUserInfoFromRefreshToken浣跨敤AccessToken搴旇繑鍥瀗ull")
+    @DisplayName("getUserInfoFromRefreshToken 使用 AccessToken 应返回 null")
     void getUserInfoFromRefreshToken_withAccessToken_shouldReturnNull() {
         String token = jwtUtils.createAccessToken(1L, 2L);
         assertNull(jwtUtils.getUserInfoFromRefreshToken(token));

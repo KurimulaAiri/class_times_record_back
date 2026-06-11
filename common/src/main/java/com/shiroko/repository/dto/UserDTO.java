@@ -1,10 +1,10 @@
 package com.shiroko.repository.dto;
 
-import com.shiroko.repository.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * Description: 用户DTO类
@@ -14,10 +14,13 @@ import lombok.EqualsAndHashCode;
  * @version 1.0
  * @since 2026/4/19 上午12:57
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO extends User {
+public class UserDTO  {
     private Long roleId;
+    private Long id;
+    private Long institutionId;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 }

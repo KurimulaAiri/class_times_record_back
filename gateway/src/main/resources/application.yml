@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9999
 
 spring:
   application:
@@ -22,16 +22,20 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        # Auth service routes
+        # Auth service — /auth/** 转发到 auth-service，去掉 /auth 前缀
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/auth/**, /user/**, /admin/**, /menu/**, /permission_record/**
-        # Business service routes
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        # Business service — /biz/** 转发到 business-service，去掉 /biz 前缀
         - id: business-service
           uri: lb://business-service
           predicates:
-            - Path=/institution/**, /student/**, /teacher/**, /class/**, /course/**, /class_schedule/**, /course_record/**, /record/**, /test/**
+            - Path=/biz/**
+          filters:
+            - StripPrefix=1
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin
       globalcors:

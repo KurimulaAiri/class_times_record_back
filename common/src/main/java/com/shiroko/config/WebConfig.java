@@ -33,6 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**") // 拦截所有API
                 .excludePathPatterns(
                         "/auth/**",  //  排除登录等接口
+                        "/internal/**",  //  排除内部服务间调用接口
                         "/error",    //  SpringBoot 默认错误页
                         "/static/**",               //  静态资源
                         "/v3/api-docs/**",             //  OpenAPI 文档

@@ -1,73 +1,122 @@
-services:
+﻿services:
+  # ==================== 基础设施（最先启动） ====================
   nacos:
-    image: nacos/nacos-server:v2.4.3
-    container_name: nacos
+    image: nacos/nacos-server:v2.3.2
+    container_name: cr-nacos
+    restart: unless-stopped
     environment:
       MODE: standalone
-      JVM_XMS: 256m
-      JVM_XMX: 256m
+      NACOS_AUTH_ENABLE: "false"
     ports:
       - "8848:8848"
       - "9848:9848"
     volumes:
-      - nacos-data:/home/nacos/data
-    restart: always
+      - nacos_data:/home/nacos/data
+      - nacos_logs:/home/nacos/logs
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8848/nacos/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/index.html"]
       interval: 10s
       timeout: 5s
-      retries: 30
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
 
+  sentinel:
+    image: bladex/sentinel-dashboard:1.8.6
+    container_name: cr-sentinel
+    restart: unless-stopped
+    ports:
+      - "8080:8858"
+    environment:
+      SENTINEL_DASHBOARD_USERNAME: sentinel
+      SENTINEL_DASHBOARD_PASSWORD: sentinel
+    networks:
+      - app-network
+
+  # ==================== 微服务（依赖基础设施） ====================
   gateway:
     build:
-      context: ./gateway
-      dockerfile: Dockerfile
-    container_name: gateway
+      context: .
+      dockerfile: gateway/Dockerfile
+    image: cr-gateway:latest
+    container_name: cr-gateway
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "9999:9999"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: cr-sentinel:8858
     depends_on:
       nacos:
         condition: service_healthy
-      auth-service:
+      sentinel:
         condition: service_started
-      business-service:
-        condition: service_started
-    restart: always
+    networks:
+      - app-network
 
   auth-service:
     build:
-      context: ./auth-service
-      dockerfile: Dockerfile
-    container_name: auth-service
+      context: .
+      dockerfile: auth-service/Dockerfile
+    image: cr-auth-service:latest
+    container_name: cr-auth-service
+    restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "10002:10002"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
-      DATABASE_ADDRESS: ${DB_HOST:-172.17.0.1}
+      NACOS_SERVER_ADDR: nacos:8848
+      DATABASE_ADDRESS: 121.196.229.10
+      SENTINEL_DASHBOARD: cr-sentinel:8858
     depends_on:
       nacos:
         condition: service_healthy
-    restart: always
+      sentinel:
+        condition: service_started
+    networks:
+      - app-network
 
   business-service:
     build:
-      context: ./business-service
-      dockerfile: Dockerfile
-    container_name: business-service
+      context: .
+      dockerfile: business-service/Dockerfile
+    image: cr-business-service:latest
+    container_name: cr-business-service
+    restart: unless-stopped
     ports:
-      - "8082:8082"
+      - "10001:10001"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
-      DATABASE_ADDRESS: ${DB_HOST:-172.17.0.1}
+      NACOS_SERVER_ADDR: nacos:8848
+      DATABASE_ADDRESS: 121.196.229.10
+      SENTINEL_DASHBOARD: cr-sentinel:8858
     depends_on:
       nacos:
         condition: service_healthy
-    restart: always
+      sentinel:
+        condition: service_started
+    networks:
+      - app-network
+
+  # ==================== Nginx（最后启动，动态解析 gateway） ====================
+  nginx:
+    image: nginx:alpine
+    container_name: cr-nginx
+    restart: unless-stopped
+    ports:
+      - "9080:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      gateway:
+        condition: service_started
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
-  nacos-data:
+  nacos_data:
+  nacos_logs:

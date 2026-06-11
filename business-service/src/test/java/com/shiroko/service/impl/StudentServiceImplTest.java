@@ -71,15 +71,15 @@ class StudentServiceImplTest {
     }
 
     @Test
-    @DisplayName("insertStudent浠呭惈涓昏瀹堕暱搴旀垚鍔熸彃鍏?)
+    @DisplayName("insertStudent仅包含主要家长应成功插入")
     void insertStudent_withOnlyPrimaryParent_shouldInsertSuccessfully() {
         InsertParentDTO primaryParentDTO = new InsertParentDTO();
-        primaryParentDTO.setUsername("鐖朵翰");
-        primaryParentDTO.setRelation("鐖朵翰");
+        primaryParentDTO.setUsername("父亲");
+        primaryParentDTO.setRelation("父亲");
         primaryParentDTO.setPhone("13800001111");
 
         InsertStudentDTO dto = new InsertStudentDTO();
-        dto.setStudentName("寮犱笁");
+        dto.setStudentName("张三");
         dto.setInstitutionId(1L);
         dto.setSex(1L);
         dto.setPrimaryParent(primaryParentDTO);
@@ -99,7 +99,7 @@ class StudentServiceImplTest {
 
         assertEquals(Long.valueOf(200L), result.getCode());
         assertEquals(Long.valueOf(100L), result.getData().getStudentId());
-        assertTrue(result.getMessage().contains("浠呭寘鍚富瑕佸闀?));
+        assertTrue(result.getMessage().contains("仅包含主要家长"));
 
         verify(studentMapper).insert(mockStudent);
         verify(parentMapper).insert(mockParent);
@@ -107,20 +107,20 @@ class StudentServiceImplTest {
     }
 
     @Test
-    @DisplayName("insertStudent鍖呭惈涓绘瀹堕暱搴斿叏閮ㄦ彃鍏ユ垚鍔?)
+    @DisplayName("insertStudent包含次要家长应全部插入成功")
     void insertStudent_withBothParents_shouldInsertBothSuccessfully() {
         InsertParentDTO primaryParentDTO = new InsertParentDTO();
-        primaryParentDTO.setUsername("鐖朵翰");
-        primaryParentDTO.setRelation("鐖朵翰");
+        primaryParentDTO.setUsername("父亲");
+        primaryParentDTO.setRelation("父亲");
         primaryParentDTO.setPhone("13800001111");
 
         InsertParentDTO secondaryParentDTO = new InsertParentDTO();
-        secondaryParentDTO.setUsername("姣嶄翰");
-        secondaryParentDTO.setRelation("姣嶄翰");
+        secondaryParentDTO.setUsername("母亲");
+        secondaryParentDTO.setRelation("母亲");
         secondaryParentDTO.setPhone("13800002222");
 
         InsertStudentDTO dto = new InsertStudentDTO();
-        dto.setStudentName("鏉庡洓");
+        dto.setStudentName("李四");
         dto.setInstitutionId(1L);
         dto.setSex(0L);
         dto.setPrimaryParent(primaryParentDTO);
@@ -144,24 +144,24 @@ class StudentServiceImplTest {
 
         assertEquals(Long.valueOf(200L), result.getCode());
         assertEquals(Long.valueOf(101L), result.getData().getStudentId());
-        assertTrue(result.getMessage().contains("鍖呭惈娆¤瀹堕暱"));
+        assertTrue(result.getMessage().contains("包含次要家长"));
 
         verify(parentMapper, times(2)).insert(any(Parent.class));
         verify(parentStudentMapper, times(2)).insert(any(ParentStudent.class));
     }
 
     @Test
-    @DisplayName("updateStudent鏇存柊涓昏瀹堕暱搴旀纭鐞?)
+    @DisplayName("updateStudent更新主要家长应正确处理")
     void updateStudent_withPrimaryParent_shouldUpdateCorrectly() {
         UpdateParentDTO primaryParentDTO = new UpdateParentDTO();
         primaryParentDTO.setParentId(200L);
-        primaryParentDTO.setUsername("鐖朵翰");
-        primaryParentDTO.setRelation("鐖朵翰");
+        primaryParentDTO.setUsername("父亲");
+        primaryParentDTO.setRelation("父亲");
         primaryParentDTO.setIsPrimary(true);
 
         UpdateStudentDTO dto = new UpdateStudentDTO();
         dto.setId(100L);
-        dto.setStudentName("寮犱笁鏇存柊");
+        dto.setStudentName("张三更新");
         dto.setSex(1L);
         dto.setPrimaryParent(primaryParentDTO);
         dto.setSecondaryParent(null);
@@ -171,7 +171,7 @@ class StudentServiceImplTest {
         when(parentConverter.updateDTOToPojo(primaryParentDTO)).thenReturn(mockParent);
         doReturn(true).when(parentMapper).insertOrUpdate(any(Parent.class));
         when(parentStudentMapper.selectOne(any(LambdaQueryWrapper.class)))
-                .thenReturn(new ParentStudent(1L, 200L, "鐖朵翰", 100L, true, null));
+                .thenReturn(new ParentStudent(1L, 200L, "父亲", 100L, true, null));
         when(parentStudentMapper.updateById(any(ParentStudent.class))).thenReturn(1);
 
         Student mockStudent = new Student();
@@ -188,26 +188,26 @@ class StudentServiceImplTest {
     }
 
     @Test
-    @DisplayName("getStudent杩斿洖null")
+    @DisplayName("getStudent返回null")
     void getStudent_shouldReturnNull() {
         ResponseDTO<QueryStudentVO> result = studentService.getStudent(new QueryStudentDTO());
         assertNull(result);
     }
 
     @Test
-    @DisplayName("getStudentByStudentId鏌ヨ鍗曚釜瀛︾敓搴旇繑鍥炲甫瀹堕暱淇℃伅鐨勭粨鏋?)
+    @DisplayName("getStudentByStudentId查询单个学生应返回带家长信息的结果")
     void getStudentByStudentId_shouldReturnStudentWithParentInfo() {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setStudentId(100L);
 
         StudentDTO studentDTO = new StudentDTO();
         studentDTO.setId(100L);
-        studentDTO.setStudentName("寮犱笁");
+        studentDTO.setStudentName("张三");
         when(studentMapper.selectByStudentId(dto)).thenReturn(studentDTO);
 
         StudentVO studentVO = new StudentVO();
         studentVO.setId(100L);
-        studentVO.setStudentName("寮犱笁");
+        studentVO.setStudentName("张三");
         when(studentConverter.dtoToVO(studentDTO)).thenReturn(studentVO);
 
         ParentVO primaryParentVO = new ParentVO();
@@ -225,7 +225,7 @@ class StudentServiceImplTest {
     }
 
     @Test
-    @DisplayName("getStudentByStudentId瀛︾敓涓嶅瓨鍦ㄥ簲杩斿洖fail")
+    @DisplayName("getStudentByStudentId学生不存在应返回fail")
     void getStudentByStudentId_whenStudentNotExists_shouldReturnFail() {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setStudentId(999L);
@@ -235,11 +235,11 @@ class StudentServiceImplTest {
         ResponseDTO<QueryStudentVO> result = studentService.getStudentByStudentId(dto);
 
         assertEquals(Long.valueOf(400L), result.getCode());
-        assertEquals("瀛︾敓涓嶅瓨鍦?, result.getMessage());
+        assertEquals("学生不存在", result.getMessage());
     }
 
     @Test
-    @DisplayName("getStudentByParentId鍒嗛〉鏌ヨ搴旇繑鍥炲惈鏈烘瀯淇℃伅鐨勭粨鏋?)
+    @DisplayName("getStudentByParentId分页查询应返回含机构信息的结果")
     void getStudentByParentId_shouldReturnStudentsWithInstitutions() {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setParentId(200L);
@@ -248,7 +248,7 @@ class StudentServiceImplTest {
 
         StudentDTO studentDTO1 = new StudentDTO();
         studentDTO1.setId(1L);
-        studentDTO1.setStudentName("寮犱笁");
+        studentDTO1.setStudentName("张三");
         List<StudentDTO> dtoList = List.of(studentDTO1);
 
         doAnswer(invocation -> {
@@ -260,7 +260,7 @@ class StudentServiceImplTest {
 
         StudentVO studentVO = new StudentVO();
         studentVO.setId(1L);
-        studentVO.setStudentName("寮犱笁");
+        studentVO.setStudentName("张三");
         when(studentConverter.dtoListToVOList(dtoList)).thenReturn(List.of(studentVO));
 
         when(institutionMapper.selectListByStudentId(1L)).thenReturn(Collections.emptyList());
@@ -273,7 +273,7 @@ class StudentServiceImplTest {
     }
 
     @Test
-    @DisplayName("getStudentByTeacherId鍒嗛〉鏌ヨ绌虹粨鏋滃簲杩斿洖绌哄垪琛?)
+    @DisplayName("getStudentByTeacherId分页查询空结果应返回空列表")
     void getStudentByTeacherId_whenNoRecords_shouldReturnEmptyList() {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setTeacherId(300L);
@@ -296,7 +296,7 @@ class StudentServiceImplTest {
     }
 
     @Test
-    @DisplayName("getStudentByClassId鍒嗛〉鏌ヨ搴旀敞鍏ュ闀夸俊鎭?)
+    @DisplayName("getStudentByClassId分页查询应注入家长信息")
     void getStudentByClassId_shouldInjectParentInfo() {
         QueryStudentDTO dto = new QueryStudentDTO();
         dto.setClassId(10L);
@@ -305,7 +305,7 @@ class StudentServiceImplTest {
 
         StudentDTO studentDTO = new StudentDTO();
         studentDTO.setId(1L);
-        studentDTO.setStudentName("鐜嬩簲");
+        studentDTO.setStudentName("王五");
         List<StudentDTO> dtoList = List.of(studentDTO);
 
         doAnswer(invocation -> {
@@ -317,7 +317,7 @@ class StudentServiceImplTest {
 
         StudentVO studentVO = new StudentVO();
         studentVO.setId(1L);
-        studentVO.setStudentName("鐜嬩簲");
+        studentVO.setStudentName("王五");
         when(studentConverter.dtoToVO(studentDTO)).thenReturn(studentVO);
 
         ParentVO primaryVO = new ParentVO();
