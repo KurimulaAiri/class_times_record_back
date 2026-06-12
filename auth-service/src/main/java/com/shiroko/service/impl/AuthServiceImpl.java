@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shiroko.context.UserContext;
-import com.shiroko.feign.IdentityFeignClient;
 import com.shiroko.mapper.UserAuthMapper;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.auth.GetUserAuthInfoDTO;
@@ -58,8 +57,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserPlatformService userPlatformService;
     private final PermissionService permissionService;
     private final UserAuthService userAuthService;
-
-    private final IdentityFeignClient identityFeignClient;
+    private final IdentityService identityService;
 
     @Override
     public ResponseDTO<LoginVO> wxLogin(LoginDTO dto) {
@@ -283,7 +281,7 @@ public class AuthServiceImpl implements AuthService {
 
         userAuthService.save(userAuth);
 
-        // 通过 Feign 调用 business-service 创建身份记录
+        // 直接创建身份记录，不再通过 Feign 调用
         saveIdentityRecord(userId, dto.getRole());
 
         return ResponseDTO.success(new RegisterVO(openId));
@@ -300,32 +298,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 通过 Feign 调用 business-service 检查角色权限
+     * 直接查询角色表检查权限
      */
     private boolean hasRolePermission(Long userId, Long role, Permission permission) {
         String roleName = permission.getPermissionName();
-        ResponseDTO<Boolean> response = identityFeignClient.checkAvailable(
-                Map.of("roleName", roleName, "userId", userId)
-        );
-        return response.getCode() == 200 && Boolean.TRUE.equals(response.getData());
+        return identityService.checkAvailable(roleName, userId);
     }
 
     /**
-     * 通过 Feign 调用 business-service 创建身份记录
+     * 直接创建身份记录
      */
     private void saveIdentityRecord(Long userId, Long role) {
         Permission permission = permissionService.getById(role);
         String roleName = permission.getPermissionName();
 
-        ResponseDTO<String> response = identityFeignClient.createIdentity(
-                Map.of("roleName", roleName, "userId", userId, "role", role)
-        );
-
-        if (response.getCode() != 200) {
-            logger.error("身份记录创建失败: {}", response.getMessage());
+        try {
+            identityService.createIdentity(roleName, userId);
+            logger.info("角色身份记录初始化成功: 角色={}, 用户ID={}", role, userId);
+        } catch (Exception e) {
+            logger.error("身份记录创建失败: {}", e.getMessage());
             throw new RuntimeException("注册失败，身份信息初始化异常");
         }
-        logger.info("角色身份记录初始化成功: 角色={}, 用户ID={}", role, userId);
     }
 
     private UserAuth validAuth(String account, Long role, Long institutionId) {

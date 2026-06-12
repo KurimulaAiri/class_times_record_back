@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 public class SysUser implements Serializable {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     private String username;
@@ -23,6 +23,8 @@ public class SysUser implements Serializable {
     private String nickname;
 
     private String password;
+
+    private String salt;
 
     private String phone;
 

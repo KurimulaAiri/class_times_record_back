@@ -3,15 +3,18 @@ pipeline {
 
     environment {
         GIT_REPO_URL    = "git@github.com:KurimulaAiri/class_times_record_back.git"
-        GIT_BRANCH      = "master"
+        GIT_BRANCH      = "micro_service"
         PROJECT_NAME    = "class-times-record"
         MAVEN_BUILD_CMD = "clean package -Dmaven.test.skip=true"
         // 部署目标主机（Jenkins 容器通过 SSH 连接宿主机执行 docker compose）
         HOST_USER       = "root"
         HOST_IP         = "172.21.0.1"
-        HOST_SSH_PORT   = 25184
+        HOST_SSH_PORT   = "25184"
         HOST_DEPLOY_DIR = "/opt/java-deploy/class_times_record_back"
-        DB_HOST         = "172.17.0.1"
+        DB_HOST         = "121.196.229.10"
+        NACOS_ADDR      = "nacos.kurimula-airi.top"
+        NACOS_NAMESPACE = "course-record"
+        SENTINEL_ADDR   = "sentinel.kurimula-airi.top"
         COMPOSE_PROJECT = "class-times-record"
     }
 
@@ -26,7 +29,7 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'DEPLOY_SCOPE', choices: ['all', 'gateway', 'auth-service', 'business-service'], description: '部署范围：all=全部，或指定单个服务')
+        choice(name: 'DEPLOY_SCOPE', choices: ['all', 'gateway', 'auth-service', 'business-service', 'admin-service'], description: '部署范围：all=全部，或指定单个服务')
         booleanParam(name: 'SKIP_BUILD', defaultValue: false, description: '跳过构建，直接部署')
         booleanParam(name: 'ROLLBACK', defaultValue: false, description: '回滚到上一版本镜像')
     }
@@ -71,7 +74,7 @@ pipeline {
                         # Sync only needed files (JARs, Dockerfiles, docker-compose.yml)
                         rsync -azP -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
                             pom.xml docker-compose.yml \${HOST_USER}@\${HOST_IP}:\${HOST_DEPLOY_DIR}/
-                        for SVC in gateway auth-service business-service; do
+                        for SVC in gateway auth-service business-service admin-service; do
                             rsync -azP --include='target/*.jar' --include='Dockerfile' --include='*/' --exclude='*' \\
                                 -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
                                 ./\${SVC}/ \${HOST_USER}@\${HOST_IP}:\${HOST_DEPLOY_DIR}/\${SVC}/
@@ -88,17 +91,20 @@ pipeline {
                     sh """
                         ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'DEPLOY_EOF'
 cd "${HOST_DEPLOY_DIR}"
-export DB_HOST="${DB_HOST}"
+export NACOS_ADDR="${NACOS_ADDR}"
+export NACOS_NAMESPACE="${NACOS_NAMESPACE}"
+export SENTINEL_ADDR="${SENTINEL_ADDR}"
+export DB_ADDR="${DB_HOST}"
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT}"
 DEPLOY_SCOPE="${params.DEPLOY_SCOPE}"
 ROLLBACK="${params.ROLLBACK}"
 
 # Tag current images as backup before deploying
 if [ "\$ROLLBACK" = "false" ]; then
-    for SVC in gateway auth-service business-service; do
-        EXISTING=\$(docker images -q \${COMPOSE_PROJECT_NAME}_\${SVC}:latest 2>/dev/null)
+    for SVC in gateway auth-service business-service admin-service; do
+        EXISTING=\$(docker images -q cr-\${SVC}:latest 2>/dev/null)
         if [ -n "\$EXISTING" ]; then
-            docker tag \${COMPOSE_PROJECT_NAME}_\${SVC}:latest \${COMPOSE_PROJECT_NAME}_\${SVC}:backup 2>/dev/null || true
+            docker tag cr-\${SVC}:latest cr-\${SVC}:backup 2>/dev/null || true
         fi
     done
 fi
@@ -106,10 +112,10 @@ fi
 # Rollback: retag backup images
 if [ "\$ROLLBACK" = "true" ]; then
     echo "-> Rolling back to previous images"
-    for SVC in gateway auth-service business-service; do
-        BACKUP=\$(docker images -q \${COMPOSE_PROJECT_NAME}_\${SVC}:backup 2>/dev/null)
+    for SVC in gateway auth-service business-service admin-service; do
+        BACKUP=\$(docker images -q cr-\${SVC}:backup 2>/dev/null)
         if [ -n "\$BACKUP" ]; then
-            docker tag \${COMPOSE_PROJECT_NAME}_\${SVC}:backup \${COMPOSE_PROJECT_NAME}_\${SVC}:latest
+            docker tag cr-\${SVC}:backup cr-\${SVC}:latest
             echo "Restored \$SVC from backup"
         else
             echo "No backup found for \$SVC"
@@ -117,39 +123,18 @@ if [ "\$ROLLBACK" = "true" ]; then
     done
 fi
 
-# Build and deploy based on scope
-BUILD_ARGS=""
-if [ "\$DEPLOY_SCOPE" != "all" ]; then
-    BUILD_ARGS="--no-deps build \$DEPLOY_SCOPE && docker compose up -d \$DEPLOY_SCOPE"
-else
-    BUILD_ARGS="build && docker compose up -d"
-fi
-
+# Build images
 if [ "\$ROLLBACK" = "false" ]; then
-    docker compose build \$([ "\$DEPLOY_SCOPE" = "all" ] && echo "" || echo "\$DEPLOY_SCOPE")
-fi
-
-# Start Nacos first if not running
-if ! docker compose ps nacos | grep -q "running"; then
-    echo "-> Starting Nacos..."
-    docker compose up -d nacos
-    echo "-> Waiting for Nacos to be healthy..."
-    for i in \$(seq 1 60); do
-        if docker compose exec nacos curl -sf http://localhost:8848/nacos/ > /dev/null 2>&1; then
-            echo "Nacos is healthy"
-            break
-        fi
-        if [ \$i -eq 60 ]; then
-            echo "Nacos health check timeout"
-            exit 1
-        fi
-        sleep 2
-    done
+    if [ "\$DEPLOY_SCOPE" = "all" ]; then
+        docker compose build
+    else
+        docker compose build \$DEPLOY_SCOPE
+    fi
 fi
 
 # Start services (downstream first, gateway last)
 if [ "\$DEPLOY_SCOPE" = "all" ]; then
-    docker compose up -d auth-service business-service
+    docker compose up -d auth-service business-service admin-service
     sleep 10
     docker compose up -d gateway
 else
@@ -176,10 +161,9 @@ FAILED=0
 verify_service() {
     local NAME=\$1
     local PORT=\$2
-    local CONTAINER="\${COMPOSE_PROJECT_NAME}-\${NAME}-1"
 
     # Check container is running
-    STATUS=\$(docker inspect -f '{{.State.Status}}' \$CONTAINER 2>/dev/null)
+    STATUS=\$(docker inspect -f '{{.State.Status}}' cr-\${NAME} 2>/dev/null)
     if [ "\$STATUS" != "running" ]; then
         echo "FAIL: \$NAME - container not running (status: \$STATUS)"
         docker compose logs --tail=20 \$NAME 2>/dev/null
@@ -187,25 +171,22 @@ verify_service() {
         return
     fi
 
-    # Health check via HTTP
-    sleep 3
-    if curl -sf "http://localhost:\$PORT/actuator/health" > /dev/null 2>&1; then
-        echo "OK:   \$NAME (port \$PORT, health=UP)"
-    elif curl -sf "http://localhost:\$PORT/" > /dev/null 2>&1; then
-        echo "OK:   \$NAME (port \$PORT, responding)"
-    else
-        echo "WARN: \$NAME (port \$PORT, container running but not responding yet)"
-    fi
+    # Health check via HTTP (network_mode=host, access via localhost)
+    sleep 5
+    for i in \$(seq 1 12); do
+        if curl -sf "http://localhost:\$PORT/actuator/health" > /dev/null 2>&1; then
+            echo "OK:   \$NAME (port \$PORT, health=UP)"
+            return
+        fi
+        sleep 5
+    done
+    echo "WARN: \$NAME (port \$PORT, container running but health check timeout)"
 }
 
-verify_service "auth-service" 8081
-verify_service "business-service" 8082
-verify_service "gateway" 8080
-
-# Check Nacos registration
-echo ""
-echo "--- Nacos Service Registry ---"
-docker compose exec nacos curl -sf "http://localhost:8848/nacos/v1/ns/service/list?pageNo=1&pageSize=10" 2>/dev/null || echo "Cannot query Nacos"
+verify_service "gateway" 9999
+verify_service "auth-service" 10002
+verify_service "business-service" 10001
+verify_service "admin-service" 10003
 
 if [ \$FAILED -ne 0 ]; then
     echo ""
@@ -225,9 +206,10 @@ VERIFY_EOF
             echo "=================================================="
             echo "       Deployment Success (Docker Microservices)"
             echo " Scope:         ${params.DEPLOY_SCOPE}"
-            echo " Gateway:       http://${HOST_IP}:8080"
-            echo " Auth Service:  http://${HOST_IP}:8081"
-            echo " Business Svc:  http://${HOST_IP}:8082"
+            echo " Gateway:       http://${HOST_IP}:9999"
+            echo " Auth Service:  http://${HOST_IP}:10002"
+            echo " Business Svc:  http://${HOST_IP}:10001"
+            echo " Admin Service:  http://${HOST_IP}:10003"
             echo " Nacos:         http://${HOST_IP}:8848/nacos"
             echo "=================================================="
         }

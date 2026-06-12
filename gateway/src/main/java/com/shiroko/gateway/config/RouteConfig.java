@@ -11,18 +11,18 @@ public class RouteConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("auth-service", r -> r
+                .route("cr-auth-service", r -> r
                         .path("/auth/**")
                         .filters(f -> f.stripPrefix(1))
-                        .uri("lb://auth-service"))
-                .route("business-service", r -> r
+                        .uri("lb://cr-auth-service"))
+                .route("cr-business-service", r -> r
                         .path("/biz/**")
                         .filters(f -> f.stripPrefix(1))
-                        .uri("lb://business-service"))
-                .route("admin-service", r -> r
+                        .uri("lb://cr-business-service"))
+                .route("cr-admin-service", r -> r
                         .path("/admin/**")
                         .filters(f -> f.stripPrefix(1))
-                        .uri("lb://admin-service"))
+                        .uri("lb://cr-admin-service"))
                 .build();
     }
 }

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 public class SysRole implements Serializable {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     private String roleName;

@@ -1,40 +1,5 @@
-﻿services:
-  # ==================== 基础设施（最先启动） ====================
-  nacos:
-    image: nacos/nacos-server:v2.3.2
-    container_name: cr-nacos
-    restart: unless-stopped
-    environment:
-      MODE: standalone
-      NACOS_AUTH_ENABLE: "false"
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-    volumes:
-      - nacos_data:/home/nacos/data
-      - nacos_logs:/home/nacos/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/index.html"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - app-network
-
-  sentinel:
-    image: bladex/sentinel-dashboard:1.8.6
-    container_name: cr-sentinel
-    restart: unless-stopped
-    ports:
-      - "8080:8858"
-    environment:
-      SENTINEL_DASHBOARD_USERNAME: sentinel
-      SENTINEL_DASHBOARD_PASSWORD: sentinel
-    networks:
-      - app-network
-
-  # ==================== 微服务（依赖基础设施） ====================
+services:
+  # ==================== 微服务（依赖远程 Nacos/Sentinel/MySQL） ====================
   gateway:
     build:
       context: .
@@ -45,15 +10,9 @@
     ports:
       - "9999:9999"
     environment:
-      NACOS_SERVER_ADDR: nacos:8848
-      SENTINEL_DASHBOARD: cr-sentinel:8858
-    depends_on:
-      nacos:
-        condition: service_healthy
-      sentinel:
-        condition: service_started
-    networks:
-      - app-network
+      NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
+    network_mode: host
 
   auth-service:
     build:
@@ -65,16 +24,10 @@
     ports:
       - "10002:10002"
     environment:
-      NACOS_SERVER_ADDR: nacos:8848
-      DATABASE_ADDRESS: 121.196.229.10
-      SENTINEL_DASHBOARD: cr-sentinel:8858
-    depends_on:
-      nacos:
-        condition: service_healthy
-      sentinel:
-        condition: service_started
-    networks:
-      - app-network
+      NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
+      DATABASE_ADDRESS: ${DB_ADDR:-121.196.229.10}
+    network_mode: host
 
   business-service:
     build:
@@ -86,16 +39,10 @@
     ports:
       - "10001:10001"
     environment:
-      NACOS_SERVER_ADDR: nacos:8848
-      DATABASE_ADDRESS: 121.196.229.10
-      SENTINEL_DASHBOARD: cr-sentinel:8858
-    depends_on:
-      nacos:
-        condition: service_healthy
-      sentinel:
-        condition: service_started
-    networks:
-      - app-network
+      NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
+      DATABASE_ADDRESS: ${DB_ADDR:-121.196.229.10}
+    network_mode: host
 
   admin-service:
     build:
@@ -107,37 +54,7 @@
     ports:
       - "10003:10003"
     environment:
-      NACOS_SERVER_ADDR: nacos:8848
-      DATABASE_ADDRESS: 121.196.229.10
-      SENTINEL_DASHBOARD: cr-sentinel:8858
-    depends_on:
-      nacos:
-        condition: service_healthy
-      sentinel:
-        condition: service_started
-    networks:
-      - app-network
-
-  # ==================== Nginx（最后启动，动态解析 gateway） ====================
-  nginx:
-    image: nginx:alpine
-    container_name: cr-nginx
-    restart: unless-stopped
-    ports:
-      - "9080:80"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-    depends_on:
-      gateway:
-        condition: service_started
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  nacos_data:
-  nacos_logs:
+      NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
+      DATABASE_ADDRESS: ${DB_ADDR:-121.196.229.10}
+    network_mode: host

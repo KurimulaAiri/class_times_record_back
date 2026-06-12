@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shiroko.context.UserContext;
 import com.shiroko.converter.UserConverter;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.UserDTO;
 import com.shiroko.repository.entity.User;
 import com.shiroko.service.UserService;
 import com.shiroko.util.JwtUtils;
@@ -21,7 +22,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Description: JWT 拦截器 - 校验 Access Token
+ * Description: 小程序 JWT 拦截器 - 校验 Access Token 并设置 UserContext
  *
  * @author Guguguy
  * @version 2.0

@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin/menu")
+@RequestMapping("/menu")
 @RequiredArgsConstructor
 public class SysMenuController {
 

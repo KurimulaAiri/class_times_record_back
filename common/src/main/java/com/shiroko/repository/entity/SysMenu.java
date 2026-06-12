@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Data
 public class SysMenu implements Serializable {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     private Long parentId;

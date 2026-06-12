@@ -2,12 +2,9 @@ package com.shiroko.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shiroko.converter.AdminConverter;
 import com.shiroko.converter.UserConverter;
-import com.shiroko.feign.IdentityFeignClient;
 import com.shiroko.mapper.UserMapper;
-import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.entity.Admin;
 import com.shiroko.repository.entity.Permission;
 import com.shiroko.repository.entity.User;
@@ -15,6 +12,7 @@ import com.shiroko.repository.entity.UserPlatform;
 import com.shiroko.repository.entity.common.RoleBaseEntity;
 import com.shiroko.repository.vo.UserVO;
 import com.shiroko.service.AdminService;
+import com.shiroko.service.IdentityService;
 import com.shiroko.service.UserPlatformService;
 import com.shiroko.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +21,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -32,13 +28,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private final AdminService adminService;
     private final UserPlatformService userPlatformService;
+    private final IdentityService identityService;
 
     private final AdminConverter adminConverter;
     private final UserConverter userConverter;
 
-    private final IdentityFeignClient identityFeignClient;
     private final UserMapper userMapper;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -104,17 +99,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserVO<RoleBaseEntity> getFullUserInfo(Permission permission, User user) {
         String permissionName = permission.getPermissionName();
 
-        ResponseDTO<Map<String, Object>> response = identityFeignClient.getByUserId(
-                Map.of("roleName", permissionName, "userId", user.getId())
-        );
-
-        if (response.getCode() != 200 || response.getData() == null) {
-            return null;
-        }
-
-        // 根据 roleName 反序列化为具体子类（Teacher / Parent），绕过抽象类 RoleBaseEntity 的反序列化
-        Class<? extends RoleBaseEntity> roleClass = getRoleClass(permissionName);
-        RoleBaseEntity roleEntity = objectMapper.convertValue(response.getData(), roleClass);
+        RoleBaseEntity roleEntity = identityService.getByUserId(permissionName, user.getId());
 
         UserVO<RoleBaseEntity> vo = userConverter.pojoToVO(user);
         vo.setRoleId(permission.getId());
@@ -123,13 +108,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Admin admin = adminService.getOne(new LambdaQueryWrapper<Admin>().eq(Admin::getUserId, user.getId()));
         vo.setAdmin(adminConverter.pojoToVO(admin));
         return vo;
-    }
-
-    private Class<? extends RoleBaseEntity> getRoleClass(String roleName) {
-        return switch (roleName.toLowerCase()) {
-            case "teacher" -> com.shiroko.repository.entity.Teacher.class;
-            case "parent" -> com.shiroko.repository.entity.Parent.class;
-            default -> throw new IllegalArgumentException("Unsupported role: " + roleName);
-        };
     }
 }

@@ -19,8 +19,10 @@ import com.shiroko.repository.vo.admin.LoginSysUserVO;
 import com.shiroko.repository.vo.admin.SysUserVO;
 import com.shiroko.service.SysUserService;
 import com.shiroko.util.JwtUtils;
+import com.shiroko.util.SM2Util;
+import com.shiroko.util.SM3Util;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,7 +43,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final SysUserConverter sysUserConverter;
     private final JwtUtils jwtUtils;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Value("${crypto.sm2.private-key}")
+    private String sm2PrivateKey;
 
     @Override
     public ResponseDTO<LoginSysUserVO> login(LoginSysUserDTO dto) {
@@ -54,7 +58,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (sysUser.getStatus() != 1) {
             return ResponseDTO.fail("账号已被禁用");
         }
-        if (!passwordEncoder.matches(dto.getPassword(), sysUser.getPassword())) {
+        // SM2 解密前端传来的密码
+        String plainPassword = SM2Util.decrypt(dto.getPassword(), sm2PrivateKey);
+        // SM3 带盐值验证密码
+        String hashedPassword = SM3Util.digestWithSalt(plainPassword, sysUser.getSalt());
+        if (!hashedPassword.equalsIgnoreCase(sysUser.getPassword())) {
             return ResponseDTO.fail("用户名或密码错误");
         }
 
@@ -125,7 +133,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser sysUser = new SysUser();
         sysUser.setUsername(dto.getUsername());
         sysUser.setNickname(dto.getNickname());
-        sysUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        // SM2 解密前端传来的密码，SM3 带盐值哈希存储
+        String plainPassword = SM2Util.decrypt(dto.getPassword(), sm2PrivateKey);
+        String salt = UUID.randomUUID().toString().replace("-", "");
+        sysUser.setPassword(SM3Util.digestWithSalt(plainPassword, salt));
+        sysUser.setSalt(salt);
         sysUser.setPhone(dto.getPhone());
         sysUser.setEmail(dto.getEmail());
         sysUser.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
@@ -200,7 +212,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (sysUser == null) {
             return ResponseDTO.fail("用户不存在");
         }
-        sysUser.setPassword(passwordEncoder.encode(newPassword));
+        // SM2 解密前端传来的新密码，SM3 带盐值哈希存储
+        String plainPassword = SM2Util.decrypt(newPassword, sm2PrivateKey);
+        String salt = UUID.randomUUID().toString().replace("-", "");
+        sysUser.setPassword(SM3Util.digestWithSalt(plainPassword, salt));
+        sysUser.setSalt(salt);
         sysUserMapper.updateById(sysUser);
         return ResponseDTO.success("密码重置成功");
     }

@@ -34,8 +34,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/auth/auth/refresh",
             "/biz/institution/get_by_open_id",
             "/biz/institution/get_by_institution_code",
-            "/biz/internal/identity",
-            "/admin/user/login"
+            "/admin/user/login",
+            "/admin/crypto/public_key"
     );
 
     @Override
