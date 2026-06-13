@@ -6,7 +6,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 WORKDIR /app
 
 # 从宿主机本地的 gateway/target 目录复制 Jar 包
-COPY gateway/target/gateway-*.jar app.jar
+COPY gateway/target/gateway-[0-9]*.jar app.jar
 
 EXPOSE 9999
 
