@@ -281,7 +281,7 @@ VERIFY_EOF
             echo "=================================================="
             echo "              Deployment Success"
             echo "=================================================="
-            echo " Gateway (JAR):    ${HOST_IP}:9999"
+            echo " Gateway (JAR):    ${HOST_IP}:11011"
             echo " Auth (Docker):    ${HOST_IP}:10002"
             echo " Business (Docker):${HOST_IP}:10001"
             echo " Admin (Docker):   ${HOST_IP}:10003"
