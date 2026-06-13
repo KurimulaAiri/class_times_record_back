@@ -114,13 +114,12 @@ echo "Using Java: \$JAVA_CMD"
 # JVM 内存优化参数（与 Dockerfile 保持一致）
 nohup \$JAVA_CMD \\
   -Xms64m -Xmx128m \\
-  -XX:+UseZGC \\
+  -XX:+UseG1GC \\
+  -XX:MaxGCPauseMillis=200 \\
   -Dspring.threads.virtual.enabled=true \\
   -Djava.security.egd=file:/dev/./urandom \\
   -XX:MaxMetaspaceSize=128m \\
   -XX:ReservedCodeCacheSize=64m \\
-  -XX:+TieredCompilation \\
-  -XX:TieredStopAtLevel=1 \\
   -jar gateway.jar > gateway.log 2>&1 &
 disown
 sleep 2

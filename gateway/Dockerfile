@@ -16,16 +16,14 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
 # JVM 内存优化参数:
 # - 初始堆 64MB，最大堆 128MB（网关仅做路由+JWT校验，无需大堆）
 # - 启用虚拟线程（Java 21），大幅减少线程栈内存占用
-# - ZGC 低延迟垃圾回收，适合小堆场景
-# - 关闭 C2 编译层和分层编译，减少 JIT 编译内存开销
-# - 按需加载类，减少元空间占用
+# - G1GC 平衡吞吐与延迟，Alpine 兼容性最好
+# - 限制元空间和代码缓存大小
 ENV JAVA_OPTS="-Xms64m -Xmx128m \
-  -XX:+UseZGC \
+  -XX:+UseG1GC \
+  -XX:MaxGCPauseMillis=200 \
   -Dspring.threads.virtual.enabled=true \
   -Djava.security.egd=file:/dev/./urandom \
   -XX:MaxMetaspaceSize=128m \
-  -XX:ReservedCodeCacheSize=64m \
-  -XX:+TieredCompilation \
-  -XX:TieredStopAtLevel=1"
+  -XX:ReservedCodeCacheSize=64m"
 
 ENTRYPOINT exec java ${JAVA_OPTS} -jar app.jar
