@@ -77,8 +77,9 @@ pipeline {
                     sh """
                         # 同步 JAR 到宿主机
                         ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_GATEWAY_DIR}"
+                        # 排除 .original 薄包，只传输 fat JAR
                         scp -i \${HOST_SSH_KEY_PATH} -P \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \\
-                            gateway/target/gateway-*.jar \${HOST_USER}@\${HOST_IP}:\${HOST_GATEWAY_DIR}/gateway.jar
+                            gateway/target/gateway-[0-9]*.jar \${HOST_USER}@\${HOST_IP}:\${HOST_GATEWAY_DIR}/gateway.jar
 
                         # 重启 Gateway
                         ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'GATEWAY_EOF'
