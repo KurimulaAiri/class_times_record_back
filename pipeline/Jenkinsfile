@@ -128,7 +128,7 @@ GATEWAY_EOF
                         for SVC in auth-service business-service admin-service; do
                             ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_DOCKER_DIR}/\${SVC}/target"
                             scp -i \${HOST_SSH_KEY_PATH} -P \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \\
-                                ./\${SVC}/target/\${SVC}-*.jar \${HOST_USER}@\${HOST_IP}:\${HOST_DOCKER_DIR}/\${SVC}/target/\${SVC}.jar
+                                ./\${SVC}/target/\${SVC}-*.jar \${HOST_USER}@\${HOST_IP}:\${HOST_DOCKER_DIR}/\${SVC}/target/
                             scp -i \${HOST_SSH_KEY_PATH} -P \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \\
                                 ./\${SVC}/Dockerfile \${HOST_USER}@\${HOST_IP}:\${HOST_DOCKER_DIR}/\${SVC}/
                         done
