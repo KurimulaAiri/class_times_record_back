@@ -99,8 +99,18 @@ fi
 # 启动新 Gateway（BUILD_ID=dontKillMe 防止 Jenkins 误杀）
 echo "Starting Gateway..."
 export BUILD_ID=dontKillMe
-export JAVA_HOME=/usr/local/jdk-21
-nohup \$JAVA_HOME/bin/java -jar gateway.jar > gateway.log 2>&1 &
+# 查找可用的 Java：优先 JAVA_HOME，其次常见路径，最后 PATH
+if [ -x "\$JAVA_HOME/bin/java" ]; then
+    JAVA_CMD="\$JAVA_HOME/bin/java"
+elif [ -x "/usr/local/jdk-21/bin/java" ]; then
+    JAVA_CMD="/usr/local/jdk-21/bin/java"
+elif [ -x "/usr/lib/jvm/java-21-openjdk/bin/java" ]; then
+    JAVA_CMD="/usr/lib/jvm/java-21-openjdk/bin/java"
+else
+    JAVA_CMD="java"
+fi
+echo "Using Java: \$JAVA_CMD"
+nohup \$JAVA_CMD -jar gateway.jar > gateway.log 2>&1 &
 disown
 sleep 2
 # 验证进程存活
