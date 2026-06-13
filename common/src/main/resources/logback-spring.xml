@@ -18,16 +18,30 @@
         </encoder>
     </appender>
 
+    <!-- MyBatis Mapper 日志 -->
     <logger name="com.shiroko.repository.mapper" level="DEBUG" additivity="false">
         <appender-ref ref="ASYNC_STDOUT" />
     </logger>
 
+    <!-- Spring MVC 相关日志降级 -->
     <logger name="org.springframework.web.servlet.DispatcherServlet" level="WARN" additivity="false">
         <appender-ref ref="ASYNC_STDOUT" />
     </logger>
     <logger name="org.springframework.web.servlet.mvc.method.annotation" level="WARN" additivity="false">
         <appender-ref ref="ASYNC_STDOUT" />
     </logger>
+
+    <!-- 屏蔽 Sentinel 高频心跳INFO日志，只输出警告/错误 -->
+    <logger name="com.alibaba.csp.sentinel.endpoint.SentinelHealthIndicator" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_STDOUT" />
+    </logger>
+
+    <!-- 如需关闭签名拦截器日志，取消下面注释即可 -->
+    <!--
+    <logger name="com.shiroko.interceptor.SignInterceptor" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_STDOUT" />
+    </logger>
+    -->
 
     <root level="INFO">
         <appender-ref ref="ASYNC_STDOUT" />

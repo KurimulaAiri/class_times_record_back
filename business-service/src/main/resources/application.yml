@@ -6,6 +6,7 @@ spring:
       - optional:nacos:cr-business-service.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:common-db.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:common-sentinel.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:logback-spring.xml?group=DEFAULT_GROUP&refresh=true
   cloud:
     nacos:
       server-addr: ${NACOS_SERVER_ADDR:https://nacos.kurimula-airi.top}
