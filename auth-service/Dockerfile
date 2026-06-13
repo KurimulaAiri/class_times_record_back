@@ -1,7 +1,7 @@
 FROM eclipse-temurin:21-jre-alpine
 
-# 安装 curl 用于健康检查
-RUN apk add --no-cache curl
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && apk add --no-cache curl
 
 WORKDIR /app
 
