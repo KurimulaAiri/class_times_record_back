@@ -8,11 +8,11 @@ spring:
       - optional:nacos:common-sentinel.yaml?group=DEFAULT_GROUP&refresh=true
   cloud:
     nacos:
-      server-addr: ${NACOS_SERVER_ADDR:nacos.kurimula-airi.top}
+      server-addr: ${NACOS_SERVER_ADDR}
       discovery:
-        namespace: ${NACOS_NAMESPACE:course-record}
+        namespace: ${NACOS_NAMESPACE}
         group: DEFAULT_GROUP
       config:
-        namespace: ${NACOS_NAMESPACE:course-record}
+        namespace: ${NACOS_NAMESPACE}
         group: DEFAULT_GROUP
         file-extension: yaml
