@@ -1,19 +1,5 @@
 services:
-  # ==================== 微服务（依赖远程 Nacos/Sentinel/MySQL） ====================
-  gateway:
-    build:
-      context: .
-      dockerfile: gateway/Dockerfile
-    image: cr-gateway:latest
-    container_name: cr-gateway
-    restart: unless-stopped
-    ports:
-      - "9999:9999"
-    environment:
-      NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
-      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
-    network_mode: host
-
+  # ==================== 微服务容器（gateway 作为 JAR 直跑，不走容器） ====================
   auth-service:
     build:
       context: .

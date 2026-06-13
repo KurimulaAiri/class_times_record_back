@@ -4,13 +4,16 @@ pipeline {
     environment {
         GIT_REPO_URL    = "git@github.com:KurimulaAiri/class_times_record_back.git"
         GIT_BRANCH      = "micro_service"
-        PROJECT_NAME    = "class-times-record"
         MAVEN_BUILD_CMD = "clean package -Dmaven.test.skip=true"
-        // 部署目标主机（Jenkins 容器通过 SSH 连接宿主机执行 docker compose）
+        // 部署目标主机
         HOST_USER       = "root"
         HOST_IP         = "172.21.0.1"
         HOST_SSH_PORT   = "25184"
-        HOST_DEPLOY_DIR = "/opt/java-deploy/class_times_record_back"
+        // Gateway 直跑目录（非 Docker）
+        HOST_GATEWAY_DIR  = "/opt/java-deploy/class_times_record_back/gateway"
+        // Docker 微服务部署目录
+        HOST_DOCKER_DIR   = "/opt/java-deploy/class_times_record_docker"
+        // 基础设施
         DB_HOST         = "121.196.229.10"
         NACOS_ADDR      = "nacos.kurimula-airi.top"
         NACOS_NAMESPACE = "course-record"
@@ -29,9 +32,9 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'DEPLOY_SCOPE', choices: ['all', 'gateway', 'auth-service', 'business-service', 'admin-service'], description: '部署范围：all=全部，或指定单个服务')
+        choice(name: 'DEPLOY_SCOPE', choices: ['all', 'gateway', 'auth-service', 'business-service', 'admin-service'], description: '部署范围')
         booleanParam(name: 'SKIP_BUILD', defaultValue: false, description: '跳过构建，直接部署')
-        booleanParam(name: 'ROLLBACK', defaultValue: false, description: '回滚到上一版本镜像')
+        booleanParam(name: 'ROLLBACK', defaultValue: false, description: '回滚到上一版本')
     }
 
     stages {
@@ -60,37 +63,90 @@ pipeline {
             }
             post {
                 failure { error "Build failed" }
-                success { echo "Build success" }
             }
         }
 
-        stage("Sync to Host") {
-            when { expression { params.ROLLBACK == false } }
+        stage("Deploy Gateway (JAR)") {
+            when {
+                expression { params.ROLLBACK == false }
+                anyOf { expression { params.DEPLOY_SCOPE == 'all' }; expression { params.DEPLOY_SCOPE == 'gateway' } }
+            }
             steps {
-                echo "-> Syncing project to host deploy dir"
+                echo "-> Deploying Gateway as standalone JAR"
                 withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
                     sh """
-                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_DEPLOY_DIR}"
-                        # Sync only needed files (JARs, Dockerfiles, docker-compose.yml)
+                        # 同步 JAR 到宿主机
+                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_GATEWAY_DIR}"
                         rsync -azP -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
-                            pom.xml docker-compose.yml \${HOST_USER}@\${HOST_IP}:\${HOST_DEPLOY_DIR}/
-                        for SVC in gateway auth-service business-service admin-service; do
-                            rsync -azP --include='target/*.jar' --include='Dockerfile' --include='*/' --exclude='*' \\
-                                -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
-                                ./\${SVC}/ \${HOST_USER}@\${HOST_IP}:\${HOST_DEPLOY_DIR}/\${SVC}/
+                            gateway/target/gateway-*.jar \${HOST_USER}@\${HOST_IP}:\${HOST_GATEWAY_DIR}/gateway.jar
+
+                        # 重启 Gateway
+                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'GATEWAY_EOF'
+GATEWAY_DIR="${HOST_GATEWAY_DIR}"
+cd \$GATEWAY_DIR
+
+# 查找并停止旧进程（匹配 gateway.jar）
+OLD_PID=\$(ps aux | grep '[g]ateway.jar' | awk '{print \$2}')
+if [ -n "\$OLD_PID" ]; then
+    echo "Stopping old gateway (PID: \$OLD_PID)..."
+    kill \$OLD_PID
+    for i in \$(seq 1 15); do
+        if ! kill -0 \$OLD_PID 2>/dev/null; then
+            echo "Gateway stopped."
+            break
+        fi
+        sleep 1
+    done
+    # 强制杀掉
+    kill -9 \$OLD_PID 2>/dev/null || true
+fi
+
+# 启动新 Gateway
+export JAVA_HOME=/usr/local/jdk-21
+nohup \$JAVA_HOME/bin/java -jar gateway.jar > gateway.log 2>&1 &
+echo "Gateway started (PID: \$!)"
+GATEWAY_EOF
+                    """
+                }
+            }
+        }
+
+        stage("Sync Docker Files") {
+            when {
+                expression { params.ROLLBACK == false }
+                anyOf { expression { params.DEPLOY_SCOPE == 'all' }; expression { params.DEPLOY_SCOPE != 'gateway' } }
+            }
+            steps {
+                echo "-> Syncing Dockerfiles and JARs for microservices"
+                withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
+                    sh """
+                        ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_DOCKER_DIR}"
+                        # 同步 docker-compose.yml
+                        rsync -azP -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
+                            docker-compose.yml \${HOST_USER}@\${HOST_IP}:\${HOST_DOCKER_DIR}/
+                        # 同步微服务 JAR + Dockerfile（不含 gateway）
+                        for SVC in auth-service business-service admin-service; do
+                            ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} "mkdir -p \${HOST_DOCKER_DIR}/\${SVC}/target"
+                            rsync -azP -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
+                                ./\${SVC}/target/\${SVC}-*.jar \${HOST_USER}@\${HOST_IP}:\${HOST_DOCKER_DIR}/\${SVC}/target/\${SVC}.jar
+                            rsync -azP -e "ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no" \\
+                                ./\${SVC}/Dockerfile \${HOST_USER}@\${HOST_IP}:\${HOST_DOCKER_DIR}/\${SVC}/
                         done
                     """
                 }
             }
         }
 
-        stage("Build Docker Images & Deploy") {
+        stage("Build Docker & Deploy Microservices") {
+            when {
+                anyOf { expression { params.DEPLOY_SCOPE == 'all' }; expression { params.DEPLOY_SCOPE != 'gateway' } }
+            }
             steps {
-                echo "-> Building images and deploying (scope: ${params.DEPLOY_SCOPE})"
+                echo "-> Building Docker images and deploying (scope: ${params.DEPLOY_SCOPE})"
                 withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
                     sh """
                         ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'DEPLOY_EOF'
-cd "${HOST_DEPLOY_DIR}"
+cd "${HOST_DOCKER_DIR}"
 export NACOS_ADDR="${NACOS_ADDR}"
 export NACOS_NAMESPACE="${NACOS_NAMESPACE}"
 export SENTINEL_ADDR="${SENTINEL_ADDR}"
@@ -99,9 +155,9 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT}"
 DEPLOY_SCOPE="${params.DEPLOY_SCOPE}"
 ROLLBACK="${params.ROLLBACK}"
 
-# Tag current images as backup before deploying
+# 备份现有镜像（非 gateway）
 if [ "\$ROLLBACK" = "false" ]; then
-    for SVC in gateway auth-service business-service admin-service; do
+    for SVC in auth-service business-service admin-service; do
         EXISTING=\$(docker images -q cr-\${SVC}:latest 2>/dev/null)
         if [ -n "\$EXISTING" ]; then
             docker tag cr-\${SVC}:latest cr-\${SVC}:backup 2>/dev/null || true
@@ -109,10 +165,10 @@ if [ "\$ROLLBACK" = "false" ]; then
     done
 fi
 
-# Rollback: retag backup images
+# 回滚模式
 if [ "\$ROLLBACK" = "true" ]; then
-    echo "-> Rolling back to previous images"
-    for SVC in gateway auth-service business-service admin-service; do
+    echo "-> Rolling back to backup images"
+    for SVC in auth-service business-service admin-service; do
         BACKUP=\$(docker images -q cr-\${SVC}:backup 2>/dev/null)
         if [ -n "\$BACKUP" ]; then
             docker tag cr-\${SVC}:backup cr-\${SVC}:latest
@@ -123,25 +179,23 @@ if [ "\$ROLLBACK" = "true" ]; then
     done
 fi
 
-# Build images
+# 构建镜像
 if [ "\$ROLLBACK" = "false" ]; then
     if [ "\$DEPLOY_SCOPE" = "all" ]; then
-        docker compose build
-    else
+        docker compose build auth-service business-service admin-service
+    elif [ "\$DEPLOY_SCOPE" != "gateway" ]; then
         docker compose build \$DEPLOY_SCOPE
     fi
 fi
 
-# Start services (downstream first, gateway last)
+# 启动服务
 if [ "\$DEPLOY_SCOPE" = "all" ]; then
     docker compose up -d auth-service business-service admin-service
-    sleep 10
-    docker compose up -d gateway
-else
+elif [ "\$DEPLOY_SCOPE" != "gateway" ]; then
     docker compose up -d \$DEPLOY_SCOPE
 fi
 
-echo "Deploy completed"
+echo "Docker deploy completed"
 DEPLOY_EOF
                     """
                 }
@@ -150,29 +204,15 @@ DEPLOY_EOF
 
         stage("Verify") {
             steps {
-                echo "-> Verifying services"
+                echo "-> Verifying all services"
                 withCredentials([sshUserPrivateKey(credentialsId: "host-ssh-key", keyFileVariable: "HOST_SSH_KEY_PATH")]) {
                     sh """
                         ssh -i \${HOST_SSH_KEY_PATH} -p \${HOST_SSH_PORT} -o StrictHostKeyChecking=no \${HOST_USER}@\${HOST_IP} bash -s << 'VERIFY_EOF'
-cd "${HOST_DEPLOY_DIR}"
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT}"
 FAILED=0
 
-verify_service() {
+verify_port() {
     local NAME=\$1
     local PORT=\$2
-
-    # Check container is running
-    STATUS=\$(docker inspect -f '{{.State.Status}}' cr-\${NAME} 2>/dev/null)
-    if [ "\$STATUS" != "running" ]; then
-        echo "FAIL: \$NAME - container not running (status: \$STATUS)"
-        docker compose logs --tail=20 \$NAME 2>/dev/null
-        FAILED=1
-        return
-    fi
-
-    # Health check via HTTP (network_mode=host, access via localhost)
-    sleep 5
     for i in \$(seq 1 12); do
         if curl -sf "http://localhost:\$PORT/actuator/health" > /dev/null 2>&1; then
             echo "OK:   \$NAME (port \$PORT, health=UP)"
@@ -180,13 +220,36 @@ verify_service() {
         fi
         sleep 5
     done
-    echo "WARN: \$NAME (port \$PORT, container running but health check timeout)"
+    echo "WARN: \$NAME (port \$PORT, health check timeout)"
 }
 
-verify_service "gateway" 9999
-verify_service "auth-service" 10002
-verify_service "business-service" 10001
-verify_service "admin-service" 10003
+# Gateway（JAR 直跑）
+echo "--- Gateway ---"
+GW_PID=\$(ps aux | grep '[g]ateway.jar' | awk '{print \$2}')
+if [ -n "\$GW_PID" ]; then
+    verify_port "gateway" 9999
+else
+    echo "FAIL: gateway - process not found"
+    FAILED=1
+fi
+
+# Docker 微服务
+echo "--- Docker Microservices ---"
+for SVC in auth-service business-service admin-service; do
+    STATUS=\$(docker inspect -f '{{.State.Status}}' cr-\${SVC} 2>/dev/null)
+    if [ "\$STATUS" = "running" ]; then
+        case \$SVC in
+            auth-service)     PORT=10002 ;;
+            business-service) PORT=10001 ;;
+            admin-service)    PORT=10003 ;;
+        esac
+        verify_port "\$SVC" \$PORT
+    else
+        echo "FAIL: \$SVC - container not running (status: \$STATUS)"
+        docker compose -f ${HOST_DOCKER_DIR}/docker-compose.yml logs --tail=20 \$SVC 2>/dev/null
+        FAILED=1
+    fi
+done
 
 if [ \$FAILED -ne 0 ]; then
     echo ""
@@ -204,21 +267,21 @@ VERIFY_EOF
         success {
             echo ""
             echo "=================================================="
-            echo "       Deployment Success (Docker Microservices)"
-            echo " Scope:         ${params.DEPLOY_SCOPE}"
-            echo " Gateway:       http://${HOST_IP}:9999"
-            echo " Auth Service:  http://${HOST_IP}:10002"
-            echo " Business Svc:  http://${HOST_IP}:10001"
-            echo " Admin Service:  http://${HOST_IP}:10003"
-            echo " Nacos:         http://${HOST_IP}:8848/nacos"
+            echo "              Deployment Success"
+            echo "=================================================="
+            echo " Gateway (JAR):    ${HOST_IP}:9999"
+            echo " Auth (Docker):    ${HOST_IP}:10002"
+            echo " Business (Docker):${HOST_IP}:10001"
+            echo " Admin (Docker):   ${HOST_IP}:10003"
             echo "=================================================="
         }
         failure {
             echo ""
             echo "=================================================="
-            echo "            Deployment Failed"
-            echo " Check: docker compose logs <service>"
-            echo " Rollback: re-run pipeline with ROLLBACK=true"
+            echo "              Deployment Failed"
+            echo " Gateway logs: tail -f ${HOST_GATEWAY_DIR}/gateway.log"
+            echo " Docker logs:  docker compose logs <service>"
+            echo " Rollback:     re-run with ROLLBACK=true"
             echo "=================================================="
         }
     }
