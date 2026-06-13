@@ -86,25 +86,26 @@ GATEWAY_DIR="${HOST_GATEWAY_DIR}"
 cd \$GATEWAY_DIR
 
 # 查找并停止旧进程（匹配 gateway.jar）
-OLD_PID=\$(ps aux | grep '[g]ateway.jar' | awk '{print \$2}')
+OLD_PID=\$(pgrep -f gateway.jar || true)
 if [ -n "\$OLD_PID" ]; then
     echo "Stopping old gateway (PID: \$OLD_PID)..."
-    kill \$OLD_PID
-    for i in \$(seq 1 15); do
-        if ! kill -0 \$OLD_PID 2>/dev/null; then
-            echo "Gateway stopped."
-            break
-        fi
-        sleep 1
-    done
-    # 强制杀掉
+    kill -15 \$OLD_PID 2>/dev/null || true
+    sleep 3
+    # 若未死则强制
     kill -9 \$OLD_PID 2>/dev/null || true
+    sleep 1
 fi
 
-# 启动新 Gateway
+# 启动新 Gateway（BUILD_ID=dontKillMe 防止 Jenkins 误杀）
+echo "Starting Gateway..."
+export BUILD_ID=dontKillMe
 export JAVA_HOME=/usr/local/jdk-21
 nohup \$JAVA_HOME/bin/java -jar gateway.jar > gateway.log 2>&1 &
-echo "Gateway started (PID: \$!)"
+disown
+sleep 2
+# 验证进程存活
+ps -ef | grep '[g]ateway.jar' | head -1
+echo "Gateway deploy done"
 GATEWAY_EOF
                     """
                 }
