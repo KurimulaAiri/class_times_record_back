@@ -4,7 +4,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * 密码编码工具，用于生成 BCrypt 密码哈希。
- *
+ * <p>
  * 运行方式：
  *   mvn -pl admin-service exec:java -Dexec.mainClass="com.shiroko.PasswordEncoderUtil" -Dexec.args="admin123"
  *   或不带参数进入交互模式：

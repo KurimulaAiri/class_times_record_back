@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--namespace填写mapper类包名加类名（全路径）-->
+<mapper namespace="com.shiroko.mapper.ClassStudentMapper">
+
+    <insert id="insertBatch">
+        INSERT INTO class_student (class_id, student_id)
+        VALUES
+        <foreach collection="dto.students" item="student" separator=",">
+            (#{dto.classId}, #{student.id})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBatch">
+        DELETE FROM class_student
+        WHERE class_id = #{dto.classId}
+        AND student_id IN
+        <foreach collection="dto.students" item="student" open="(" separator="," close=")">
+            #{student.id}
+        </foreach>
+    </delete>
+
+</mapper>

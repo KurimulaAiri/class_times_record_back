@@ -234,6 +234,35 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         return ResponseDTO.success(roles);
     }
 
+    @Override
+    public ResponseDTO<LoginSysUserVO> refreshToken(String refreshTokenStr) {
+        if (!jwtUtils.validateRefreshToken(refreshTokenStr)) {
+            return ResponseDTO.fail("Refresh Token 无效或已过期");
+        }
+        Map<String, Object> claims = jwtUtils.getUserInfoFromRefreshToken(refreshTokenStr);
+        if (claims == null) {
+            return ResponseDTO.fail("Refresh Token 无效");
+        }
+        Long userId = Long.parseLong(String.valueOf(claims.get("userId")));
+        Long roleId = Long.parseLong(String.valueOf(claims.getOrDefault("roleId", 0)));
+
+        String newAccessToken = jwtUtils.createAccessToken(userId, roleId);
+        String newRefreshToken = jwtUtils.createRefreshToken(userId, roleId);
+
+        SysUser sysUser = sysUserMapper.selectById(userId);
+        if (sysUser == null) {
+            return ResponseDTO.fail("用户不存在");
+        }
+        if (sysUser.getStatus() != 1) {
+            return ResponseDTO.fail("账号已被禁用");
+        }
+
+        SysUserVO userVO = sysUserConverter.pojoToVO(sysUser);
+        userVO.setRoleIds(getRoleIdsByUserId(userId));
+
+        return ResponseDTO.success(new LoginSysUserVO(newAccessToken, newRefreshToken, userVO));
+    }
+
     private List<Long> getRoleIdsByUserId(Long userId) {
         List<SysUserRole> userRoles = sysUserRoleMapper.selectList(
                 new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId)

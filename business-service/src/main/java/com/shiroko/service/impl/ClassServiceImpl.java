@@ -38,9 +38,9 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
 @Slf4j
-public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements ClassService{
+public class ClassServiceImpl extends ServiceImpl<ClazzMapper, Class> implements ClassService{
 
-    private final ClassMapper classMapper;
+    private final ClazzMapper clazzMapper;
     private final ClassConverter classConverter;
 
     private final ClassStudentMapper classStudentMapper;
@@ -51,7 +51,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
     @Override
     public ResponseDTO<QueryClassVO> getClassesByStudentId(QueryClassDTO queryClassDTO) {
 
-        List<ClassDTO> classList = classMapper.getClassesByStudentId(queryClassDTO);
+        List<ClassDTO> classList = clazzMapper.getClassesByStudentId(queryClassDTO);
 
         List<ClassVO> classVOList = classConverter.dtoListToVOList(classList);
 
@@ -64,7 +64,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     @Override
     public ResponseDTO<QueryClassVO> getClassesByTeacherId(QueryClassDTO queryClassDTO) {
-        List<ClassDTO> classList = classMapper.getClassesByTeacherId(queryClassDTO);
+        List<ClassDTO> classList = clazzMapper.getClassesByTeacherId(queryClassDTO);
 
         // System.out.println("classList: " + classList);
 
@@ -81,7 +81,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     @Override
     public ResponseDTO<QueryClassVO> getClassesByInstitutionId(QueryClassDTO queryClassDTO) {
-        List<ClassDTO> classList = classMapper.getClassesByInstitutionId(queryClassDTO);
+        List<ClassDTO> classList = clazzMapper.getClassesByInstitutionId(queryClassDTO);
 
         List<ClassVO> classVOList = classConverter.dtoListToVOList(classList);
 
@@ -103,7 +103,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         Integer studentCount = students.size();
 
         // 1. 检查班级是否存在
-        Class clazz = classMapper.selectById(updateClassDTO.getClassId());
+        Class clazz = clazzMapper.selectById(updateClassDTO.getClassId());
         if (clazz == null) {
             return ResponseDTO.fail("班级不存在");
         }
@@ -161,7 +161,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     @Override
     public ResponseDTO<QueryClassVO> getClassById(QueryClassDTO queryClassDTO) {
-        ClassDTO clazz = classMapper.selectByClassId(queryClassDTO);
+        ClassDTO clazz = clazzMapper.selectByClassId(queryClassDTO);
         if (clazz == null) {
             return ResponseDTO.fail("班级不存在");
         }
@@ -177,7 +177,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         newClazz.setStudentMaxCount(insertClassDTO.getMaxCount());
 
         // 假设你使用的是 MyBatis-Plus 或配置了主键回填，执行完 insert 后 newClazz.getId() 就能拿到自增 ID
-        classMapper.insert(newClazz);
+        clazzMapper.insert(newClazz);
         Long classId = newClazz.getId();
 
         // 2. 批量插入班级与老师的关联表 (class_teacher)
@@ -238,7 +238,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
         Class clazz = classConverter.updateDtoToPojo(updateClassDTO);
 
         // 针对 MyBatis-Plus 的优化：updateById 默认会自动忽略 null 字段，只更新传过来的字段
-        int result = classMapper.updateById(clazz);
+        int result = clazzMapper.updateById(clazz);
         if (result == 0) {
             return ResponseDTO.fail("更新失败");
         }

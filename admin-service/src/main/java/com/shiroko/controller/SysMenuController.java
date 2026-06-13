@@ -1,5 +1,6 @@
 package com.shiroko.controller;
 
+import com.shiroko.annotation.OperationLog;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.admin.InsertSysMenuDTO;
 import com.shiroko.repository.dto.admin.QuerySysMenuDTO;
@@ -34,12 +35,18 @@ public class SysMenuController {
         return sysMenuService.getMenuTree();
     }
 
+    @PostMapping("/user_tree")
+    public ResponseDTO<List<SysMenuVO>> getUserMenuTree() {
+        return sysMenuService.getUserMenuTree();
+    }
+
     @PostMapping("/insert")
     public ResponseDTO<SysMenuVO> insertMenu(@Valid @RequestBody InsertSysMenuDTO dto) {
         return sysMenuService.insertMenu(dto);
     }
 
     @PostMapping("/update")
+    @OperationLog("更新菜单")
     public ResponseDTO<SysMenuVO> updateMenu(@Valid @RequestBody UpdateSysMenuDTO dto) {
         return sysMenuService.updateMenu(dto);
     }

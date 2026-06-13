@@ -31,4 +31,6 @@ public interface SysUserService extends IService<SysUser> {
     ResponseDTO<String> resetPassword(Long id, String newPassword);
 
     ResponseDTO<List<SysRole>> getUserRoles(Long userId);
+
+    ResponseDTO<LoginSysUserVO> refreshToken(String refreshToken);
 }

@@ -47,7 +47,7 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
     private final RecordMapper recordMapper;
     private final CourseRecordMapper courseRecordMapper;
     private final StudentMapper studentMapper;
-    private final ClassMapper classMapper;
+    private final ClazzMapper clazzMapper;
     private final ClassStudentMapper classStudentMapper;
 
     private final CourseRecordConverter courseRecordConverter;
@@ -96,6 +96,11 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
 
     @Override
     public ResponseDTO<Object> updateCourseRecord(UpdateCourseRecordDTO dto) {
+        // 校验：剩余课时不能大于总课时
+        if (dto.getCourseTotalTime() != null && dto.getCourseRestTime() != null
+                && dto.getCourseRestTime() > dto.getCourseTotalTime()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "剩余课时不能大于总课时");
+        }
         CourseRecord courseRecord = courseRecordConverter.updateDtoToPojo(dto);
         int rowsUpdated = courseRecordMapper.updateById(courseRecord);
         return ResponseDTO.success(rowsUpdated);
@@ -168,7 +173,7 @@ public class CourseRecordServiceImpl extends ServiceImpl<CourseRecordMapper, Cou
     @Override
     public ResponseDTO<DeductCourseRecordVO> deductByClassId(DeductCourseRecordDTO dto) {
         // 1. 查询班级信息，获取 courseId
-        Class clazz = classMapper.selectById(dto.getClassId());
+        Class clazz = clazzMapper.selectById(dto.getClassId());
         if (clazz == null) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "班级不存在");
         }

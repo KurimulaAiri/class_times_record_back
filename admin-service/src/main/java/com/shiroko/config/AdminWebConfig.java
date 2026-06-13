@@ -27,6 +27,7 @@ public class AdminWebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/user/login",
+                        "/user/refresh",
                         "/crypto/public_key",
                         "/error",
                         "/static/**",

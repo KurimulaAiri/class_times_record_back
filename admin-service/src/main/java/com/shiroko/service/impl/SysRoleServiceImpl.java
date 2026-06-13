@@ -100,7 +100,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
         // Assign menus
         if (dto.getMenuIds() != null && !dto.getMenuIds().isEmpty()) {
-            saveRoleMenus(sysRole.getId(), dto.getMenuIds());
+            batchInsertRoleMenus(sysRole.getId(), dto.getMenuIds());
         }
 
         SysRoleVO vo = sysRoleConverter.pojoToVO(sysRole);
@@ -149,7 +149,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                     new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, dto.getId())
             );
             if (!dto.getMenuIds().isEmpty()) {
-                saveRoleMenus(dto.getId(), dto.getMenuIds());
+                batchInsertRoleMenus(dto.getId(), dto.getMenuIds());
             }
         }
 
@@ -185,6 +185,43 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         return ResponseDTO.success(menus);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseDTO<String> saveRoleMenus(Long roleId, List<Long> menuIds) {
+        SysRole role = sysRoleMapper.selectById(roleId);
+        if (role == null) {
+            return ResponseDTO.fail("角色不存在");
+        }
+
+        // 校验：如果父菜单被移除，其子菜单也必须被移除
+        if (menuIds != null && !menuIds.isEmpty()) {
+            // 查询所有菜单，构建父子关系
+            List<SysMenu> allMenus = sysMenuMapper.selectList(null);
+            for (SysMenu menu : allMenus) {
+                // 如果是目录类型(M)且不在新的menuIds中，检查其子菜单是否还在menuIds中
+                if ("M".equals(menu.getMenuType()) && !menuIds.contains(menu.getId())) {
+                    List<Long> childIdsInNew = allMenus.stream()
+                            .filter(m -> menu.getId().equals(m.getParentId()) && menuIds.contains(m.getId()))
+                            .map(SysMenu::getId)
+                            .collect(Collectors.toList());
+                    if (!childIdsInNew.isEmpty()) {
+                        return ResponseDTO.fail("目录菜单「" + menu.getMenuName() + "」下仍有子菜单，请先移除所有子菜单");
+                    }
+                }
+            }
+        }
+
+        // 先删除旧的关联
+        sysRoleMenuMapper.delete(
+                new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId)
+        );
+        // 再插入新的关联
+        if (menuIds != null && !menuIds.isEmpty()) {
+            batchInsertRoleMenus(roleId, menuIds);
+        }
+        return ResponseDTO.success("保存成功");
+    }
+
     private List<Long> getMenuIdsByRoleId(Long roleId) {
         List<SysRoleMenu> roleMenus = sysRoleMenuMapper.selectList(
                 new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId)
@@ -192,7 +229,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         return roleMenus.stream().map(SysRoleMenu::getMenuId).collect(Collectors.toList());
     }
 
-    private void saveRoleMenus(Long roleId, List<Long> menuIds) {
+    private void batchInsertRoleMenus(Long roleId, List<Long> menuIds) {
         for (Long menuId : menuIds) {
             SysRoleMenu roleMenu = new SysRoleMenu();
             roleMenu.setRoleId(roleId);

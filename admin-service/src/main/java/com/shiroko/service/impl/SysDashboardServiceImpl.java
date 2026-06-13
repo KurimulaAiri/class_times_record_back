@@ -26,7 +26,7 @@ public class SysDashboardServiceImpl implements SysDashboardService {
 
     private Long countTable(String tableName) {
         try {
-            return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName + " WHERE is_deleted = 0", Long.class);
+            return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Long.class);
         } catch (Exception e) {
             return 0L;
         }

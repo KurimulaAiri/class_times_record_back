@@ -66,6 +66,7 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(sysUser.getId());
         userDTO.setRoleId(roleId);
+        userDTO.setUsername(sysUser.getUsername());
         userDTO.setCreateTime(sysUser.getCreateTime());
         userDTO.setUpdateTime(sysUser.getUpdateTime());
         UserContext.setUser(userDTO);

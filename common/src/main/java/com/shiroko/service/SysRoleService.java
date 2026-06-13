@@ -25,4 +25,6 @@ public interface SysRoleService extends IService<SysRole> {
     ResponseDTO<String> deleteRole(Long id);
 
     ResponseDTO<List<SysMenu>> getRoleMenus(Long roleId);
+
+    ResponseDTO<String> saveRoleMenus(Long roleId, List<Long> menuIds);
 }

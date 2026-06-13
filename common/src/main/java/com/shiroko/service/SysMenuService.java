@@ -23,4 +23,6 @@ public interface SysMenuService extends IService<SysMenu> {
     ResponseDTO<String> deleteMenu(Long id);
 
     ResponseDTO<List<SysMenu>> getMenusByRoleId(Long roleId);
+
+    ResponseDTO<List<SysMenuVO>> getUserMenuTree();
 }

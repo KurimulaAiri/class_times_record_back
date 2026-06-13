@@ -1,5 +1,6 @@
 package com.shiroko.controller;
 
+import com.shiroko.annotation.OperationLog;
 import com.shiroko.repository.dto.ResponseDTO;
 import com.shiroko.repository.dto.admin.InsertSysRoleDTO;
 import com.shiroko.repository.dto.admin.QuerySysRoleDTO;
@@ -45,6 +46,7 @@ public class SysRoleController {
     }
 
     @PostMapping("/delete")
+    @OperationLog("删除角色")
     public ResponseDTO<String> deleteRole(@RequestBody Map<String, Long> params) {
         return sysRoleService.deleteRole(params.get("id"));
     }
@@ -52,5 +54,15 @@ public class SysRoleController {
     @PostMapping("/get_menus")
     public ResponseDTO<List<SysMenu>> getRoleMenus(@RequestBody Map<String, Long> params) {
         return sysRoleService.getRoleMenus(params.get("roleId"));
+    }
+
+    @PostMapping("/save_menus")
+    @OperationLog("保存角色菜单权限")
+    public ResponseDTO<String> saveRoleMenus(@RequestBody Map<String, Object> params) {
+        Long roleId = Long.parseLong(params.get("roleId").toString());
+        @SuppressWarnings("unchecked")
+        List<Integer> menuIds = (List<Integer>) params.get("menuIds");
+        List<Long> menuIdList = menuIds.stream().map(Long::valueOf).collect(java.util.stream.Collectors.toList());
+        return sysRoleService.saveRoleMenus(roleId, menuIdList);
     }
 }

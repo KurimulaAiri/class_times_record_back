@@ -20,6 +20,16 @@ public class UserContext {
         return userThreadLocal.get();
     }
 
+    public static Long getUserId() {
+        UserDTO user = getUser();
+        return user != null ? user.getId() : null;
+    }
+
+    public static String getUsername() {
+        UserDTO user = getUser();
+        return user != null ? user.getUsername() : null;
+    }
+
     public static void remove() {
         userThreadLocal.remove();
     }

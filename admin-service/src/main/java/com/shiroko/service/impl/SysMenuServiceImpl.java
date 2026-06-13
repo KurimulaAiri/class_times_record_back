@@ -3,14 +3,18 @@ package com.shiroko.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shiroko.converter.SysMenuConverter;
+import com.shiroko.context.UserContext;
 import com.shiroko.mapper.SysMenuMapper;
 import com.shiroko.mapper.SysRoleMenuMapper;
+import com.shiroko.mapper.SysUserRoleMapper;
 import com.shiroko.repository.dto.ResponseDTO;
+import com.shiroko.repository.dto.UserDTO;
 import com.shiroko.repository.dto.admin.InsertSysMenuDTO;
 import com.shiroko.repository.dto.admin.QuerySysMenuDTO;
 import com.shiroko.repository.dto.admin.UpdateSysMenuDTO;
 import com.shiroko.repository.entity.SysMenu;
 import com.shiroko.repository.entity.SysRoleMenu;
+import com.shiroko.repository.entity.SysUserRole;
 import com.shiroko.repository.vo.admin.SysMenuVO;
 import com.shiroko.service.SysMenuService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     private final SysMenuMapper sysMenuMapper;
     private final SysRoleMenuMapper sysRoleMenuMapper;
+    private final SysUserRoleMapper sysUserRoleMapper;
     private final SysMenuConverter sysMenuConverter;
 
     @Override
@@ -160,6 +165,46 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         }
         List<SysMenu> menus = sysMenuMapper.selectBatchIds(menuIds);
         return ResponseDTO.success(menus);
+    }
+
+    @Override
+    public ResponseDTO<List<SysMenuVO>> getUserMenuTree() {
+        UserDTO user = UserContext.getUser();
+        Long userId = user.getId();
+
+        // 查询用户角色ID列表
+        List<SysUserRole> userRoles = sysUserRoleMapper.selectList(
+                new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId)
+        );
+        List<Long> roleIds = userRoles.stream().map(SysUserRole::getRoleId).collect(Collectors.toList());
+        if (roleIds.isEmpty()) {
+            return ResponseDTO.success(List.of());
+        }
+
+        // 查询角色关联的菜单ID
+        List<SysRoleMenu> roleMenus = sysRoleMenuMapper.selectList(
+                new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds)
+        );
+        List<Long> menuIds = roleMenus.stream().map(SysRoleMenu::getMenuId).distinct().collect(Collectors.toList());
+        if (menuIds.isEmpty()) {
+            return ResponseDTO.success(List.of());
+        }
+
+        // 查询菜单实体，过滤 status=1 且 menuType 为 M、C 或 L，按 sort 升序
+        List<SysMenu> menus = sysMenuMapper.selectList(
+                new LambdaQueryWrapper<SysMenu>()
+                        .in(SysMenu::getId, menuIds)
+                        .eq(SysMenu::getStatus, 1)
+                        .in(SysMenu::getMenuType, "M", "C", "L")
+                        .orderByAsc(SysMenu::getSort)
+        );
+
+        List<SysMenuVO> voList = menus.stream()
+                .map(sysMenuConverter::pojoToVO)
+                .collect(Collectors.toList());
+
+        List<SysMenuVO> tree = buildMenuTree(voList, 0L);
+        return ResponseDTO.success(tree);
     }
 
     private List<SysMenuVO> buildMenuTree(List<SysMenuVO> allMenus, Long parentId) {

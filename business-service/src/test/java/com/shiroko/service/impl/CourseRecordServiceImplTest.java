@@ -58,7 +58,7 @@ class CourseRecordServiceImplTest {
     private com.shiroko.mapper.StudentMapper studentMapper;
 
     @Mock
-    private com.shiroko.mapper.ClassMapper classMapper;
+    private com.shiroko.mapper.ClazzMapper clazzMapper;
 
     @Mock
     private com.shiroko.mapper.ClassStudentMapper classStudentMapper;

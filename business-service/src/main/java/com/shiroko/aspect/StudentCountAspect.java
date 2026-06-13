@@ -3,7 +3,7 @@ package com.shiroko.aspect;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.shiroko.annotation.UpdateStudentCount;
-import com.shiroko.mapper.ClassMapper;
+import com.shiroko.mapper.ClazzMapper;
 import com.shiroko.mapper.ClassStudentMapper;
 import com.shiroko.repository.entity.Class;
 import com.shiroko.repository.entity.ClassStudent;
@@ -32,7 +32,7 @@ import java.lang.reflect.Field;
 @RequiredArgsConstructor
 public class StudentCountAspect {
 
-    private final ClassMapper classMapper;
+    private final ClazzMapper clazzMapper;
     // 关键：这里需要注入中间表的 Mapper
     private final ClassStudentMapper classStudentMapper;
 
@@ -52,7 +52,7 @@ public class StudentCountAspect {
             );
 
             // 3. 更新到 Class 表（实体类名建议改为 Clazz 避免关键字冲突）
-            classMapper.update(null, new LambdaUpdateWrapper<Class>()
+            clazzMapper.update(null, new LambdaUpdateWrapper<Class>()
                     .set(Class::getStudentCount, currentCount)
                     .eq(Class::getId, classId));
 

@@ -21,6 +21,7 @@ public class UserDTO  {
     private Long roleId;
     private Long id;
     private Long institutionId;
+    private String username;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

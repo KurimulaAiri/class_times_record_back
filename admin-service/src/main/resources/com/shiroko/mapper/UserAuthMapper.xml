@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shiroko.mapper.UserAuthMapper">
+    <select id="selectAuthByTeacherId" resultType="com.shiroko.repository.entity.UserAuth">
+        SELECT * FROM user_auth WHERE user_id = #{teacherId} AND role_id = 1 LIMIT 1
+    </select>
+</mapper>
