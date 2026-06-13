@@ -10,9 +10,8 @@ services:
     ports:
       - "10002:10002"
     environment:
-      NACOS_SERVER_ADDR: ${NACOS_ADDR}
-      NACOS_NAMESPACE: ${NACOS_NAMESPACE}
-      DATABASE_ADDRESS: ${DB_ADDR}
+      NACOS_SERVER_ADDR: https://nacos.kurimula-airi.top
+      NACOS_NAMESPACE: course-record
       # Tomcat 线程池限制（减少线程栈内存占用）
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
@@ -37,9 +36,8 @@ services:
     ports:
       - "10001:10001"
     environment:
-      NACOS_SERVER_ADDR: ${NACOS_ADDR}
-      NACOS_NAMESPACE: ${NACOS_NAMESPACE}
-      DATABASE_ADDRESS: ${DB_ADDR}
+      NACOS_SERVER_ADDR: https://nacos.kurimula-airi.top
+      NACOS_NAMESPACE: course-record
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
@@ -62,9 +60,8 @@ services:
     ports:
       - "10003:10003"
     environment:
-      NACOS_SERVER_ADDR: ${NACOS_ADDR}
-      NACOS_NAMESPACE: ${NACOS_NAMESPACE}
-      DATABASE_ADDRESS: ${DB_ADDR}
+      NACOS_SERVER_ADDR: https://nacos.kurimula-airi.top
+      NACOS_NAMESPACE: course-record
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
