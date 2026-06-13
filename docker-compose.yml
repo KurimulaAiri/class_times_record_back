@@ -13,6 +13,18 @@ services:
       NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
       DATABASE_ADDRESS: ${DB_ADDR:-121.196.229.10}
+      # Tomcat 线程池限制（减少线程栈内存占用）
+      SERVER_TOMCAT_THREADS_MAX: "50"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
+      # HikariCP 连接池限制（减少数据库连接内存占用）
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 192M
     network_mode: host
 
   business-service:
@@ -28,6 +40,16 @@ services:
       NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
       DATABASE_ADDRESS: ${DB_ADDR:-121.196.229.10}
+      SERVER_TOMCAT_THREADS_MAX: "50"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 192M
     network_mode: host
 
   admin-service:
@@ -43,4 +65,14 @@ services:
       NACOS_SERVER_ADDR: ${NACOS_ADDR:-nacos.kurimula-airi.top}
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-course-record}
       DATABASE_ADDRESS: ${DB_ADDR:-121.196.229.10}
+      SERVER_TOMCAT_THREADS_MAX: "50"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 192M
     network_mode: host

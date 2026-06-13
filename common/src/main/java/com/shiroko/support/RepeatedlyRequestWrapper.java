@@ -17,11 +17,16 @@ import java.nio.charset.StandardCharsets;
  * @since 2026/5/7 下午6:09
  */
 public class RepeatedlyRequestWrapper extends HttpServletRequestWrapper {
+    private static final int MAX_BODY_SIZE = 1024 * 1024; // 1MB 请求体上限，防止大请求撑爆内存
     private final byte[] body;
 
     public RepeatedlyRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
-        // 使用工具类（如 Hutool 的 IoUtil 或原生 IO）一次性读完
+        // 限制请求体大小，防止大文件上传等场景导致 OOM
+        int contentLength = request.getContentLength();
+        if (contentLength > MAX_BODY_SIZE) {
+            throw new IOException("Request body too large: " + contentLength + " bytes, max allowed: " + MAX_BODY_SIZE);
+        }
         this.body = request.getInputStream().readAllBytes();
     }
 

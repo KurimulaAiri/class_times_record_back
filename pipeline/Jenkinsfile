@@ -111,7 +111,17 @@ else
     JAVA_CMD="java"
 fi
 echo "Using Java: \$JAVA_CMD"
-nohup \$JAVA_CMD -jar gateway.jar > gateway.log 2>&1 &
+# JVM 内存优化参数（与 Dockerfile 保持一致）
+nohup \$JAVA_CMD \\
+  -Xms64m -Xmx128m \\
+  -XX:+UseZGC \\
+  -Dspring.threads.virtual.enabled=true \\
+  -Djava.security.egd=file:/dev/./urandom \\
+  -XX:MaxMetaspaceSize=128m \\
+  -XX:ReservedCodeCacheSize=64m \\
+  -XX:+TieredCompilation \\
+  -XX:TieredStopAtLevel=1 \\
+  -jar gateway.jar > gateway.log 2>&1 &
 disown
 sleep 2
 # 验证进程存活
@@ -167,47 +177,117 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT}"
 DEPLOY_SCOPE="${params.DEPLOY_SCOPE}"
 ROLLBACK="${params.ROLLBACK}"
 
-# 备份现有镜像（非 gateway）
-if [ "\$ROLLBACK" = "false" ]; then
-    for SVC in auth-service business-service admin-service; do
-        EXISTING=\$(docker images -q cr-\${SVC}:latest 2>/dev/null)
-        if [ -n "\$EXISTING" ]; then
-            docker tag cr-\${SVC}:latest cr-\${SVC}:backup 2>/dev/null || true
-        fi
-    done
-fi
+# 确定要操作的微服务列表（排除 gateway，它直跑 JAR）
+get_service_list() {
+    if [ "\$DEPLOY_SCOPE" = "all" ]; then
+        echo "auth-service business-service admin-service"
+    elif [ "\$DEPLOY_SCOPE" != "gateway" ]; then
+        echo "\$DEPLOY_SCOPE"
+    else
+        echo ""
+    fi
+}
 
 # 回滚模式
 if [ "\$ROLLBACK" = "true" ]; then
-    echo "-> Rolling back to backup images"
-    for SVC in auth-service business-service admin-service; do
+    echo "========== 回滚模式 =========="
+    for SVC in \$(get_service_list); do
         BACKUP=\$(docker images -q cr-\${SVC}:backup 2>/dev/null)
         if [ -n "\$BACKUP" ]; then
+            echo "-> 停止并删除容器 cr-\${SVC}..."
+            docker compose stop \${SVC} 2>/dev/null || true
+            docker compose rm -f \${SVC} 2>/dev/null || true
+            echo "-> 恢复 \${SVC} 备份镜像..."
             docker tag cr-\${SVC}:backup cr-\${SVC}:latest
+            echo "-> 启动 \${SVC}..."
+            docker compose up -d \${SVC}
             echo "Restored \$SVC from backup"
         else
-            echo "No backup found for \$SVC"
+            echo "No backup found for \$SVC, skip"
         fi
     done
+    echo "Rollback completed"
+    exit 0
 fi
 
-# 构建镜像
-if [ "\$ROLLBACK" = "false" ]; then
-    if [ "\$DEPLOY_SCOPE" = "all" ]; then
-        docker compose build auth-service business-service admin-service
-    elif [ "\$DEPLOY_SCOPE" != "gateway" ]; then
-        docker compose build \$DEPLOY_SCOPE
+# ========== 正常部署流程 ==========
+SERVICES=\$(get_service_list)
+echo "-> 本次部署范围: \${SERVICES}"
+
+# 1) 备份现有镜像
+echo "========== Step 1: 备份现有镜像 =========="
+for SVC in \${SERVICES}; do
+    EXISTING=\$(docker images -q cr-\${SVC}:latest 2>/dev/null)
+    if [ -n "\$EXISTING" ]; then
+        # 先删除旧的备份
+        docker rmi cr-\${SVC}:backup 2>/dev/null || true
+        docker tag cr-\${SVC}:latest cr-\${SVC}:backup
+        echo "-> cr-\${SVC}:latest → cr-\${SVC}:backup"
     fi
+done
+
+# 2) 停止并删除旧容器
+echo "========== Step 2: 停止并删除旧容器 =========="
+for SVC in \${SERVICES}; do
+    CONTAINER=\$(docker ps -a -q --filter "name=cr-\${SVC}" 2>/dev/null)
+    if [ -n "\$CONTAINER" ]; then
+        echo "-> 停止容器 cr-\${SVC}..."
+        docker stop cr-\${SVC} 2>/dev/null || true
+        echo "-> 删除容器 cr-\${SVC}..."
+        docker rm cr-\${SVC} 2>/dev/null || true
+    else
+        echo "-> 容器 cr-\${SVC} 不存在，跳过"
+    fi
+done
+
+# 3) 删除旧镜像（保留 backup 用于回滚）
+echo "========== Step 3: 清理旧镜像 =========="
+for SVC in \${SERVICES}; do
+    OLD_IMAGE=\$(docker images -q cr-\${SVC}:latest 2>/dev/null)
+    if [ -n "\$OLD_IMAGE" ]; then
+        echo "-> 删除旧镜像 cr-\${SVC}:latest (ID: \$OLD_IMAGE)..."
+        docker rmi cr-\${SVC}:latest 2>/dev/null || true
+    else
+        echo "-> 镜像 cr-\${SVC}:latest 不存在，跳过"
+    fi
+done
+
+# 4) 构建新镜像
+echo "========== Step 4: 构建新镜像 =========="
+for SVC in \${SERVICES}; do
+    echo "-> 构建 cr-\${SVC}:latest..."
+    docker compose build \${SVC}
+done
+
+# 5) 启动新容器
+echo "========== Step 5: 启动新容器 =========="
+for SVC in \${SERVICES}; do
+    echo "-> 启动 \${SVC}..."
+    docker compose up -d \${SVC}
+done
+
+# 6) 清理悬空镜像（无标签的中间层镜像）
+echo "========== Step 6: 清理悬空镜像 =========="
+DANGLING_COUNT=\$(docker images -f "dangling=true" -q 2>/dev/null | wc -l)
+if [ "\$DANGLING_COUNT" -gt 0 ]; then
+    echo "-> 发现 \$DANGLING_COUNT 个悬空镜像，正在清理..."
+    docker image prune -f
+else
+    echo "-> 无悬空镜像"
 fi
 
-# 启动服务
-if [ "\$DEPLOY_SCOPE" = "all" ]; then
-    docker compose up -d auth-service business-service admin-service
-elif [ "\$DEPLOY_SCOPE" != "gateway" ]; then
-    docker compose up -d \$DEPLOY_SCOPE
-fi
+# 清理停止的容器（安全兜底）
+docker container prune -f 2>/dev/null || true
 
-echo "Docker deploy completed"
+echo ""
+echo "=========================================="
+echo "       Docker Deploy Completed"
+echo "=========================================="
+for SVC in \${SERVICES}; do
+    STATUS=\$(docker inspect -f '{{.State.Status}}' cr-\${SVC} 2>/dev/null || echo "unknown")
+    echo "  \${SVC}: \${STATUS}"
+done
+echo "=========================================="
 DEPLOY_EOF
                     """
                 }

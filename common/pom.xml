@@ -102,6 +102,10 @@
             <scope>test</scope>
         </dependency>
 
+        <!--
+          缓存依赖：当前代码未使用 @Cacheable/@EnableCaching，
+          如需缓存请先配置 CacheManager bean 再启用以下依赖。
+          暂时注释以减少 JAR 体积和类加载开销。
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
@@ -110,6 +114,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
+        -->
     </dependencies>
 
     <build>
