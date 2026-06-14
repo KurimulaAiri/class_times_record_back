@@ -17,3 +17,6 @@ spring:
         namespace: ${NACOS_NAMESPACE:course-record}
         group: DEFAULT_GROUP
         file-extension: yaml
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml,classpath*:com/shiroko/mapper/*.xml

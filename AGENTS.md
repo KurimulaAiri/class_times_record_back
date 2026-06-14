@@ -96,6 +96,15 @@ backend/
 - 命名空间 ID：`course-record`
 - Group：`DEFAULT_GROUP`
 
+### Nacos API
+
+Nacos API 已集成到 MCP Server（`mcp-server/server.ts`），可通过 MCP 工具直接调用：
+- `list_nacos_services` — 列出注册服务
+- `list_nacos_configs` — 列出配置文件
+- `get_nacos_config` — 获取配置内容
+- `update_nacos_config` — 更新配置
+- `get_nacos_service_instances` — 获取服务实例
+
 ### 配置文件上传
 
 所有 Nacos 配置文件存放在 `nacos-config/` 目录，文件头部注释包含上传说明：

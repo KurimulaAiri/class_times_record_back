@@ -11,6 +11,7 @@ services:
       NACOS_SERVER_ADDR: nacos.kurimula-airi.top
       NACOS_NAMESPACE: course-record
       SENTINEL_ADDR: sentinel.kurimula-airi.top
+      SENTINEL_CLIENT_IP: 172.16.36.126
       # Tomcat 线程池限制（减少线程栈内存占用）
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
@@ -36,6 +37,7 @@ services:
       NACOS_SERVER_ADDR: nacos.kurimula-airi.top
       NACOS_NAMESPACE: course-record
       SENTINEL_ADDR: sentinel.kurimula-airi.top
+      SENTINEL_CLIENT_IP: 172.16.36.126
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
@@ -59,6 +61,7 @@ services:
       NACOS_SERVER_ADDR: nacos.kurimula-airi.top
       NACOS_NAMESPACE: course-record
       SENTINEL_ADDR: sentinel.kurimula-airi.top
+      SENTINEL_CLIENT_IP: 172.16.36.126
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
