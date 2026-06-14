@@ -7,11 +7,10 @@ services:
     image: cr-auth-service:latest
     container_name: cr-auth-service
     restart: unless-stopped
-    ports:
-      - "10002:10002"
     environment:
-      NACOS_SERVER_ADDR: https://nacos.kurimula-airi.top
+      NACOS_SERVER_ADDR: nacos.kurimula-airi.top
       NACOS_NAMESPACE: course-record
+      SENTINEL_ADDR: sentinel.kurimula-airi.top
       # Tomcat 线程池限制（减少线程栈内存占用）
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
@@ -33,11 +32,10 @@ services:
     image: cr-business-service:latest
     container_name: cr-business-service
     restart: unless-stopped
-    ports:
-      - "10001:10001"
     environment:
-      NACOS_SERVER_ADDR: https://nacos.kurimula-airi.top
+      NACOS_SERVER_ADDR: nacos.kurimula-airi.top
       NACOS_NAMESPACE: course-record
+      SENTINEL_ADDR: sentinel.kurimula-airi.top
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
@@ -57,11 +55,10 @@ services:
     image: cr-admin-service:latest
     container_name: cr-admin-service
     restart: unless-stopped
-    ports:
-      - "10003:10003"
     environment:
-      NACOS_SERVER_ADDR: https://nacos.kurimula-airi.top
+      NACOS_SERVER_ADDR: nacos.kurimula-airi.top
       NACOS_NAMESPACE: course-record
+      SENTINEL_ADDR: sentinel.kurimula-airi.top
       SERVER_TOMCAT_THREADS_MAX: "50"
       SERVER_TOMCAT_THREADS_MIN_SPARE: "5"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"

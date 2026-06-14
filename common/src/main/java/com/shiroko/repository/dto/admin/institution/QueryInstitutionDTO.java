@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 public class QueryInstitutionDTO extends BaseDTO {
     private Long institutionId;
     private String institutionName;
+    private String institutionCode;
     private Integer status;
     private Integer currentPage;
     private Integer pageSize;

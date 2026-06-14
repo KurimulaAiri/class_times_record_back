@@ -66,6 +66,7 @@ public class AdminBusinessServiceImpl implements AdminBusinessService {
         LambdaQueryWrapper<Institution> wrapper = new LambdaQueryWrapper<>();
         if (dto.getInstitutionId() != null) wrapper.eq(Institution::getId, dto.getInstitutionId());
         if (dto.getInstitutionName() != null && !dto.getInstitutionName().isEmpty()) wrapper.like(Institution::getInstitutionName, dto.getInstitutionName());
+        if (dto.getInstitutionCode() != null && !dto.getInstitutionCode().isEmpty()) wrapper.like(Institution::getInstitutionCode, dto.getInstitutionCode());
         if (dto.getStatus() != null) wrapper.eq(Institution::getStatus, dto.getStatus());
         wrapper.orderByDesc(Institution::getCreateTime);
         Page<Institution> result = institutionMapper.selectPage(page, wrapper);
